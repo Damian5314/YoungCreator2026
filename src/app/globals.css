@@ -3,46 +3,47 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Kleur-tokens: light is de basis, .dark (gezet door next-themes) overschrijft alleen de waarden */
+/* Palet: diep bosgroen + warme crème (zie template) */
 :root {
   color-scheme: light;
-  --background: #fafaf9;
-  --foreground: #1c1917;
+  --background: #f8f6f0;
+  --foreground: #17201a;
   --card: #ffffff;
-  --muted: #f5f5f4;
-  --muted-foreground: #6f6863;
-  --border: #e7e5e4;
-  --input: #d6d3d1;
-  --primary: #c2410c;
-  --primary-hover: #9a3412;
+  --muted: #efece3;
+  --muted-foreground: #6b685f;
+  --border: #e5e1d5;
+  --input: #d5d0c1;
+  --primary: #1f5d3b;
+  --primary-hover: #174a2f;
   --primary-foreground: #ffffff;
-  --primary-soft: #fff7ed;
-  --primary-soft-foreground: #9a3412;
-  --success: #15803d;
-  --success-soft: #f0fdf4;
-  --warning: #a16207;
-  --warning-soft: #fefce8;
+  --primary-soft: #e7f2ea;
+  --primary-soft-foreground: #1f5d3b;
+  --success: #1e7a45;
+  --success-soft: #ecf7ef;
+  --warning: #a15c07;
+  --warning-soft: #fdf4e3;
   --danger: #b91c1c;
   --danger-soft: #fef2f2;
 }
 
 .dark {
   color-scheme: dark;
-  --background: #0c0a09;
-  --foreground: #f5f5f4;
-  --card: #1c1917;
-  --muted: #292524;
-  --muted-foreground: #a8a29e;
-  --border: #292524;
-  --input: #44403c;
-  --primary: #fb923c;
-  --primary-hover: #fdba74;
-  --primary-foreground: #1c1917;
-  --primary-soft: rgb(251 146 60 / 0.12);
-  --primary-soft-foreground: #fdba74;
-  --success: #4ade80;
-  --success-soft: rgb(74 222 128 / 0.12);
-  --warning: #facc15;
-  --warning-soft: rgb(250 204 21 / 0.12);
+  --background: #0e1310;
+  --foreground: #eef2ec;
+  --card: #151c17;
+  --muted: #1e2721;
+  --muted-foreground: #9ba89f;
+  --border: #26312a;
+  --input: #36453b;
+  --primary: #6cc793;
+  --primary-hover: #8ad6a8;
+  --primary-foreground: #0e1310;
+  --primary-soft: rgb(108 199 147 / 0.14);
+  --primary-soft-foreground: #9adcb5;
+  --success: #6dd394;
+  --success-soft: rgb(109 211 148 / 0.12);
+  --warning: #f5b94a;
+  --warning-soft: rgb(245 185 74 / 0.12);
   --danger: #f87171;
   --danger-soft: rgb(248 113 113 / 0.12);
 }
