@@ -8,17 +8,23 @@ import { Button } from '@/components/ui/Button';
 import { Switch } from '@/components/ui/Switch';
 import { OpportunityCard } from '@/components/opportunities/OpportunityCard';
 import { CREDIT_COST_PER_SEARCH } from '@/shared/constants/opportunityTypes';
-import { mockOpportunities, mockUser } from '@/shared/mocks/mockData';
+import { mockOpportunities } from '@/shared/mocks/mockData';
 import type { Opportunity } from '@/shared/types/Opportunity';
 
 type Phase = 'idle' | 'running' | 'done';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Stap 2 van de search flow: de search engine zelf
-export function SearchEngine() {
-  const [includeHidden, setIncludeHidden] = useState(true);
-  const [includeHunting, setIncludeHunting] = useState(true);
+interface SearchEngineProps {
+  credits: number;
+  defaultIncludeRadar: boolean;
+  defaultIncludeCompanyHunter: boolean;
+}
+
+// Stap 2 van de search flow: de search engine zelf (de run is nog nagespeeld met mock-data)
+export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompanyHunter }: SearchEngineProps) {
+  const [includeHidden, setIncludeHidden] = useState(defaultIncludeRadar);
+  const [includeHunting, setIncludeHunting] = useState(defaultIncludeCompanyHunter);
   const [phase, setPhase] = useState<Phase>('idle');
   const [steps, setSteps] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
@@ -81,7 +87,7 @@ export function SearchEngine() {
         </div>
         <div className="mt-6 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Costs {CREDIT_COST_PER_SEARCH} credit · You have {mockUser.credits} credits
+            Costs {CREDIT_COST_PER_SEARCH} credit · You have {credits} {credits === 1 ? 'credit' : 'credits'}
           </p>
           <Button size="lg" onClick={runSearch} disabled={running}>
             {running ? (

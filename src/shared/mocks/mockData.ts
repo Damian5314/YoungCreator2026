@@ -1,56 +1,10 @@
 import { Opportunity } from '../types/Opportunity';
-import { SearchSchedule } from '../types/SearchSchedule';
-import { UserProfile } from '../types/UserProfile';
 
-// Hardcoded demo-data zodat alle pagina's visueel werken.
-// Vervangen door echte data zodra auth, database en de n8n workflow er zijn.
+// Demo-vacatures voor de landingspagina en de (nog nagespeelde) search engine.
+// Vervangen zodra de n8n workflow echte resultaten in de database zet.
 // Alle bedrijven zijn fictief.
 
-export const mockUser: UserProfile = {
-  id: 'user-1',
-  email: 'alex.morgan@example.com',
-  name: 'Alex Morgan',
-  nationality: 'Brazilian',
-  visaDeadline: new Date('2027-08-31'),
-  cv: {
-    rawText: '',
-    skills: ['TypeScript', 'React', 'Python', 'SQL', 'Data visualisation'],
-    education: [
-      { institution: 'TU Delft', degree: 'MSc', field: 'Computer Science', graduationYear: 2026 },
-    ],
-    experience: [
-      {
-        company: 'Campus Analytics Lab',
-        role: 'Student Developer',
-        from: new Date('2025-02-01'),
-        to: new Date('2026-06-30'),
-        description: 'Built internal dashboards in React and automated data pipelines in Python.',
-      },
-    ],
-    languages: ['English', 'Portuguese', 'Dutch (A2)'],
-    summary: 'Computer Science graduate focused on frontend development and data.',
-  },
-  preferences: {
-    desiredRoles: ['Frontend Developer', 'Data Analyst'],
-    opportunityTypes: ['job', 'traineeship', 'working-student', 'open-application'],
-    locations: ['Amsterdam', 'Rotterdam', 'Utrecht'],
-    remoteOnly: false,
-    industries: ['Tech', 'Fintech', 'Energy'],
-    minSalary: 3200,
-  },
-  credits: 12,
-  createdAt: new Date('2026-09-01'),
-};
-
-export const mockSchedule: SearchSchedule = {
-  userId: mockUser.id,
-  enabled: true,
-  frequency: 'daily',
-  dayOfWeek: 1,
-  time: '08:00',
-};
-
-const base = { userId: mockUser.id, sourceUrl: 'https://example.com' } as const;
+const base = { userId: 'demo-user', sourceUrl: 'https://example.com' } as const;
 
 export const mockOpportunities: Opportunity[] = [
   {

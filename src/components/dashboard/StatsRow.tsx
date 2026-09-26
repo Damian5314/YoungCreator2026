@@ -5,11 +5,13 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface StatsRowProps {
   opportunities: Opportunity[];
-  visaDeadline: Date;
+  searchYearEndsOn: string | null; // 'YYYY-MM-DD', leeg zolang de gebruiker het niet heeft ingevuld
 }
 
-export function StatsRow({ opportunities, visaDeadline }: StatsRowProps) {
-  const daysLeft = Math.max(0, Math.ceil((visaDeadline.getTime() - Date.now()) / DAY_MS));
+export function StatsRow({ opportunities, searchYearEndsOn }: StatsRowProps) {
+  const daysLeft = searchYearEndsOn
+    ? Math.max(0, Math.ceil((new Date(searchYearEndsOn).getTime() - Date.now()) / DAY_MS))
+    : '—';
 
   const stats = [
     { label: 'Opportunities found', value: opportunities.length, icon: Briefcase },

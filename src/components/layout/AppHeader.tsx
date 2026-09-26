@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Coins, LayoutDashboard, Search, Settings } from 'lucide-react';
 import { Logo } from './Logo';
-import { mockUser } from '@/shared/mocks/mockData';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -12,14 +11,20 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-const initials = mockUser.name
-  .split(' ')
-  .map((part) => part[0])
-  .join('')
-  .slice(0, 2);
+interface AppHeaderProps {
+  name: string;
+  credits: number;
+}
 
-export function AppHeader() {
+export function AppHeader({ name, credits }: AppHeaderProps) {
   const pathname = usePathname();
+  const initials =
+    name
+      .split(/[\s@.]+/)
+      .filter(Boolean)
+      .map((part) => part[0].toUpperCase())
+      .join('')
+      .slice(0, 2) || '?';
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
@@ -47,10 +52,10 @@ export function AppHeader() {
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary-soft-foreground md:flex">
             <Coins className="size-3.5" aria-hidden />
-            {mockUser.credits} credits
+            {credits} {credits === 1 ? 'credit' : 'credits'}
           </span>
           <span
-            title={mockUser.name}
+            title={name}
             className="grid size-8 place-items-center rounded-full bg-foreground text-xs font-semibold text-background"
           >
             {initials}

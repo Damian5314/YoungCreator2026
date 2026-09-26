@@ -21,6 +21,8 @@
   --success-soft: #f0fdf4;
   --warning: #a16207;
   --warning-soft: #fefce8;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
 }
 
 .dark {
@@ -41,6 +43,8 @@
   --success-soft: rgb(74 222 128 / 0.12);
   --warning: #facc15;
   --warning-soft: rgb(250 204 21 / 0.12);
+  --danger: #f87171;
+  --danger-soft: rgb(248 113 113 / 0.12);
 }
 
 @theme inline {
@@ -60,6 +64,8 @@
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 

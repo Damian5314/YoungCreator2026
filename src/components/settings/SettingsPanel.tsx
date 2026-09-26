@@ -1,68 +1,82 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTheme } from 'next-themes';
 import { LogOut } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
-import { Button, ButtonLink } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Field';
-import { SavedNote } from '@/components/ui/SavedNote';
+import { FormMessage } from '@/components/ui/FormMessage';
 import { Switch } from '@/components/ui/Switch';
-import { mockUser } from '@/shared/mocks/mockData';
+import { logout, updateEmail, updatePassword } from '@/lib/actions/auth';
+import { useFormAction } from '@/lib/hooks/useFormAction';
 
-export function SettingsPanel() {
+interface SettingsPanelProps {
+  email: string;
+  fullName: string | null;
+}
+
+export function SettingsPanel({ email, fullName }: SettingsPanelProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [email, setEmail] = useState(mockUser.email);
-  const [emailSaved, setEmailSaved] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
+  const emailAction = useFormAction(updateEmail);
+  const passwordAction = useFormAction(updatePassword);
+  const passwordForm = useRef<HTMLFormElement>(null);
 
   // Het thema is pas op de client bekend (localStorage / systeemvoorkeur)
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  function handleEmailSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    // TODO: e-mailadres bijwerken via /api/profile
-    setEmailSaved(true);
+  // Wachtwoordveld leegmaken zodra het opslaan gelukt is
+  useEffect(() => {
+    if (passwordAction.state?.message) passwordForm.current?.reset();
+  }, [passwordAction.state]);
+
+  function submitWith(action: ReturnType<typeof useFormAction>) {
+    return (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      action.submit(new FormData(event.currentTarget));
+    };
   }
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title="Account" description="The email address we use for your login and notifications." />
-        <form onSubmit={handleEmailSubmit}>
+        <CardHeader title="Account" description="The email address you log in with." />
+        <form onSubmit={submitWith(emailAction)} className="space-y-4">
           <Field label="Email address" htmlFor="settings-email">
-            <Input
-              id="settings-email"
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                setEmailSaved(false);
-              }}
-            />
+            <Input id="settings-email" name="email" type="email" autoComplete="email" defaultValue={email} required />
           </Field>
-          <div className="mt-4 flex items-center justify-end gap-3">
-            {emailSaved && <SavedNote>Saved</SavedNote>}
-            <Button type="submit" size="sm">
-              Update email
+          <FormMessage state={emailAction.state} />
+          <div className="flex justify-end">
+            <Button type="submit" size="sm" disabled={emailAction.pending}>
+              {emailAction.pending ? 'Saving…' : 'Update email'}
             </Button>
           </div>
         </form>
       </Card>
 
       <Card>
-        <CardHeader title="Password" description={`We'll send a reset link to ${email}.`} />
-        <div className="flex items-center justify-end gap-3">
-          {/* TODO: echte reset-mail versturen */}
-          {resetSent && <SavedNote>Reset link sent</SavedNote>}
-          <Button variant="secondary" size="sm" onClick={() => setResetSent(true)}>
-            Send reset link
-          </Button>
-        </div>
+        <CardHeader title="Password" description="Choose a new password for your account." />
+        <form ref={passwordForm} onSubmit={submitWith(passwordAction)} className="space-y-4">
+          <Field label="New password" htmlFor="settings-password" hint="At least 6 characters.">
+            <Input
+              id="settings-password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              minLength={6}
+              required
+            />
+          </Field>
+          <FormMessage state={passwordAction.state} />
+          <div className="flex justify-end">
+            <Button type="submit" variant="secondary" size="sm" disabled={passwordAction.pending}>
+              {passwordAction.pending ? 'Saving…' : 'Update password'}
+            </Button>
+          </div>
+        </form>
       </Card>
 
       <Card>
@@ -78,14 +92,13 @@ export function SettingsPanel() {
       </Card>
 
       <Card>
-        <CardHeader title="Session" description={`Logged in as ${mockUser.name}.`} />
-        <div className="flex justify-end">
-          {/* TODO: echte sessie beëindigen */}
-          <ButtonLink href="/" variant="secondary" size="sm">
+        <CardHeader title="Session" description={`Logged in as ${fullName || email}.`} />
+        <form action={logout} className="flex justify-end">
+          <Button type="submit" variant="secondary" size="sm">
             <LogOut className="size-4" aria-hidden />
             Log out
-          </ButtonLink>
-        </div>
+          </Button>
+        </form>
       </Card>
     </div>
   );

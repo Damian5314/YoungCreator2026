@@ -6,10 +6,12 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Field, Input, Select } from '@/components/ui/Field';
+import { FormMessage } from '@/components/ui/FormMessage';
 import { SavedNote } from '@/components/ui/SavedNote';
 import { Switch } from '@/components/ui/Switch';
+import { saveSchedule } from '@/lib/actions/search';
+import { useFormAction } from '@/lib/hooks/useFormAction';
 import { CREDIT_COST_PER_SEARCH } from '@/shared/constants/opportunityTypes';
-import { mockSchedule } from '@/shared/mocks/mockData';
 import type { ScheduleFrequency, SearchSchedule } from '@/shared/types/SearchSchedule';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -43,10 +45,16 @@ function getNextRun({ frequency, dayOfWeek, time }: SearchSchedule, now: Date): 
   return next;
 }
 
+interface ScheduleCardProps {
+  searchProfileId: string;
+  initialSchedule: SearchSchedule;
+}
+
 // Timer management: wanneer de search automatisch moet draaien
-export function ScheduleCard() {
-  const [schedule, setSchedule] = useState<SearchSchedule>(mockSchedule);
-  const [saved, setSaved] = useState(false);
+export function ScheduleCard({ searchProfileId, initialSchedule }: ScheduleCardProps) {
+  const [schedule, setSchedule] = useState<SearchSchedule>(initialSchedule);
+  const [dirty, setDirty] = useState(false);
+  const { state, pending, submit } = useFormAction(saveSchedule);
   // "Nu" pas op de client bepalen, anders verschilt de server-render van de client-render
   const [now, setNow] = useState<Date | null>(null);
 
@@ -56,12 +64,22 @@ export function ScheduleCard() {
 
   function update(patch: Partial<SearchSchedule>) {
     setSchedule((current) => ({ ...current, ...patch }));
-    setSaved(false);
+    setDirty(true);
   }
 
   function handleSave() {
-    // TODO: opslaan en als cron-trigger doorgeven aan de n8n workflow
-    setSaved(true);
+    const formData = new FormData();
+    formData.set('searchProfileId', searchProfileId);
+    formData.set('enabled', String(schedule.enabled));
+    formData.set('frequency', schedule.frequency);
+    formData.set('dayOfWeek', String(schedule.dayOfWeek));
+    formData.set('time', schedule.time);
+    formData.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
+    if (schedule.enabled && schedule.time) {
+      formData.set('nextRunAt', getNextRun(schedule, new Date()).toISOString());
+    }
+    setDirty(false);
+    submit(formData);
   }
 
   let nextRunText = 'Automatic search is paused.';
@@ -132,12 +150,17 @@ export function ScheduleCard() {
           Each run uses {CREDIT_COST_PER_SEARCH} credit.
         </p>
         <div className="flex items-center gap-3">
-          {saved && <SavedNote>Saved</SavedNote>}
-          <Button size="sm" onClick={handleSave}>
-            Save
+          {state?.message && !dirty && !pending && <SavedNote>{state.message}</SavedNote>}
+          <Button size="sm" onClick={handleSave} disabled={pending}>
+            {pending ? 'Saving…' : 'Save'}
           </Button>
         </div>
       </div>
+      {state?.error && (
+        <div className="mt-3">
+          <FormMessage state={{ error: state.error }} />
+        </div>
+      )}
     </Card>
   );
 }

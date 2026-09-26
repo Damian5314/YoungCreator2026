@@ -1,28 +1,34 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { Check, Upload } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Field, Input, Select } from '@/components/ui/Field';
+import { FormMessage } from '@/components/ui/FormMessage';
 import { Switch } from '@/components/ui/Switch';
+import { savePreferences } from '@/lib/actions/search';
+import type { ProfileData, SearchProfileData } from '@/lib/data/queries';
+import { useFormAction } from '@/lib/hooks/useFormAction';
 import { OPPORTUNITY_TYPE_LABELS } from '@/shared/constants/opportunityTypes';
-import { mockUser } from '@/shared/mocks/mockData';
 import type { OpportunityType } from '@/shared/types/OpportunityType';
 
 const ALL_TYPES = Object.keys(OPPORTUNITY_TYPE_LABELS) as OpportunityType[];
 
-// Stap 1 van de search flow: situatie + voorkeuren (voorgevuld met mock-data)
-export function PreferencesForm() {
-  const router = useRouter();
-  const { cv, preferences } = mockUser;
-  const education = cv.education[0];
+interface PreferencesFormProps {
+  profile: ProfileData | null;
+  searchProfile: SearchProfileData | null;
+}
 
-  const [types, setTypes] = useState<OpportunityType[]>(preferences.opportunityTypes);
-  const [remoteOnly, setRemoteOnly] = useState(preferences.remoteOnly);
-  const [cvFileName, setCvFileName] = useState('cv_alex_morgan_2026.pdf');
+// Stap 1 van de search flow: situatie (profiles) + voorkeuren (search_profiles)
+export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps) {
+  const preferences = searchProfile?.preferences;
+  const { state, pending, submit } = useFormAction(savePreferences);
+
+  const [types, setTypes] = useState<OpportunityType[]>(preferences?.opportunityTypes ?? []);
+  const [remoteOnly, setRemoteOnly] = useState(preferences?.remoteOnly ?? false);
+  const [cvFileName, setCvFileName] = useState<string | null>(null);
 
   function toggleType(type: OpportunityType) {
     setTypes((current) => (current.includes(type) ? current.filter((t) => t !== type) : [...current, type]));
@@ -30,12 +36,15 @@ export function PreferencesForm() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO: opslaan via /api/profile (CV parsen via CVParser). Nu alleen door naar de search engine.
-    router.push('/search');
+    submit(new FormData(event.currentTarget));
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <input type="hidden" name="searchProfileId" value={searchProfile?.id ?? ''} />
+      <input type="hidden" name="opportunityTypes" value={types.join(',')} />
+      <input type="hidden" name="remoteOnly" value={String(remoteOnly)} />
+
       <Card>
         <CardHeader
           title="Your situation"
@@ -43,36 +52,45 @@ export function PreferencesForm() {
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nationality" htmlFor="nationality">
-            <Input id="nationality" defaultValue={mockUser.nationality} />
+            <Input id="nationality" name="nationality" defaultValue={profile?.nationality ?? ''} />
           </Field>
-          <Field label="Search year ends on" htmlFor="visaDeadline" hint="When your orientation year (zoekjaar) permit expires.">
-            <Input id="visaDeadline" type="date" defaultValue={mockUser.visaDeadline.toISOString().slice(0, 10)} />
+          <Field label="Search year ends on" htmlFor="searchYearEndsOn" hint="When your orientation year (zoekjaar) permit expires.">
+            <Input id="searchYearEndsOn" name="searchYearEndsOn" type="date" defaultValue={profile?.searchYearEndsOn ?? ''} />
           </Field>
           <Field label="Degree" htmlFor="degree">
-            <Select id="degree" defaultValue={education.degree}>
+            <Select id="degree" name="degree" defaultValue={profile?.degree ?? ''}>
+              <option value="">Select…</option>
               <option>BSc</option>
               <option>MSc</option>
               <option>MBA</option>
               <option>PhD</option>
             </Select>
           </Field>
-          <Field label="Field of study" htmlFor="field">
-            <Input id="field" defaultValue={education.field} />
+          <Field label="Field of study" htmlFor="fieldOfStudy">
+            <Input id="fieldOfStudy" name="fieldOfStudy" defaultValue={profile?.fieldOfStudy ?? ''} />
           </Field>
-          <Field label="University" htmlFor="institution">
-            <Input id="institution" defaultValue={education.institution} />
+          <Field label="University" htmlFor="university">
+            <Input id="university" name="university" defaultValue={profile?.university ?? ''} />
           </Field>
           <Field label="Graduation year" htmlFor="graduationYear">
-            <Input id="graduationYear" type="number" defaultValue={education.graduationYear} />
+            <Input
+              id="graduationYear"
+              name="graduationYear"
+              type="number"
+              min={1990}
+              max={2040}
+              defaultValue={profile?.graduationYear ?? ''}
+            />
           </Field>
           <Field label="Languages" htmlFor="languages" hint="Separate with commas.">
-            <Input id="languages" defaultValue={cv.languages.join(', ')} />
+            <Input id="languages" name="languages" defaultValue={profile?.languages.join(', ') ?? ''} />
           </Field>
           <Field label="Skills" htmlFor="skills" hint="Separate with commas.">
-            <Input id="skills" defaultValue={cv.skills.join(', ')} />
+            <Input id="skills" name="skills" defaultValue={profile?.skills.join(', ') ?? ''} />
           </Field>
         </div>
 
+        {/* TODO: upload naar Supabase Storage + parsen met CVParser. Nu wordt het bestand nog niet opgeslagen. */}
         <div className="mt-4">
           <p className="text-sm font-medium">CV</p>
           <label className="mt-1.5 flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input p-4 transition-colors hover:bg-muted focus-within:outline-2 focus-within:outline-primary">
@@ -89,8 +107,8 @@ export function PreferencesForm() {
               <Upload className="size-5" aria-hidden />
             </span>
             <span className="min-w-0 text-sm">
-              <span className="block truncate font-medium">{cvFileName}</span>
-              <span className="block text-muted-foreground">PDF, max 5 MB · click to replace</span>
+              <span className="block truncate font-medium">{cvFileName ?? 'Choose your CV (PDF)'}</span>
+              <span className="block text-muted-foreground">CV upload isn&apos;t saved yet — coming soon</span>
             </span>
           </label>
         </div>
@@ -99,8 +117,8 @@ export function PreferencesForm() {
       <Card>
         <CardHeader title="Your preferences" description="What kind of opportunities should we hunt for?" />
         <div className="space-y-5">
-          <Field label="Desired roles" htmlFor="roles" hint="Separate with commas.">
-            <Input id="roles" defaultValue={preferences.desiredRoles.join(', ')} />
+          <Field label="Desired roles" htmlFor="desiredRoles" hint="Separate with commas.">
+            <Input id="desiredRoles" name="desiredRoles" defaultValue={preferences?.desiredRoles.join(', ') ?? ''} />
           </Field>
 
           <fieldset>
@@ -120,13 +138,13 @@ export function PreferencesForm() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Locations" htmlFor="locations" hint="Separate with commas.">
-              <Input id="locations" defaultValue={preferences.locations.join(', ')} />
+              <Input id="locations" name="locations" defaultValue={preferences?.locations.join(', ') ?? ''} />
             </Field>
             <Field label="Industries" htmlFor="industries" hint="Separate with commas.">
-              <Input id="industries" defaultValue={preferences.industries.join(', ')} />
+              <Input id="industries" name="industries" defaultValue={preferences?.industries.join(', ') ?? ''} />
             </Field>
             <Field label="Minimum salary (€ gross / month)" htmlFor="minSalary" hint="Optional.">
-              <Input id="minSalary" type="number" min={0} step={100} defaultValue={preferences.minSalary} />
+              <Input id="minSalary" name="minSalary" type="number" min={0} step={100} defaultValue={preferences?.minSalary ?? ''} />
             </Field>
           </div>
 
@@ -140,11 +158,15 @@ export function PreferencesForm() {
         </div>
       </Card>
 
+      <FormMessage state={state} />
+
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <ButtonLink href="/search" variant="ghost">
+        <ButtonLink href={searchProfile ? '/search' : '/dashboard'} variant="ghost">
           Cancel
         </ButtonLink>
-        <Button type="submit">Save &amp; continue to search</Button>
+        <Button type="submit" disabled={pending}>
+          {pending ? 'Saving…' : 'Save & continue to search'}
+        </Button>
       </div>
     </form>
   );
