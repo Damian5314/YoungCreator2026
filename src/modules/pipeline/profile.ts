@@ -34,11 +34,19 @@ export interface SearchOptions {
   maxResults: number;
 }
 
+// Company Hunter: bedrijven die de student volgt (opgeslagen of al benaderd), met hun domein
+export interface WatchedCompany {
+  name: string;
+  domain: string;
+  careerPageUrl: string | null;
+}
+
 export interface RunSnapshot {
   profile: MatchProfile;
   options: SearchOptions;
   searchQueries: string[];
   searchPlan: PlannedQuery[];
+  watchCompanies: WatchedCompany[];
 }
 
 export class MissingSearchProfileError extends Error {}
@@ -93,6 +101,33 @@ export async function loadMatchProfile(
   };
 }
 
+const MAX_WATCHED_COMPANIES = 5;
+const MAX_PLAN_SIZE = 15;
+const MAX_HUNTER_QUERIES = 3;
+
+// "Companies we monitor for you": de bedrijven achter kansen die de student heeft opgeslagen of
+// benaderd, meest recente eerst. Alleen met een domein, want n8n zoekt op hun eigen site.
+export async function loadWatchedCompanies(admin: SupabaseClient, userId: string): Promise<WatchedCompany[]> {
+  const { data, error } = await admin
+    .from('matches')
+    .select('opportunity:opportunities!inner(company:companies!inner(name, domain, career_page_url))')
+    .eq('user_id', userId)
+    .in('status', ['saved', 'applied'])
+    .order('status_changed_at', { ascending: false, nullsFirst: false })
+    .limit(30);
+  if (error) throw error;
+
+  type Row = { opportunity: { company: { name: string; domain: string | null; career_page_url: string | null } } };
+  const companies = new Map<string, WatchedCompany>();
+  for (const { opportunity } of (data ?? []) as unknown as Row[]) {
+    const { name, domain, career_page_url: careerPageUrl } = opportunity.company;
+    if (!domain || companies.has(domain)) continue;
+    companies.set(domain, { name, domain, careerPageUrl });
+    if (companies.size >= MAX_WATCHED_COMPANIES) break;
+  }
+  return [...companies.values()];
+}
+
 // Soort zoekterm: vertelt n8n en de app wat voor kans er terug hoort te komen
 export type SearchKind = 'job' | 'internship' | 'event' | 'hackathon' | 'startup' | 'news';
 
@@ -101,8 +136,13 @@ export interface PlannedQuery {
   kind: SearchKind;
 }
 
-// Kant-en-klare zoektermen voor n8n/Apify (Google Search, LinkedIn, Eventbrite, Meetup, nieuws, ...)
-export function buildSearchPlan(profile: MatchProfile, options?: Pick<SearchOptions, 'includeHiddenOpportunities'>): PlannedQuery[] {
+// Kant-en-klare zoektermen voor n8n/Apify (Google Search, LinkedIn, Eventbrite, Meetup, nieuws, ...).
+// Met gevolgde bedrijven (Company Hunter) krijgen die een eigen zoekterm op hun site; die gaan vóór.
+export function buildSearchPlan(
+  profile: MatchProfile,
+  options?: Pick<SearchOptions, 'includeHiddenOpportunities'>,
+  watchCompanies: WatchedCompany[] = [],
+): PlannedQuery[] {
   const { preferences } = profile;
   const place = preferences.locations[0] || 'Netherlands';
   const topics = unique([...profile.interests, ...preferences.industries, ...(profile.fieldOfStudy ? [profile.fieldOfStudy] : [])]);
@@ -124,15 +164,21 @@ export function buildSearchPlan(profile: MatchProfile, options?: Pick<SearchOpti
     if (options?.includeHiddenOpportunities !== false) plan.push({ query: `${topic} company news ${place}`, kind: 'news' });
   }
 
+  // Company Hunter: vacatures, stages en career pages op de eigen site van gevolgde bedrijven
+  const hunter: PlannedQuery[] = watchCompanies
+    .slice(0, MAX_HUNTER_QUERIES)
+    .map(({ domain }) => ({ query: `site:${domain} (careers OR jobs OR vacatures OR internship)`, kind: 'job' }));
+
   const seen = new Set<string>();
-  return plan
+  const base = plan
     .filter(({ query }) => {
       const key = query.trim().toLowerCase();
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
     })
-    .slice(0, 15);
+    .slice(0, MAX_PLAN_SIZE - hunter.length);
+  return [...hunter, ...base];
 }
 
 export function buildSearchQueries(profile: MatchProfile): string[] {

@@ -153,7 +153,7 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
           <Switch
             id="include-hunting"
             label="Company hunter"
-            description="Check the career pages of companies we monitor for you."
+            description="Check the career pages of companies you saved or contacted."
             checked={includeHunting}
             onChange={setIncludeHunting}
             disabled={busy}

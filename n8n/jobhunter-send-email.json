@@ -27,8 +27,8 @@
         "message": "={{ $json.body.body }}",
         "options": {
           "appendAttribution": false,
-          "senderName": "={{ $json.body.from.name }}",
-          "replyTo": "={{ $json.body.replyTo ? $json.body.replyTo.email : '' }}"
+          "senderName": "={{ $json.body.from?.name || '' }}",
+          "replyTo": "={{ $json.body.replyTo?.email || '' }}"
         }
       },
       "id": "729adf5c-ec8d-4175-81ee-e69024230add",
@@ -61,7 +61,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ ok: false, error: $json.error?.message ?? 'send failed' }) }}",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: String((typeof $json.error === 'string' ? $json.error : $json.error?.message) || 'send failed').slice(0, 300) }) }}",
         "options": {
           "responseCode": 500
         }
@@ -73,6 +73,21 @@
       "position": [
         480,
         400
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Invullen na importeren\n1. **Webhook: send email** → Header Auth-credential *JobHunter → n8n* (`x-jobhunter-secret` = `N8N_SECRET`)\n2. **Gmail: send** → Gmail OAuth2-credential (inloggen met het afzendaccount)\n3. Workflow publiceren (**Publish**; in n8n-versies vóór 2.0 heet dit **Active**); de **Production URL** van de webhook in `N8N_SEND_EMAIL_WEBHOOK_URL` zetten.\n\nAntwoordt pas na het versturen: 200 = verstuurd, 500 = mislukt (de app zet de mail dan op failed).",
+        "height": 220,
+        "width": 560
+      },
+      "id": "ae0a40c3-86e2-4b0b-a705-04d5ed87b127",
+      "name": "Note: wat invullen",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -120
       ]
     }
   ],

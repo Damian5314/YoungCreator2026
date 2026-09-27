@@ -4,12 +4,15 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
-// Controleert of een tabel uit een migratie bestaat (zonder data te lezen)
-async function tableStatus(table: string): Promise<'ok' | 'missing' | 'error'> {
+type MigrationStatus = 'ok' | 'missing' | 'error';
+
+// Controleert of een tabel (of kolom) uit een migratie bestaat. limit(0): geen data lezen,
+// maar wel een foutcode terugkrijgen (een HEAD-request heeft geen body en dus geen code).
+async function tableStatus(table: string, column = 'id'): Promise<MigrationStatus> {
   try {
-    const { error } = await createAdminClient().from(table).select('id', { head: true, count: 'exact' }).limit(1);
+    const { error } = await createAdminClient().from(table).select(column).limit(0);
     if (!error) return 'ok';
-    return error.code === '42P01' || error.code === 'PGRST205' ? 'missing' : 'error';
+    return ['42P01', 'PGRST205', '42703', 'PGRST204'].includes(error.code) ? 'missing' : 'error';
   } catch {
     return 'error';
   }
@@ -21,8 +24,21 @@ export async function GET() {
     ? {
         initialSchema: await tableStatus('search_runs'),
         agentPipeline: await tableStatus('outreach_messages'),
+        onboardingIntro: await tableStatus('profiles', 'onboarded_at'),
       }
     : 'not-configured';
+
+  // Halve configuraties die pas tijdens een demo zouden opvallen
+  const warnings: string[] = [];
+  if (database === 'not-configured') warnings.push('Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY.');
+  else if (Object.values(database).some((status) => status !== 'ok'))
+    warnings.push('Run the missing migrations in supabase/migrations (in order).');
+  const usesN8n = Boolean(env.n8nSearchWebhookUrl || env.n8nSendEmailWebhookUrl);
+  if (usesN8n && !env.n8nSecret) warnings.push('N8N_SECRET is empty: n8n cannot authenticate, results will be rejected.');
+  if (env.n8nSearchWebhookUrl && !env.appUrl)
+    warnings.push('APP_URL is empty: n8n gets the request origin as callback URL (localhost is not reachable from n8n cloud).');
+  if (env.appUrl && /localhost|127\.0\.0\.1/.test(env.appUrl) && env.n8nSearchWebhookUrl && !/localhost|127\.0\.0\.1/.test(env.n8nSearchWebhookUrl))
+    warnings.push('APP_URL points to localhost while n8n runs elsewhere: use a tunnel (ngrok) or the deployed URL.');
 
   return NextResponse.json(
     {
@@ -38,6 +54,7 @@ export async function GET() {
       ai: env.aiProvider
         ? { provider: env.aiProvider, model: env.aiProvider === 'openai' ? env.openaiModel : env.anthropicModel }
         : 'rules only (no OPENAI_API_KEY or ANTHROPIC_API_KEY)',
+      warnings,
     },
     { headers: { 'cache-control': 'no-store' } },
   );

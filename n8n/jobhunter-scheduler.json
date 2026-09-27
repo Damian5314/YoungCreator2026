@@ -1,5 +1,5 @@
 {
-  "name": "JobHunter — Planning (elke 15 min)",
+  "name": "JobHunter — Planning (elke 30 min)",
   "nodes": [
     {
       "parameters": {
@@ -7,13 +7,13 @@
           "interval": [
             {
               "field": "minutes",
-              "minutesInterval": 15
+              "minutesInterval": 30
             }
           ]
         }
       },
       "id": "c3bf7100-f212-48a8-8c6f-e6aa1f220416",
-      "name": "Every 15 minutes",
+      "name": "Every 30 minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
@@ -27,7 +27,9 @@
         "url": "https://JOUW-APP-URL/api/n8n/scheduler",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
-        "options": {}
+        "options": {
+          "timeout": 120000
+        }
       },
       "id": "9cb53664-89ac-4964-b2e4-0b675d0c4c1f",
       "name": "Run due searches",
@@ -37,10 +39,25 @@
         240,
         300
       ]
+    },
+    {
+      "parameters": {
+        "content": "## Invullen na importeren\n1. **Run due searches** → URL: vervang `https://JOUW-APP-URL` door je `APP_URL` (bv. `https://jobhunter.vercel.app`)\n2. **Run due searches** → Header Auth *n8n → JobHunter* (`Authorization` = `Bearer <N8N_SECRET>`)\n3. Workflow publiceren (**Publish**; in n8n-versies vóór 2.0 heet dit **Active**).\n4. Interval staat op 30 min: n8n Cloud Starter heeft 2.500 executions per maand (15 min ≈ 2.900). Eigen server of hoger plan? 15 min mag.",
+        "height": 200,
+        "width": 560
+      },
+      "id": "daf3451d-d902-4362-9a96-bb86ac10a9eb",
+      "name": "Note: wat invullen",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -100
+      ]
     }
   ],
   "connections": {
-    "Every 15 minutes": {
+    "Every 30 minutes": {
       "main": [
         [
           {

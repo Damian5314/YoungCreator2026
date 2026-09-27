@@ -31,6 +31,11 @@ Kernflow:  KNOW ME (profiel + cv)  ->  FIND OPPORTUNITIES (zoekrun via n8n)
     Niet ingelogd -> naar /login; ingelogd op /login of /register -> naar
     /dashboard (src/proxy.ts).
   - Nieuwe gebruiker krijgt automatisch een profiel + 10 welkomstcredits.
+  - Eerste keer ingelogd: korte introductie (welkom + 3 stappen: profiel,
+    zoeken, matches & outreach), met het aantal credits en een melding als
+    de app in demo-modus draait. Sluiten/overslaan telt als gezien
+    (profiles.onboarded_at). Opnieuw bekijken: Instellingen -> Introduction.
+    Bestaande accounts krijgen hem niet automatisch.
 
 1.2 Profiel: "know me"                                            [WERKT]
   - Situatie: nationaliteit, einddatum zoekjaar (orientation year), opleiding,
@@ -76,7 +81,7 @@ Kernflow:  KNOW ME (profiel + cv)  ->  FIND OPPORTUNITIES (zoekrun via n8n)
 1.5 Automatisch zoeken (planning)                        [WERKT + KOPPELEN]
   - Per zoekprofiel: dagelijks of wekelijks, dag en tijd, in de eigen tijdzone.
   - De database rekent zelf het volgende moment uit (tijdzone-bewust).
-  - n8n roept elke 15 minuten POST /api/n8n/scheduler aan; die start alle runs
+  - n8n roept elke 30 minuten POST /api/n8n/scheduler aan; die start alle runs
     die aan de beurt zijn (max 25 per keer, nooit dubbel) en ruimt vastgelopen
     runs op. Zonder die n8n-trigger draait de planning niet.   [KOPPELEN: n8n]
 
@@ -160,20 +165,26 @@ Kernflow:  KNOW ME (profiel + cv)  ->  FIND OPPORTUNITIES (zoekrun via n8n)
 
 
 ====================================================================
-2. GEBOUWD, NOG KOPPELEN (instellen in .env.local / Vercel)
+2. GEBOUWD, NOG KOPPELEN (instellen in .env / Vercel)
 ====================================================================
+  Controle: open /api/health. Die toont wat er gekoppeld is, welke
+  migraties ontbreken en waarschuwt bij een halve configuratie (zonder
+  geheimen te tonen).
+
+  Database                  alle migraties in supabase/migrations/, op volgorde.
   N8N_SEARCH_WEBHOOK_URL    n8n-workflow die echt zoekt. Zonder: demo-modus.
   N8N_SEND_EMAIL_WEBHOOK_URL n8n-workflow die mails verstuurt. Zonder: alleen
                             kopiëren / mailprogramma.
   N8N_SECRET                gedeeld geheim tussen app en n8n (beide kanten).
   APP_URL                   publieke URL van de app (callback voor n8n).
-  ANTHROPIC_API_KEY         AI voor cv, scoren en mails. Zonder: regels/templates.
-  ANTHROPIC_MODEL           optioneel, standaard claude-opus-5.
-  n8n Schedule Trigger      elke 15 min POST /api/n8n/scheduler (planning).
+  OPENAI_API_KEY of         AI voor cv, opschonen, scoren en mails.
+  ANTHROPIC_API_KEY         Zonder: regels/templates. Beide? AI_PROVIDER kiest.
 
-  Let op: de n8n-workflows zelf (welke bronnen er echt doorzocht worden:
-  Google, job boards, Eventbrite/Meetup, nieuws, Apify, ...) staan NIET in deze
-  repo. De app levert de zoektermen en verwerkt wat terugkomt.
+  In n8n zelf (workflows staan in n8n/, uitleg in docs/n8n.md):
+  Apify API-token           zoeken (Google Search) + contactgegevens.
+  Gmail (OAuth2)            mails versturen namens de afzender.
+  Header Auth (2x)          N8N_SECRET, beide richtingen.
+  Scheduler-URL             APP_URL invullen in jobhunter-scheduler.json.
 
 
 ====================================================================
@@ -250,13 +261,12 @@ werken inmiddels wel.)
 ====================================================================
 4. BEKENDE LOSSE EINDJES
 ====================================================================
-  - pnpm typecheck faalt in src/lib/data/queries.ts,
-    src/modules/profile/CVParser.ts en src/shared/mocks/mockData.ts: de types
-    Opportunity (matchReasons, signals) en CVData (interests) zijn uitgebreid,
-    deze bestanden nog niet.
-  - api/n8n/results verwijst naar docs/n8n.md voor het dataformaat, maar die map
-    bestaat niet. Voorbeeld van het formaat: src/modules/pipeline/demoItems.ts
-    en src/modules/pipeline/schema.ts.
+  - Supabase-project (stand 27 sep, volgens /api/health): 20260927090100
+    (agent-pipeline) en 20260927120000 (introductie) ontbreken. Zonder die
+    twee werken zoeken (spend_credits), outreach en de introductie niet.
+    Draai 20260927090000, 20260927090100 en 20260927120000 op volgorde in de
+    SQL editor (090000 voegt alleen enum-waarden toe met "if not exists" en
+    is dus veilig om nog eens te draaien).
   - Oude architectuur (src/agents, src/scrapers, SearchService) is grotendeels
     vervangen door de n8n-pipeline (src/modules/pipeline) en bevat alleen stubs.
 
@@ -279,6 +289,9 @@ werken inmiddels wel.)
   Server actions         src/lib/actions/*.ts
   Database               supabase/migrations/*.sql
   Roadmap radar          Radar_Requirements.md
+  Introductie (onboarding) src/components/onboarding/WelcomeIntro.tsx,
+                         src/lib/actions/onboarding.ts
+  Status koppelingen     src/app/api/health/route.ts (GET /api/health)
   Landingspagina-teksten src/app/(marketing)/_content/landing.ts
   Afbeeldingen           public/images/<sectie>/<sectie>-<omschrijving>.<ext>
                            brand/   logo.png (header/logo)

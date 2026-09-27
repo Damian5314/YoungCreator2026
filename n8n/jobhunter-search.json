@@ -36,7 +36,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Zoekplan van de app → invoer voor de Apify Google Search Scraper\nconst body = $('Webhook: search request').first().json.body;\nconst plan = Array.isArray(body.searchPlan) && body.searchPlan.length\n  ? body.searchPlan\n  : (body.searchQueries || []).map((query) => ({ query, kind: 'job' }));\n\nreturn [{\n  json: {\n    runId: body.runId,\n    callbackUrl: body.callbackUrl,\n    plan,\n    apifyInput: {\n      queries: plan.map((entry) => entry.query).join('\\n'),\n      countryCode: 'nl',\n      languageCode: 'en',\n      maxPagesPerQuery: 1,\n      resultsPerPage: 10,\n      mobileResults: false,\n      saveHtml: false,\n      saveHtmlToKeyValueStore: false,\n    },\n  },\n}];"
+        "jsCode": "// Zoekplan van de app → invoer voor de Apify Google Search Scraper (apify/google-search-scraper)\nconst body = $('Webhook: search request').first().json.body;\nconst plan = Array.isArray(body.searchPlan) && body.searchPlan.length\n  ? body.searchPlan\n  : (body.searchQueries || []).map((query) => ({ query, kind: 'job' }));\n\nreturn [{\n  json: {\n    runId: body.runId,\n    callbackUrl: body.callbackUrl,\n    plan,\n    apifyInput: {\n      queries: plan.map((entry) => entry.query).join('\\n'), // één zoekterm per regel\n      countryCode: 'nl',\n      languageCode: 'en',\n      maxPagesPerQuery: 1, // ± 10 resultaten per zoekterm; Apify rekent per resultatenpagina\n      mobileResults: false,\n      saveHtml: false,\n      saveHtmlToKeyValueStore: false,\n    },\n  },\n}];"
       },
       "id": "ae003d9f-74c0-4867-b69b-6f5c7d4262e2",
       "name": "Build Apify input",
@@ -50,7 +50,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items",
+        "url": "https://api.apify.com/v2/actors/apify~google-search-scraper/run-sync-get-dataset-items?timeout=240",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -72,7 +72,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Google-resultaten → ruwe items voor de app (title, url, description, kind, query).\n// De app vult bedrijf, type, locatie en 'why now' zelf aan met AI (of regels).\nconst input = $('Build Apify input').first().json;\nconst kindByQuery = new Map(input.plan.map((entry) => [String(entry.query).trim().toLowerCase(), entry.kind]));\nconst seen = new Set();\nconst items = [];\n\nfor (const page of $input.all()) {\n  const term = String(page.json.searchQuery?.term ?? '').trim();\n  const kind = kindByQuery.get(term.toLowerCase()) ?? 'job';\n  for (const result of page.json.organicResults ?? []) {\n    if (!result.url || seen.has(result.url)) continue;\n    seen.add(result.url);\n    items.push({ title: result.title, url: result.url, description: result.description, kind, query: term, source: 'web' });\n  }\n}\n\nreturn [{ json: { runId: input.runId, callbackUrl: input.callbackUrl, items: items.slice(0, 60) } }];"
+        "jsCode": "// Google-resultaten → ruwe items voor de app (title, url, description, kind, query).\n// De app vult bedrijf, type, locatie en 'why now' zelf aan met AI (of regels).\n// Apify geeft één record per resultatenpagina: { searchQuery: { term }, organicResults: [{ title, url, description }] }\nconst MAX_ITEMS = 60;\nconst input = $('Build Apify input').first().json;\nconst kindByQuery = new Map(input.plan.map((entry) => [String(entry.query).trim().toLowerCase(), entry.kind]));\n\nconst lists = [];\nfor (const page of $input.all()) {\n  const term = String(page.json.searchQuery?.term ?? '').trim();\n  const kind = kindByQuery.get(term.toLowerCase()) ?? 'job';\n  lists.push(\n    (page.json.organicResults ?? [])\n      .filter((result) => result.url && result.title)\n      .map((result) => ({ title: result.title, url: result.url, description: result.description, kind, query: term, source: 'web' })),\n  );\n}\n\n// Om en om per zoekterm, zodat alle soorten (job, event, hackathon, startup, news) binnen de limiet aan bod komen\nconst seen = new Set();\nconst items = [];\nfor (let rank = 0; items.length < MAX_ITEMS && lists.some((list) => rank < list.length); rank++) {\n  for (const list of lists) {\n    const item = list[rank];\n    if (!item || seen.has(item.url)) continue;\n    seen.add(item.url);\n    items.push(item);\n    if (items.length >= MAX_ITEMS) break;\n  }\n}\n\nreturn [{ json: { runId: input.runId, callbackUrl: input.callbackUrl, items } }];"
       },
       "id": "20284a08-2b58-4e82-8c43-da8626f94157",
       "name": "Map results",
@@ -85,7 +85,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Eigen websites van bedrijven (geen jobboards, eventplatforms of nieuwssites) → contactgegevens zoeken\nconst PLATFORMS = ['linkedin.', 'indeed.', 'glassdoor.', 'eventbrite.', 'meetup.com', 'lu.ma', 'luma.com', 'devpost.com', 'crunchbase.com', 'dealroom.co', 'wellfound.com', 'facebook.com', 'x.com', 'twitter.com', 'medium.com', 'youtube.com', 'wikipedia.org', 'reddit.com', 'instagram.com', 'nos.nl', 'nu.nl', 'fd.nl', 'emerce.nl', 'sprout.nl', 'techcrunch.com', 'tweakers.net', 'news.google.com', 'werkzoeken.nl', 'nationalevacaturebank.nl', 'studentjob.nl', 'iamexpat.nl'];\nconst MAX_SITES = 10;\nconst hosts = [];\n\nfor (const item of $('Map results').first().json.items) {\n  let host = '';\n  try {\n    host = new URL(item.url).hostname.replace(/^www\\./, '');\n  } catch {\n    continue;\n  }\n  if (PLATFORMS.some((platform) => host.includes(platform)) || hosts.includes(host)) continue;\n  hosts.push(host);\n  if (hosts.length >= MAX_SITES) break;\n}\n\nreturn [{ json: { startUrls: hosts.map((host) => ({ url: `https://${host}/` })) } }];"
+        "jsCode": "// Eigen websites van bedrijven (geen jobboards, eventplatforms, social media of nieuwssites) → contactgegevens zoeken\n// Zelfde lijsten als src/modules/pipeline/normalize.ts. 'linkedin.' = elk linkedin-domein (nl.linkedin.com, linkedin.nl, ...).\nconst SKIP = [\n  'linkedin.', 'indeed.', 'glassdoor.', 'eventbrite.', 'meetup.com', 'lu.ma', 'luma.com', 'devpost.com', 'crunchbase.com',\n  'dealroom.co', 'wellfound.com', 'facebook.com', 'x.com', 'twitter.com', 'medium.com', 'youtube.com', 'wikipedia.org',\n  'reddit.com', 'instagram.com', 'quora.com', 'pinterest.com', 'tiktok.com', 'werkzoeken.nl', 'nationalevacaturebank.nl',\n  'studentjob.nl', 'iamexpat.nl', 'jobbird.com', 'monsterboard.nl', 'nos.nl', 'nu.nl', 'fd.nl', 'emerce.nl', 'sprout.nl',\n  'techcrunch.com', 'tweakers.net', 'bnr.nl', 'dutchnews.nl', 'nltimes.nl', 'siliconcanals.com', 'techleap.nl',\n  'computable.nl', 'rtl.nl', 'nrc.nl', 'volkskrant.nl', 'telegraaf.nl', 'businessinsider.', 'reuters.com', 'bloomberg.com',\n  'google.com',\n];\nconst skip = (host) =>\n  SKIP.some((domain) =>\n    domain.endsWith('.') ? host.startsWith(domain) || host.includes('.' + domain) : host === domain || host.endsWith('.' + domain),\n  );\nconst MAX_SITES = 10; // Apify rekent per gescande pagina\nconst hosts = [];\n\nfor (const item of $('Map results').first().json.items) {\n  let host = '';\n  try {\n    host = new URL(item.url).hostname.toLowerCase().replace(/^www\\./, '');\n  } catch {\n    continue;\n  }\n  if (!host || skip(host) || hosts.includes(host)) continue;\n  hosts.push(host);\n  if (hosts.length >= MAX_SITES) break;\n}\n\nreturn [{ json: { startUrls: hosts.map((host) => ({ url: `https://${host}/` })) } }];"
       },
       "id": "1240f888-a479-44dd-86a1-42e497a99c9a",
       "name": "Pick company sites",
@@ -131,14 +131,14 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.apify.com/v2/acts/vdrmota~contact-info-scraper/run-sync-get-dataset-items",
+        "url": "https://api.apify.com/v2/actors/vdrmota~contact-info-scraper/run-sync-get-dataset-items?timeout=180",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ startUrls: $json.startUrls, maxDepth: 1, maxRequestsPerStartUrl: 4, sameDomain: true }) }}",
+        "jsonBody": "={{ JSON.stringify({ startUrls: $json.startUrls, maxDepth: 1, maxRequestsPerStartUrl: 4, maxRequests: 40, sameDomain: true, mergeContacts: true, proxyConfig: { useApifyProxy: true } }) }}",
         "options": {
-          "timeout": 300000
+          "timeout": 240000
         }
       },
       "id": "e6ecb0bf-ada7-47fe-95f7-1c55eb845747",
@@ -149,11 +149,12 @@
         1560,
         100
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "// Beste e-mailadres per domein aan de items hangen (jobs@/careers@ > hello@/info@ > de rest)\nconst mapped = $('Map results').first().json;\nlet rows = [];\ntry {\n  rows = $('Apify: Contact details').all().map((item) => item.json);\n} catch {\n  rows = []; // geen bedrijfssites gevonden: contact-stap is overgeslagen\n}\n\nconst rank = (email) =>\n  /^(jobs|careers?|werken|recruit\\w*|talent|hr|people)@/.test(email) ? 0 : /^(hello|hi|info|contact)@/.test(email) ? 1 : 2;\nconst emailByHost = new Map();\n\nfor (const row of rows) {\n  let host = String(row.domain || '').replace(/^www\\./, '');\n  if (!host && row.url) {\n    try {\n      host = new URL(row.url).hostname.replace(/^www\\./, '');\n    } catch {}\n  }\n  const emails = (row.emails || [])\n    .map((email) => String(email).trim().toLowerCase())\n    .filter((email) => email.includes('@') && !/\\.(png|jpe?g|gif|webp|svg)$/.test(email));\n  if (!host || emails.length === 0) continue;\n  const best = emails.sort((a, b) => rank(a) - rank(b))[0];\n  if (!emailByHost.has(host) || rank(best) < rank(emailByHost.get(host))) emailByHost.set(host, best);\n}\n\nconst items = mapped.items.map((item) => {\n  let host = '';\n  try {\n    host = new URL(item.url).hostname.replace(/^www\\./, '');\n  } catch {}\n  const email = emailByHost.get(host);\n  return email ? { ...item, contact: { email } } : item;\n});\n\nreturn [{ json: { runId: mapped.runId, callbackUrl: mapped.callbackUrl, done: true, items } }];"
+        "jsCode": "// Beste e-mailadres per website aan de items hangen (jobs@/careers@ > hello@/info@ > de rest; eigen domein eerst)\n// Apify (mergeContacts) geeft één rij per start-URL: { originalStartUrl, domain, emails: [] }\nconst mapped = $('Map results').first().json;\nlet rows = [];\ntry {\n  rows = $('Apify: Contact details').all().map((item) => item.json);\n} catch {\n  rows = []; // geen bedrijfssites gevonden: contact-stap is overgeslagen\n}\n\nconst hostOf = (value) => {\n  try {\n    return new URL(String(value)).hostname.toLowerCase().replace(/^www\\./, '');\n  } catch {\n    return '';\n  }\n};\nconst NOISE = /(\\.(png|jpe?g|gif|webp|svg)$|^no-?reply@|@(sentry[\\w.-]*|[\\w.-]*wixpress\\.com|example\\.(com|org|net)|domain\\.com|email\\.com)$)/;\nconst rank = (email, host) => {\n  const role = /^(jobs|careers?|werken|recruit\\w*|talent|hr|people)@/.test(email) ? 0 : /^(hello|hi|info|contact)@/.test(email) ? 1 : 2;\n  const site = host.split('.').slice(-2).join('.');\n  return role + (email.endsWith('@' + site) || email.endsWith('.' + site) ? 0 : 3);\n};\nconst emailByHost = new Map();\n\nfor (const row of rows) {\n  const host = hostOf(row.originalStartUrl) || String(row.domain || '').toLowerCase().replace(/^www\\./, '') || hostOf(row.url);\n  const emails = (row.emails || [])\n    .map((email) => String(email).trim().toLowerCase())\n    .filter((email) => /^[^@\\s]+@[^@\\s]+\\.[a-z]{2,}$/.test(email) && !NOISE.test(email));\n  if (!host || emails.length === 0) continue;\n  const best = emails.sort((a, b) => rank(a, host) - rank(b, host))[0];\n  if (!emailByHost.has(host) || rank(best, host) < rank(emailByHost.get(host), host)) emailByHost.set(host, best);\n}\n\nconst items = mapped.items.map((item) => {\n  const email = emailByHost.get(hostOf(item.url));\n  return email ? { ...item, contact: { email } } : item;\n});\n\nreturn [{ json: { runId: mapped.runId, callbackUrl: mapped.callbackUrl, done: true, items } }];"
       },
       "id": "1608a7ae-d5f5-4e43-951a-ae42c69a7e00",
       "name": "Attach contacts",
@@ -173,7 +174,9 @@
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ runId: $json.runId, done: true, items: $json.items }) }}",
-        "options": {}
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "520c21b0-b517-4073-8162-484ebac90759",
       "name": "Send results to app",
@@ -182,7 +185,10 @@
       "position": [
         2000,
         200
-      ]
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -192,8 +198,10 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ runId: $('Build Apify input').first().json.runId, items: [], error: 'Apify search failed: ' + ($json.error?.message ?? 'unknown error') }) }}",
-        "options": {}
+        "jsonBody": "={{ JSON.stringify({ runId: $('Build Apify input').first().json.runId, done: true, items: [], error: 'Apify search failed: ' + String((typeof $json.error === 'string' ? $json.error : ($json.error?.message || $json.error?.description)) || 'unknown error').slice(0, 500) }) }}",
+        "options": {
+          "timeout": 30000
+        }
       },
       "id": "202051cb-1e85-472b-ac8f-b8276e795363",
       "name": "Report failure to app",
@@ -202,6 +210,21 @@
       "position": [
         900,
         440
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Invullen na importeren\n1. **Webhook: search request** → Header Auth-credential *JobHunter → n8n* (`x-jobhunter-secret` = `N8N_SECRET`)\n2. **Apify: Google Search** en **Apify: Contact details** → Header Auth *Apify* (`Authorization` = `Bearer <Apify API token>`)\n3. **Send results to app** en **Report failure to app** → Header Auth *n8n → JobHunter* (`Authorization` = `Bearer <N8N_SECRET>`)\n4. Workflow publiceren (**Publish**; in n8n-versies vóór 2.0 heet dit **Active**); de **Production URL** van de webhook in `N8N_SEARCH_WEBHOOK_URL` zetten.\n\nZie docs/n8n.md.",
+        "height": 260,
+        "width": 620
+      },
+      "id": "9ed49c85-310d-4a0e-9020-6e04f0130372",
+      "name": "Note: wat invullen",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
       ]
     }
   ],

@@ -1,0 +1,555 @@
+================================================================================
+JOB HUNTER × n8n — VOLLEDIGE BOUWPROMPT
+Versie 27 sep 2026 · sluit exact aan op n8n/*.json en docs/n8n.md in de repo
+================================================================================
+
+Wat je bouwt: 3 n8n-workflows. De app doet zelf al het slimme werk (profiel,
+zoekplan, AI-opschoning, scoren, matches, e-mails schrijven, credits, planning).
+n8n doet alleen:
+  1. ZOEKEN      webhook van de app → Apify (Google + contactgegevens) → resultaten terug naar de app
+  2. MAILEN      webhook van de app → Gmail → antwoord 200 (verstuurd) of 500 (mislukt)
+  3. PLANNING    elke 30 minuten → de app vragen geplande zoekopdrachten te starten
+
+    App ──(1) POST zoek-webhook──▶ n8n ──▶ Apify ──▶ POST {APP_URL}/api/n8n/results ──▶ App
+    n8n Schedule ──(3) POST {APP_URL}/api/n8n/scheduler──▶ App ──▶ (start zelf webhook 1)
+    App ──(2) POST mail-webhook──▶ n8n ──▶ Gmail ──▶ contactpersoon
+
+
+--------------------------------------------------------------------------------
+HOE GEBRUIK JE DIT BESTAND
+--------------------------------------------------------------------------------
+
+OPTIE A — SNELST EN 100% EXACT (aanrader)
+  De drie workflows staan al kant-en-klaar in de repo, in de map n8n/.
+  In n8n: Workflows → "Import from File" → kies achtereenvolgens:
+    n8n/jobhunter-search.json
+    n8n/jobhunter-send-email.json
+    n8n/jobhunter-scheduler.json
+  Volg daarna DEEL 1 (voorbereiding), DEEL 5 (credentials koppelen),
+  DEEL 6 (app koppelen) en DEEL 7 (testen). De prompts in DEEL 2–4 heb je dan
+  niet nodig.
+
+OPTIE B — LATEN BOUWEN MET n8n ASSISTANT (of ChatGPT/Claude)
+  Maak per workflow een NIEUWE, lege workflow. Open de n8n Assistant en plak
+  PROMPT 1, 2 of 3 (alles tussen de regels "PROMPT … START" en "PROMPT … EINDE").
+  Eén prompt per workflow, niet alles tegelijk.
+  Controleer daarna met de checklist onder elke prompt: de Assistant kan code
+  of instellingen iets anders overnemen. Code-nodes moeten LETTERLIJK gelijk zijn.
+  De Assistant ziet nooit je geheimen: credentials vul je zelf in (DEEL 5).
+
+OPTIE C — MET DE HAND
+  Gebruik de prompts als bouwtekening: elke node, naam, instelling, expressie
+  en verbinding staat erin. Plak de JavaScript letterlijk in de Code-nodes.
+
+
+--------------------------------------------------------------------------------
+DEEL 1 — VOORBEREIDING (eenmalig, ± 15 min)
+--------------------------------------------------------------------------------
+
+1. Gedeeld geheim maken (lange random string), bijvoorbeeld:
+     openssl rand -hex 32
+   Dit is je N8N_SECRET. Zelfde waarde in de app én in n8n.
+
+2. Apify-account → Settings → API & Integrations → kopieer je API-token.
+   (Kosten: ± $0,10–0,15 per zoekopdracht: 15 Google-resultatenpagina's
+   à $2,50–4,50 per 1.000 + max. 40 gescande bedrijfspagina's à $2 per 1.000.
+   Check je tegoed in het Apify-dashboard.)
+
+3. Gmail-account waarmee je mails verstuurt. Liefst een apart adres
+   (bv. jobhunter.outreach@gmail.com). Limiet: 500 mails per dag (gratis Gmail).
+   Antwoorden komen via "Reply-To" bij de student terecht, niet in dit account.
+
+4. De app moet publiek bereikbaar zijn: n8n Cloud kan "localhost" niet bereiken.
+   Gebruik je Vercel-URL, of lokaal een tunnel:  ngrok http 3000
+   Die URL is je APP_URL (zonder slash aan het eind).
+
+5. n8n: Cloud Starter of hoger (de trial kapt runs af na 180 s; een zoekrun
+   met Apify duurt meestal 1–4 minuten), of self-hosted.
+
+
+================================================================================
+DEEL 2 — PROMPT 1: WORKFLOW "ZOEKEN"
+================================================================================
+
+----- PROMPT 1 START -----
+Build one n8n workflow named "JobHunter — Zoeken (Apify)". Build EXACTLY what is
+described below: same node types, same node names, same settings, same
+connections. Paste all JavaScript into the Code nodes VERBATIM (do not rewrite,
+shorten or "improve" it). Do not add any extra nodes. Leave credentials as
+placeholders; I will connect them myself. Workflow setting "Execution Order" = v1
+(the default for new workflows).
+
+PURPOSE
+My web app calls this webhook to start a job search. The workflow must answer
+the webhook IMMEDIATELY (the app waits max 20 s), then run Google searches via
+Apify, find contact e-mails on company websites via Apify, and POST the results
+back to the app's callback URL. If the Google search fails, it POSTs an error
+to the same callback URL instead.
+
+Incoming request body (JSON), for reference:
+{
+  "runId": "uuid", "trigger": "manual" | "scheduled",
+  "callbackUrl": "https://<app>/api/n8n/results",
+  "profile": {...}, "options": {...},
+  "searchQueries": ["..."],
+  "searchPlan": [{ "query": "Robotics hackathon Netherlands", "kind": "hackathon" }, ...],
+  "watchCompanies": [{ "name": "...", "domain": "...", "careerPageUrl": null }]
+}
+("kind" is one of: job, internship, event, hackathon, startup, news.
+Company-hunter queries look like: site:acme.nl (careers OR jobs OR vacatures OR internship))
+
+NODES (in order)
+
+1) Webhook node — name: "Webhook: search request"
+   - HTTP Method: POST
+   - Path: jobhunter-search
+   - Authentication: Header Auth (credential named "JobHunter → n8n")
+   - Respond: Using 'Respond to Webhook' Node
+
+2) Respond to Webhook node — name: "Respond: accepted"
+   - Respond With: JSON
+   - Response Body (expression):
+     {{ JSON.stringify({ executionId: $execution.id }) }}
+   - Response Code: 200 (default)
+
+3) Code node — name: "Build Apify input"
+   - Mode: Run Once for All Items · Language: JavaScript
+   - Code (verbatim):
+--- CODE START: "Build Apify input" (plak letterlijk) ---
+// Zoekplan van de app → invoer voor de Apify Google Search Scraper (apify/google-search-scraper)
+const body = $('Webhook: search request').first().json.body;
+const plan = Array.isArray(body.searchPlan) && body.searchPlan.length
+  ? body.searchPlan
+  : (body.searchQueries || []).map((query) => ({ query, kind: 'job' }));
+
+return [{
+  json: {
+    runId: body.runId,
+    callbackUrl: body.callbackUrl,
+    plan,
+    apifyInput: {
+      queries: plan.map((entry) => entry.query).join('\n'), // één zoekterm per regel
+      countryCode: 'nl',
+      languageCode: 'en',
+      maxPagesPerQuery: 1, // ± 10 resultaten per zoekterm; Apify rekent per resultatenpagina
+      mobileResults: false,
+      saveHtml: false,
+      saveHtmlToKeyValueStore: false,
+    },
+  },
+}];
+--- CODE EINDE: "Build Apify input" ---
+
+4) HTTP Request node — name: "Apify: Google Search"
+   - Method: POST
+   - URL: https://api.apify.com/v2/actors/apify~google-search-scraper/run-sync-get-dataset-items?timeout=240
+   - Authentication: Generic Credential Type → Header Auth (credential named "Apify")
+   - Send Body: ON · Body Content Type: JSON · Specify Body: Using JSON
+   - JSON (expression): {{ JSON.stringify($json.apifyInput) }}
+   - Options → Timeout: 300000 (ms)
+   - Settings → On Error: "Continue (using error output)"
+     (this node gets two outputs: Success and Error)
+
+5) Code node — name: "Map results"   (connected to the SUCCESS output of node 4)
+   - Mode: Run Once for All Items · Language: JavaScript
+   - Code (verbatim):
+--- CODE START: "Map results" (plak letterlijk) ---
+// Google-resultaten → ruwe items voor de app (title, url, description, kind, query).
+// De app vult bedrijf, type, locatie en 'why now' zelf aan met AI (of regels).
+// Apify geeft één record per resultatenpagina: { searchQuery: { term }, organicResults: [{ title, url, description }] }
+const MAX_ITEMS = 60;
+const input = $('Build Apify input').first().json;
+const kindByQuery = new Map(input.plan.map((entry) => [String(entry.query).trim().toLowerCase(), entry.kind]));
+
+const lists = [];
+for (const page of $input.all()) {
+  const term = String(page.json.searchQuery?.term ?? '').trim();
+  const kind = kindByQuery.get(term.toLowerCase()) ?? 'job';
+  lists.push(
+    (page.json.organicResults ?? [])
+      .filter((result) => result.url && result.title)
+      .map((result) => ({ title: result.title, url: result.url, description: result.description, kind, query: term, source: 'web' })),
+  );
+}
+
+// Om en om per zoekterm, zodat alle soorten (job, event, hackathon, startup, news) binnen de limiet aan bod komen
+const seen = new Set();
+const items = [];
+for (let rank = 0; items.length < MAX_ITEMS && lists.some((list) => rank < list.length); rank++) {
+  for (const list of lists) {
+    const item = list[rank];
+    if (!item || seen.has(item.url)) continue;
+    seen.add(item.url);
+    items.push(item);
+    if (items.length >= MAX_ITEMS) break;
+  }
+}
+
+return [{ json: { runId: input.runId, callbackUrl: input.callbackUrl, items } }];
+--- CODE EINDE: "Map results" ---
+
+6) HTTP Request node — name: "Report failure to app"   (connected to the ERROR output of node 4)
+   - Method: POST
+   - URL (expression): {{ $('Build Apify input').first().json.callbackUrl }}
+   - Authentication: Generic Credential Type → Header Auth (credential named "n8n → JobHunter")
+   - Send Body: ON · Body Content Type: JSON · Specify Body: Using JSON
+   - JSON (expression): {{ JSON.stringify({ runId: $('Build Apify input').first().json.runId, done: true, items: [], error: 'Apify search failed: ' + String((typeof $json.error === 'string' ? $json.error : ($json.error?.message || $json.error?.description)) || 'unknown error').slice(0, 500) }) }}
+   - Options → Timeout: 30000 (ms)
+
+7) Code node — name: "Pick company sites"   (after "Map results")
+   - Mode: Run Once for All Items · Language: JavaScript
+   - Code (verbatim):
+--- CODE START: "Pick company sites" (plak letterlijk) ---
+// Eigen websites van bedrijven (geen jobboards, eventplatforms, social media of nieuwssites) → contactgegevens zoeken
+// Zelfde lijsten als src/modules/pipeline/normalize.ts. 'linkedin.' = elk linkedin-domein (nl.linkedin.com, linkedin.nl, ...).
+const SKIP = [
+  'linkedin.', 'indeed.', 'glassdoor.', 'eventbrite.', 'meetup.com', 'lu.ma', 'luma.com', 'devpost.com', 'crunchbase.com',
+  'dealroom.co', 'wellfound.com', 'facebook.com', 'x.com', 'twitter.com', 'medium.com', 'youtube.com', 'wikipedia.org',
+  'reddit.com', 'instagram.com', 'quora.com', 'pinterest.com', 'tiktok.com', 'werkzoeken.nl', 'nationalevacaturebank.nl',
+  'studentjob.nl', 'iamexpat.nl', 'jobbird.com', 'monsterboard.nl', 'nos.nl', 'nu.nl', 'fd.nl', 'emerce.nl', 'sprout.nl',
+  'techcrunch.com', 'tweakers.net', 'bnr.nl', 'dutchnews.nl', 'nltimes.nl', 'siliconcanals.com', 'techleap.nl',
+  'computable.nl', 'rtl.nl', 'nrc.nl', 'volkskrant.nl', 'telegraaf.nl', 'businessinsider.', 'reuters.com', 'bloomberg.com',
+  'google.com',
+];
+const skip = (host) =>
+  SKIP.some((domain) =>
+    domain.endsWith('.') ? host.startsWith(domain) || host.includes('.' + domain) : host === domain || host.endsWith('.' + domain),
+  );
+const MAX_SITES = 10; // Apify rekent per gescande pagina
+const hosts = [];
+
+for (const item of $('Map results').first().json.items) {
+  let host = '';
+  try {
+    host = new URL(item.url).hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    continue;
+  }
+  if (!host || skip(host) || hosts.includes(host)) continue;
+  hosts.push(host);
+  if (hosts.length >= MAX_SITES) break;
+}
+
+return [{ json: { startUrls: hosts.map((host) => ({ url: `https://${host}/` })) } }];
+--- CODE EINDE: "Pick company sites" ---
+
+8) If node — name: "Any company sites?"   (after "Pick company sites")
+   - Condition: Number → value 1 (expression) {{ $json.startUrls.length }}
+     → operation "is greater than" → value 2: 0
+   - Type validation: loose
+   - Outputs: true and false
+
+9) HTTP Request node — name: "Apify: Contact details"   (connected to the TRUE output of node 8)
+   - Method: POST
+   - URL: https://api.apify.com/v2/actors/vdrmota~contact-info-scraper/run-sync-get-dataset-items?timeout=180
+   - Authentication: Generic Credential Type → Header Auth (credential named "Apify")
+   - Send Body: ON · Body Content Type: JSON · Specify Body: Using JSON
+   - JSON (expression): {{ JSON.stringify({ startUrls: $json.startUrls, maxDepth: 1, maxRequestsPerStartUrl: 4, maxRequests: 40, sameDomain: true, mergeContacts: true, proxyConfig: { useApifyProxy: true } }) }}
+   - Options → Timeout: 240000 (ms)
+   - Settings → On Error: "Continue"   (regular output, NOT the error output)
+   - Settings → Always Output Data: ON
+
+10) Code node — name: "Attach contacts"
+    Inputs: from "Apify: Contact details" AND from the FALSE output of "Any company sites?"
+    - Mode: Run Once for All Items · Language: JavaScript
+    - Code (verbatim):
+--- CODE START: "Attach contacts" (plak letterlijk) ---
+// Beste e-mailadres per website aan de items hangen (jobs@/careers@ > hello@/info@ > de rest; eigen domein eerst)
+// Apify (mergeContacts) geeft één rij per start-URL: { originalStartUrl, domain, emails: [] }
+const mapped = $('Map results').first().json;
+let rows = [];
+try {
+  rows = $('Apify: Contact details').all().map((item) => item.json);
+} catch {
+  rows = []; // geen bedrijfssites gevonden: contact-stap is overgeslagen
+}
+
+const hostOf = (value) => {
+  try {
+    return new URL(String(value)).hostname.toLowerCase().replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+};
+const NOISE = /(\.(png|jpe?g|gif|webp|svg)$|^no-?reply@|@(sentry[\w.-]*|[\w.-]*wixpress\.com|example\.(com|org|net)|domain\.com|email\.com)$)/;
+const rank = (email, host) => {
+  const role = /^(jobs|careers?|werken|recruit\w*|talent|hr|people)@/.test(email) ? 0 : /^(hello|hi|info|contact)@/.test(email) ? 1 : 2;
+  const site = host.split('.').slice(-2).join('.');
+  return role + (email.endsWith('@' + site) || email.endsWith('.' + site) ? 0 : 3);
+};
+const emailByHost = new Map();
+
+for (const row of rows) {
+  const host = hostOf(row.originalStartUrl) || String(row.domain || '').toLowerCase().replace(/^www\./, '') || hostOf(row.url);
+  const emails = (row.emails || [])
+    .map((email) => String(email).trim().toLowerCase())
+    .filter((email) => /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(email) && !NOISE.test(email));
+  if (!host || emails.length === 0) continue;
+  const best = emails.sort((a, b) => rank(a, host) - rank(b, host))[0];
+  if (!emailByHost.has(host) || rank(best, host) < rank(emailByHost.get(host), host)) emailByHost.set(host, best);
+}
+
+const items = mapped.items.map((item) => {
+  const email = emailByHost.get(hostOf(item.url));
+  return email ? { ...item, contact: { email } } : item;
+});
+
+return [{ json: { runId: mapped.runId, callbackUrl: mapped.callbackUrl, done: true, items } }];
+--- CODE EINDE: "Attach contacts" ---
+
+11) HTTP Request node — name: "Send results to app"   (after "Attach contacts")
+    - Method: POST
+    - URL (expression): {{ $json.callbackUrl }}
+    - Authentication: Generic Credential Type → Header Auth (credential named "n8n → JobHunter")
+    - Send Body: ON · Body Content Type: JSON · Specify Body: Using JSON
+    - JSON (expression): {{ JSON.stringify({ runId: $json.runId, done: true, items: $json.items }) }}
+    - Options → Timeout: 30000 (ms)
+    - Settings → Retry On Fail: ON · Max Tries: 3 · Wait Between Tries: 5000 ms
+
+CONNECTIONS (exactly these, nothing else)
+- "Webhook: search request" → "Respond: accepted"
+- "Respond: accepted" → "Build Apify input"
+- "Build Apify input" → "Apify: Google Search"
+- "Apify: Google Search" (Success output) → "Map results"
+- "Apify: Google Search" (Error output) → "Report failure to app"
+- "Map results" → "Pick company sites"
+- "Pick company sites" → "Any company sites?"
+- "Any company sites?" (true output) → "Apify: Contact details"
+- "Any company sites?" (false output) → "Attach contacts"
+- "Apify: Contact details" → "Attach contacts"
+- "Attach contacts" → "Send results to app"
+
+Also add a Sticky Note with:
+"Fill in after building: (1) Webhook → Header Auth 'JobHunter → n8n'
+(x-jobhunter-secret = N8N_SECRET). (2) Both Apify nodes → Header Auth 'Apify'
+(Authorization = Bearer <Apify token>). (3) 'Send results to app' and 'Report
+failure to app' → Header Auth 'n8n → JobHunter' (Authorization = Bearer
+<N8N_SECRET>). (4) Publish the workflow and put the webhook's Production URL
+in the app's N8N_SEARCH_WEBHOOK_URL."
+----- PROMPT 1 EINDE -----
+
+CHECKLIST NA PROMPT 1
+  [ ] 11 nodes + sticky note, namen exact zoals hierboven (Code-nodes verwijzen naar
+      namen als $('Map results') — een andere naam = kapotte workflow)
+  [ ] "Respond: accepted" staat DIRECT na de webhook (antwoord binnen 1 seconde)
+  [ ] "Apify: Google Search" heeft 2 uitgangen: Success → Map results, Error → Report failure to app
+  [ ] "Apify: Contact details": On Error = Continue én Always Output Data = aan
+  [ ] "Attach contacts" heeft 2 inkomende lijnen (van Contact details én van If=false)
+  [ ] "Send results to app": Retry On Fail aan (3 pogingen, 5 s ertussen)
+  [ ] Code in de 4 Code-nodes is letterlijk gelijk aan deze prompt
+
+
+================================================================================
+DEEL 3 — PROMPT 2: WORKFLOW "E-MAIL VERSTUREN"
+================================================================================
+
+----- PROMPT 2 START -----
+Build one n8n workflow named "JobHunter — E-mail versturen". Build EXACTLY what is
+described below: same node types, names, settings and connections. No extra
+nodes. Leave credentials as placeholders; I will connect them myself.
+
+PURPOSE
+My web app calls this webhook to send one plain-text e-mail on behalf of a
+student. The workflow sends it with Gmail and ONLY THEN answers the webhook:
+HTTP 200 when sent, HTTP 500 when sending failed (the app then marks the mail
+as failed and shows the error). The app waits max 20 seconds.
+
+Incoming request body (JSON), for reference:
+{
+  "messageId": "uuid",
+  "to": { "email": "sanne@company.nl", "name": "Sanne de Wit" },
+  "subject": "…", "body": "Hi Sanne,\n\n…",
+  "from": { "name": "Anna Kowalski" },
+  "replyTo": { "email": "anna@student.nl", "name": "Anna Kowalski" } | null,
+  "sentBy": "user" | "agent"
+}
+
+NODES
+
+1) Webhook node — name: "Webhook: send email"
+   - HTTP Method: POST
+   - Path: jobhunter-send-email
+   - Authentication: Header Auth (credential named "JobHunter → n8n")
+   - Respond: Using 'Respond to Webhook' Node
+
+2) Gmail node — name: "Gmail: send"
+   - Resource: Message · Operation: Send
+   - To (expression): {{ $json.body.to.email }}
+   - Subject (expression): {{ $json.body.subject }}
+   - Email Type: Text
+   - Message (expression): {{ $json.body.body }}
+   - Options:
+       Append n8n Attribution: OFF
+       Sender Name (expression): {{ $json.body.from?.name || '' }}
+       Send Replies To (expression): {{ $json.body.replyTo?.email || '' }}
+   - Credential: Gmail OAuth2 (placeholder)
+   - Settings → On Error: "Continue (using error output)"   (two outputs: Success and Error)
+
+3) Respond to Webhook node — name: "Respond: sent"   (connected to the SUCCESS output of Gmail)
+   - Respond With: JSON
+   - Response Body (expression): {{ JSON.stringify({ ok: true, messageId: $('Webhook: send email').first().json.body.messageId }) }}
+   - Options → Response Code: 200
+
+4) Respond to Webhook node — name: "Respond: failed"   (connected to the ERROR output of Gmail)
+   - Respond With: JSON
+   - Response Body (expression): {{ JSON.stringify({ ok: false, error: String((typeof $json.error === 'string' ? $json.error : $json.error?.message) || 'send failed').slice(0, 300) }) }}
+   - Options → Response Code: 500
+
+CONNECTIONS (exactly these)
+- "Webhook: send email" → "Gmail: send"
+- "Gmail: send" (Success output) → "Respond: sent"
+- "Gmail: send" (Error output) → "Respond: failed"
+
+Also add a Sticky Note: "Fill in after building: (1) Webhook → Header Auth
+'JobHunter → n8n' (x-jobhunter-secret = N8N_SECRET). (2) Gmail → Gmail OAuth2
+(sign in with the sending account). (3) Publish and put the Production URL in the
+app's N8N_SEND_EMAIL_WEBHOOK_URL. Responds only after sending: 200 = sent,
+500 = failed."
+----- PROMPT 2 EINDE -----
+
+CHECKLIST NA PROMPT 2
+  [ ] Webhook "Respond" = Using 'Respond to Webhook' Node (NIET "Immediately":
+      dan denkt de app dat elke mail verstuurd is, ook als Gmail faalt)
+  [ ] Gmail heeft 2 uitgangen: Success → Respond: sent (200), Error → Respond: failed (500)
+  [ ] "Append n8n Attribution" staat UIT
+
+
+================================================================================
+DEEL 4 — PROMPT 3: WORKFLOW "PLANNING"
+================================================================================
+
+Waarom 30 minuten (en niet 15): elke 15 minuten = ± 2.900 runs per maand, meer
+dan de 2.500 executions van n8n Cloud Starter (nog zonder één zoekopdracht of
+mail). Elke 30 minuten = ± 1.450 per maand. Op Pro (10.000/maand) of self-hosted
+mag 15 minuten. De JSON in de repo staat ook op 30 minuten.
+
+----- PROMPT 3 START -----
+Build one n8n workflow named "JobHunter — Planning (elke 30 min)". Build EXACTLY
+what is described below. No extra nodes. Leave the credential as a placeholder.
+
+PURPOSE
+Every 30 minutes, call my app so it starts all scheduled searches that are due
+and cleans up stuck runs. No request body is needed.
+
+NODES
+
+1) Schedule Trigger node — name: "Every 30 minutes"
+   - Trigger Interval: Minutes · Minutes Between Triggers: 30
+
+2) HTTP Request node — name: "Run due searches"
+   - Method: POST
+   - URL: https://YOUR-APP-URL/api/n8n/scheduler
+   - Authentication: Generic Credential Type → Header Auth (credential named "n8n → JobHunter")
+   - Send Body: OFF
+   - Options → Timeout: 120000 (ms)
+
+CONNECTIONS
+- "Every 30 minutes" → "Run due searches"
+
+Also add a Sticky Note: "Fill in after building: (1) Replace https://YOUR-APP-URL
+with the app's APP_URL. (2) Header Auth 'n8n → JobHunter' (Authorization =
+Bearer <N8N_SECRET>). (3) Publish."
+----- PROMPT 3 EINDE -----
+
+CHECKLIST NA PROMPT 3
+  [ ] URL eindigt op /api/n8n/scheduler en begint met jouw echte APP_URL
+  [ ] Workflow-instellingen → Timezone: Europe/Amsterdam (anders rekent n8n in GMT)
+
+
+================================================================================
+DEEL 5 — CREDENTIALS IN n8n (4 stuks)
+================================================================================
+
+Maak ze aan via Credentials → Create credential. Namen hoeven niet exact, maar
+dan weet je welke waar hoort.
+
+  Naam in n8n          Type          Name (header)         Value
+  -------------------  ------------  --------------------  ------------------------------
+  JobHunter → n8n      Header Auth   x-jobhunter-secret    <N8N_SECRET>
+  n8n → JobHunter      Header Auth   Authorization         Bearer <N8N_SECRET>
+  Apify                Header Auth   Authorization         Bearer <Apify API token>
+  Gmail                Gmail OAuth2  (inloggen met het afzendaccount)
+
+  Let op: "Bearer " met een spatie ervoor, en geen spaties/enters na het geheim.
+
+Waar ze horen:
+  JobHunter → n8n   "Webhook: search request", "Webhook: send email"
+  n8n → JobHunter   "Send results to app", "Report failure to app", "Run due searches"
+  Apify             "Apify: Google Search", "Apify: Contact details"
+  Gmail             "Gmail: send"
+
+Daarna elke workflow: Save → PUBLISH. (Sinds n8n 2.0 heet "Active" nu
+"Publish". De Production URL van een webhook werkt pas na Publish; de Test URL
+luistert maar 120 seconden na "Execute workflow".)
+
+
+================================================================================
+DEEL 6 — DE APP KOPPELEN
+================================================================================
+
+Open in n8n de Webhook-nodes en kopieer de PRODUCTION URL (niet de Test URL).
+Zet in .env.local (lokaal) én in Vercel → Project → Settings → Environment
+Variables (daarna opnieuw deployen):
+
+  APP_URL=https://<jouw-app>.vercel.app            (of je ngrok-URL; geen slash aan het eind)
+  N8N_SECRET=<zelfde geheim als in de credentials>
+  N8N_SEARCH_WEBHOOK_URL=https://<jouw-n8n>/webhook/jobhunter-search
+  N8N_SEND_EMAIL_WEBHOOK_URL=https://<jouw-n8n>/webhook/jobhunter-send-email
+
+Zolang N8N_SEARCH_WEBHOOK_URL leeg is, draait de app in demo-modus (voorbeeldkansen).
+Zolang N8N_SEND_EMAIL_WEBHOOK_URL leeg is, kan de student alleen kopiëren/zelf mailen.
+Supabase (SUPABASE_SECRET_KEY) en de migraties moeten al werken; AI-key is optioneel.
+
+
+================================================================================
+DEEL 7 — TESTEN (in deze volgorde)
+================================================================================
+
+1. Gezondheid:  open {APP_URL}/api/health
+   Verwacht: "mode": "n8n", n8n.searchWebhook/sendEmailWebhook/secret = true.
+
+2. Beveiliging webhook (zonder geheim moet hij weigeren):
+     curl -i -X POST "<N8N_SEARCH_WEBHOOK_URL>" -H "content-type: application/json" -d "{}"
+   Verwacht: 403 "Authorization data is wrong!". Krijg je 200? Dan staat Header Auth niet aan.
+
+3. Zoeken: log in op de app → Search → "Search".
+   In n8n → Executions zie je "JobHunter — Zoeken" lopen (1–4 min).
+   Groen = resultaten staan op het dashboard. Rood bij "Apify: Google Search"
+   = check het Apify-token/tegoed; de app zet de run op failed en geeft de credit terug.
+   Rood bij "Send results to app" = check APP_URL en de "n8n → JobHunter"-credential
+   (401 = verkeerd geheim).
+
+4. Planning met de hand:
+     curl -X POST "{APP_URL}/api/n8n/scheduler" -H "Authorization: Bearer <N8N_SECRET>"
+   Verwacht: {"ok":true,"started":…,"expiredRuns":…,"results":[…]}
+
+5. Mailen: Settings → automatiseringsniveau 2. Open een match met een concept-mail,
+   zet de ontvanger op JE EIGEN adres, klik "Approve & send".
+   Verwacht: mail in je inbox met afzendernaam = student, "Reply-To" = student.
+   Mislukt? De foutmelding van Gmail staat bij de mail in de app.
+
+
+================================================================================
+DEEL 8 — LIMIETEN EN VALKUILEN
+================================================================================
+
+- n8n Cloud Starter: 2.500 executions per maand. Elke zoekopdracht = 1, elke mail
+  = 1, elke planningsronde = 1. Daarom planning op 30 minuten.
+- n8n Cloud trial: runs worden na 180 s afgebroken. Een zoekrun met Apify kan
+  langer duren; test op een betaald plan of self-hosted.
+- Webhooks op n8n Cloud moeten binnen 100 s antwoorden. Zoeken antwoordt meteen;
+  mailen wacht alleen op Gmail (enkele seconden). Niets aan veranderen.
+- Apify: synchrone runs mogen max. 300 s. De workflow gebruikt 240 s (Google) en
+  180 s (contactgegevens). Gaat Google over de tijd, dan meldt de workflow dat aan
+  de app en krijgt de student de credit terug.
+- Gmail: max. 500 mails per dag (gratis account). De app begrenst zelf al:
+  niveau 3 standaard 3 per dag, handmatig max. 25 per 24 uur.
+- Privacy (AVG): n8n bewaart standaard de invoer van elke run, dus ook de
+  profielgegevens van de student en de mailteksten. Zet per workflow in
+  Settings → "Save successful production executions" op "Do not save"
+  (mislukte runs wel bewaren om te debuggen).
+- Self-hosted n8n + een localhost-APP_URL: vanaf n8n 3.0 (oktober 2026) blokkeert
+  n8n verzoeken naar localhost/privé-adressen. Gebruik een publieke URL (ngrok/Vercel).
+- Google News RSS NIET toevoegen als bron: de voorwaarden staan alleen
+  persoonlijk, niet-commercieel gebruik toe (en de Engelse NL-editie bestaat niet).
+- Lokaal testen zonder n8n en zonder Apify-kosten: npm run mock:n8n (zie docs/n8n.md).

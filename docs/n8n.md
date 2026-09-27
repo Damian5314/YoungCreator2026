@@ -1,42 +1,62 @@
 # n8n-koppeling
 
 De app doet profiel, scoren, matches, e-mails schrijven, credits en planning zelf.
-n8n hoeft alleen **te zoeken** (bijvoorbeeld met Apify) en **e-mails te versturen**.
+n8n hoeft alleen **te zoeken** (met Apify) en **e-mails te versturen**.
 Zolang n8n niet gekoppeld is draait de app in **demo-modus**: een zoekopdracht levert dan voorbeeldkansen op die tegen het echte profiel worden gescoord.
 
 ```
-Student ── zoekt ──▶ App ── (1) zoek-webhook ──▶ n8n ── Apify / nieuws / events ──┐
-                      ▲                                                          │
-                      └──────────── (2) POST /api/n8n/results ◀──────────────────┘
-n8n Schedule Trigger ── (3) POST /api/n8n/scheduler (elke 15 min) ──▶ App
-App ── (4) verstuur-webhook ──▶ n8n ── Gmail / SMTP ──▶ contactpersoon
+Student ── zoekt ──▶ App ── (1) zoek-webhook ──▶ n8n ── Apify: Google Search + contactgegevens ──┐
+                      ▲                                                                         │
+                      └──────────────────── (2) POST /api/n8n/results ◀─────────────────────────┘
+n8n Schedule Trigger ── (3) POST /api/n8n/scheduler (elke 30 min) ──▶ App
+App ── (4) verstuur-webhook ──▶ n8n ── Gmail ──▶ contactpersoon
 ```
 
-## Snelstart (± 30 minuten)
+## Demo-checklist: wat vul je waar in
 
-Alles in de app is klaar; je hoeft alleen accounts te koppelen.
+De workflows in `n8n/` zijn kant-en-klaar. Je hoeft alleen accounts, keys en credentials te koppelen.
+
+| Wat | Waar haal je het | Waar vul je het in |
+|---|---|---|
+| Supabase URL, publishable key, secret key | Supabase → Project Settings → API Keys | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` |
+| `N8N_SECRET` | zelf maken: `openssl rand -hex 32` | env van de app + twee n8n-credentials (zie stap 5) |
+| `APP_URL` | je Vercel-URL (of een ngrok-tunnel naar `localhost:3000`) | env van de app + URL in de workflow "Planning" |
+| Apify API token | Apify Console → Settings → API & Integrations | n8n-credential "Apify" |
+| Gmail-account (afzender) | — | n8n-credential Gmail OAuth2 |
+| Webhook-URL's | n8n, na het publiceren (Production URL) | `N8N_SEARCH_WEBHOOK_URL`, `N8N_SEND_EMAIL_WEBHOOK_URL` |
+| AI-key (optioneel) | OpenAI of Anthropic | `OPENAI_API_KEY` of `ANTHROPIC_API_KEY` |
+
+"Env van de app" = `.env.local` (lokaal) of Vercel → Settings → Environment Variables (deploy). Zie `.env.example`.
 
 1. **Database:** draai de migraties in `supabase/migrations/` (Supabase → SQL editor, in volgorde, of `supabase db push`).
-2. **`.env.local`:** vul in volgens `.env.example`, minimaal `SUPABASE_SECRET_KEY`, `N8N_SECRET` en `APP_URL`. AI: `OPENAI_API_KEY` (of `ANTHROPIC_API_KEY`).
-3. **Check:** open `http://localhost:3000/api/health`. Dat laat zien wat er gekoppeld is (database, migraties, n8n, AI), zonder geheimen.
-4. **Eerst lokaal testen zonder n8n:** `npm run mock:n8n` in een tweede terminal (zie "Testen zonder n8n" onderaan).
-5. **n8n:** importeer de drie workflows uit de map `n8n/` (Workflows → Import from File):
+2. **Env van de app:** vul alles uit de tabel in behalve de webhook-URL's (die komen in stap 7).
+3. **Eerst lokaal testen zonder n8n:** `npm run mock:n8n` (zie "Testen zonder n8n" onderaan).
+4. **n8n → Workflows → Import from File**, drie keer:
    - `jobhunter-search.json` — zoeken via Apify (Google Search + contactgegevens)
    - `jobhunter-send-email.json` — mail versturen via Gmail
-   - `jobhunter-scheduler.json` — elke 15 minuten geplande zoekopdrachten starten
-6. **Credentials in n8n** (zie hieronder) koppelen aan de nodes, workflows activeren, en de productie-webhook-URL's in `.env.local` zetten.
+   - `jobhunter-scheduler.json` — elke 30 minuten geplande zoekopdrachten starten
+5. **Credentials** aanmaken en op de nodes selecteren (elke workflow heeft ook een notitie met deze lijst):
 
-| n8n-credential (type **Header Auth**) | Name | Value | Gebruikt in |
-|---|---|---|---|
-| JobHunter → n8n | `x-jobhunter-secret` | je `N8N_SECRET` | beide Webhook-nodes |
-| n8n → JobHunter | `Authorization` | `Bearer <N8N_SECRET>` | "Send results to app", "Report failure to app", "Run due searches" |
-| Apify | `Authorization` | `Bearer <Apify API token>` | "Apify: Google Search", "Apify: Contact details" |
-| Gmail (OAuth2) | — | inloggen met het afzendaccount | "Gmail: send" |
+   | n8n-credential | Type | Name | Value | Nodes |
+   |---|---|---|---|---|
+   | JobHunter → n8n | Header Auth | `x-jobhunter-secret` | je `N8N_SECRET` | "Webhook: search request", "Webhook: send email" |
+   | n8n → JobHunter | Header Auth | `Authorization` | `Bearer <N8N_SECRET>` | "Send results to app", "Report failure to app", "Run due searches" |
+   | Apify | Header Auth | `Authorization` | `Bearer <Apify API token>` | "Apify: Google Search", "Apify: Contact details" |
+   | Gmail | Gmail OAuth2 | — | inloggen met het afzendaccount | "Gmail: send" |
 
-In `jobhunter-scheduler.json`: vervang `https://JOUW-APP-URL` door je `APP_URL`.
-Liever SMTP dan Gmail? Vervang de Gmail-node door een "Send Email"-node met dezelfde velden (to, subject, text, reply-to).
+   Op n8n cloud is Gmail één klik ("Sign in with Google"). Self-hosted heb je een eigen Google Cloud OAuth-client nodig (Gmail API aan, redirect-URL uit n8n).
+6. **Planning:** vervang in de node "Run due searches" `https://JOUW-APP-URL` door je `APP_URL`.
+7. **Publiceren:** publiceer alle drie de workflows (**Publish**; in n8n-versies vóór 2.0 heet dit **Active**). Pas daarna bestaat de Production URL. Kopieer de **Production URL** van beide webhooks (`…/webhook/jobhunter-search` en `…/webhook/jobhunter-send-email`, niet `/webhook-test/`) naar `N8N_SEARCH_WEBHOOK_URL` en `N8N_SEND_EMAIL_WEBHOOK_URL`. Herstart de dev-server of redeploy.
+8. **Check:** open `{APP_URL}/api/health`. `mode` moet `n8n` zijn, zonder waarschuwingen. Klik daarna in de app op **Search** en volg de run in n8n → Executions.
 
-Kosten Apify: de zoek-workflow gebruikt `apify/google-search-scraper` (±15 zoektermen per run) en `vdrmota/contact-info-scraper` (max. 10 bedrijfssites per run).
+> n8n cloud kan `localhost` niet bereiken. Test lokaal met een tunnel (`ngrok http 3000`) en zet die URL in `APP_URL`, of test tegen de Vercel-deploy.
+> Ook een zelf-gehoste n8n kan callbacks naar `localhost`/privé-adressen blokkeren (SSRF-bescherming, strenger vanaf n8n 3.0). Gebruik dus altijd een publieke `APP_URL`.
+
+> **n8n Cloud-limieten:**
+> - Een **trial** stopt executions na 180 seconden. De zoek-workflow wacht op twee Apify-runs (max. 240 s + 180 s) en kan daar dus op afbreken; de app zet de run dan na 30 minuten op failed en geeft de credit terug. Test op een betaald plan, zelf-gehost, of met de mock.
+> - **Starter** heeft 2.500 executions per maand. Daarom draait de planning elke 30 minuten (elke 15 min ≈ 2.900 per maand).
+
+> **Let op bij de demo:** de contact-scraper vindt echte adressen van echte bedrijven. Op niveau 3 verstuurt de agent zelf mails. Gebruik in de demo niveau 2 (goedkeuren) en zet bij "Approve & send" zo nodig je eigen adres als ontvanger.
 
 ## AI: OpenAI of Claude
 
@@ -46,23 +66,30 @@ De app doet alle AI zelf (cv uitlezen, zoekresultaten opschonen, scoren, mails s
 - `ANTHROPIC_API_KEY` → Claude (`ANTHROPIC_MODEL`).
 - Beide ingevuld? `AI_PROVIDER=openai|anthropic` kiest. Geen van beide: alles werkt met regels en sjablonen.
 
-## 0. Eenmalig
+## Apify in de zoek-workflow
 
-1. Draai de migraties in `supabase/migrations/` (Supabase dashboard → SQL editor, in volgorde, of `supabase db push`).
-2. Vul `.env.local` in (zie `.env.example`): `SUPABASE_SECRET_KEY`, `APP_URL`, `N8N_SECRET` en straks de twee webhook-URL's. `ANTHROPIC_API_KEY` is optioneel.
-3. Maak in n8n een credential **Header Auth** met naam `x-jobhunter-secret` en als waarde je `N8N_SECRET`.
-   Gebruik die op beide Webhook-nodes (1 en 4).
-4. Maak in n8n een credential **Header Auth** met naam `Authorization` en waarde `Bearer <N8N_SECRET>`.
-   Gebruik die op de HTTP Request-nodes die de app aanroepen (2 en 3).
+Beide stappen gebruiken `POST https://api.apify.com/v2/actors/<gebruiker>~<actor>/run-sync-get-dataset-items` met `Authorization: Bearer <token>`.
+Zo'n synchrone aanroep wacht maximaal 300 seconden (daarna `408`). Daarom krijgt elke run een eigen `?timeout=` in seconden (240 en 180).
 
-> n8n cloud kan `localhost` niet bereiken. Test lokaal met een tunnel (`ngrok http 3000`) en zet die URL in `APP_URL`, of test tegen de Vercel-deploy.
+1. **`apify/google-search-scraper`**: alle zoektermen uit `searchPlan` als één tekst (één per regel), met `countryCode: "nl"`, `languageCode: "en"` en `maxPagesPerQuery: 1` (± 10 resultaten per zoekterm).
+   Apify geeft één record per resultatenpagina: `searchQuery.term` + `organicResults[]` met `title`, `url` en `description`.
+   De workflow neemt om en om resultaten per zoekterm (max. 60, zonder dubbele url's) en zet `kind` en `query` erbij.
+2. **`vdrmota/contact-info-scraper`**: max. 10 eigen bedrijfssites uit die resultaten (geen jobboards, eventplatforms, social media of nieuwssites).
+   Invoer: `maxDepth: 1`, `maxRequestsPerStartUrl: 4`, `maxRequests: 40`, `mergeContacts: true` en `proxyConfig` (verplicht veld).
+   Output: per site één rij met `emails[]`. Het beste adres (jobs@/careers@ vóór info@, eigen domein eerst) komt in `contact.email`.
+   Mislukt deze stap, dan gaan de resultaten zonder contactgegevens naar de app.
+
+Mislukt de Google-stap (bijvoorbeeld `401` token fout, `402` tegoed op, `408` timeout), dan stuurt "Report failure to app" een `error` naar de app. De run faalt en de credit gaat terug.
+
+**Kosten** (pay-per-event, Apify-prijzen september 2026 op het Free-plan; check de pricing-tab van beide actors):
+
+- Google: ± $0,0045 per resultatenpagina + $0,001 per start → ± $0,07 per zoekopdracht (15 zoektermen).
+- Contactgegevens: ± $0,002 per gescande pagina → max. ± $0,09 per zoekopdracht (40 pagina's).
+- Samen max. ± $0,16 per zoekopdracht. Met het gratis tegoed van $5 zijn dat ± 30 zoekopdrachten.
 
 ## 1. Workflow "Zoeken" — Webhook (POST) → zoeken → resultaten terugsturen
 
-Zet de productie-URL van de Webhook-node in `N8N_SEARCH_WEBHOOK_URL`.
-Laat de webhook **meteen antwoorden**. De app wacht maximaal 20 seconden en het zoeken zelf mag langer duren.
-Het simpelst is "Respond: Immediately".
-Wil je het execution-id bij de run zien, zet dan "Respond: Using 'Respond to Webhook' node" en plaats direct na de webhook een Respond to Webhook-node met `{ "executionId": "{{$execution.id}}" }`.
+De Webhook-node (Header Auth) antwoordt **meteen** via de node "Respond: accepted" met `{ "executionId": "…" }`. De app wacht maximaal 20 seconden, het zoeken zelf mag langer duren.
 
 De app stuurt:
 
@@ -72,8 +99,8 @@ De app stuurt:
   "trigger": "manual",
   "callbackUrl": "https://jouw-app.vercel.app/api/n8n/results",
   "profile": {
-    "name": "Anna", "degree": "MSc", "fieldOfStudy": "Robotics", "university": "TU Delft",
-    "skills": ["Python", "ROS"], "interests": ["Robotics", "AI"], "languages": ["English (C1)"],
+    "name": "Anna", "nationality": "Polish", "degree": "MSc", "fieldOfStudy": "Robotics", "university": "TU Delft",
+    "graduationYear": 2027, "skills": ["Python", "ROS"], "interests": ["Robotics", "AI"], "languages": ["English (C1)"],
     "ambitions": "…", "recentCuriosity": "…", "cvSummary": "…", "searchYearEndsOn": "2027-06-30",
     "preferences": {
       "desiredRoles": ["Robotics Engineer"], "opportunityTypes": ["hackathon", "internship"],
@@ -81,18 +108,26 @@ De app stuurt:
     }
   },
   "options": { "includeHiddenOpportunities": true, "includeCompanyHunting": true, "maxResults": 30 },
-  "searchQueries": ["Robotics Engineer Rotterdam", "Robotics hackathon Netherlands", "Robotics startups Rotterdam", "…"]
+  "searchQueries": ["site:nordwind.nl (careers OR jobs OR vacatures OR internship)", "Robotics Engineer Rotterdam", "…"],
+  "searchPlan": [
+    { "query": "site:nordwind.nl (careers OR jobs OR vacatures OR internship)", "kind": "job" },
+    { "query": "Robotics Engineer Rotterdam", "kind": "job" },
+    { "query": "Robotics hackathon Netherlands", "kind": "hackathon" }
+  ],
+  "watchCompanies": [{ "name": "Nordwind Robotics", "domain": "nordwind.nl", "careerPageUrl": null }]
 }
 ```
 
-Er gaat geen e-mailadres of user-id mee: `runId` is genoeg.
-`searchQueries` zijn kant-en-klare zoektermen, bijvoorbeeld voor Apify (Google Search, LinkedIn Jobs, Eventbrite of Meetup scrapers) of Google News RSS.
-`searchPlan` bevat dezelfde zoektermen met hun soort: `[{ "query": "Robotics hackathon Netherlands", "kind": "hackathon" }, …]`.
-`kind` is `job`, `internship`, `event`, `hackathon`, `startup` of `news` (bedrijfsnieuws dat op groei wijst). Stuur `kind` en `query` mee terug bij elk resultaat.
+- Er gaat geen e-mailadres of user-id mee: `runId` is genoeg.
+- `searchPlan` (max. 15) bevat de zoektermen met hun soort; `searchQueries` zijn dezelfde termen zonder soort.
+  `kind` is `job`, `internship`, `event`, `hackathon`, `startup` of `news` (bedrijfsnieuws dat op groei wijst). Stuur `kind` en `query` mee terug bij elk resultaat.
+- **Company Hunter:** `watchCompanies` zijn bedrijven die de student volgt (opgeslagen of benaderd, max. 5). Hun zoektermen (`site:<domein> (careers OR …)`) staan al vooraan in `searchPlan`. De workflow hoeft `watchCompanies` dus niet apart te gebruiken.
 
 ## 2. Resultaten terugsturen — `POST {callbackUrl}`
 
-HTTP Request-node: method POST, URL `{{$json.callbackUrl}}` (uit stap 1), Header Auth `Authorization: Bearer <N8N_SECRET>`, body JSON:
+HTTP Request-node: method POST, URL `{{ $json.callbackUrl }}`, Header Auth `Authorization: Bearer <N8N_SECRET>`, body JSON.
+De meegeleverde workflow stuurt ruwe resultaten: `{ "title", "url", "description", "kind", "query", "source": "web", "contact": { "email" } }` (contact alleen als gevonden).
+Een volledig item mag ook:
 
 ```json
 {
@@ -118,19 +153,19 @@ HTTP Request-node: method POST, URL `{{$json.callbackUrl}}` (uit stap 1), Header
 ```
 
 **Verplicht per item:** alleen `title` en `url` (http/https).
-**Ruwe zoekresultaten zijn prima:** `{ "title", "url", "description", "kind", "query" }` is genoeg. De app vult `company`, `type`, locatie, "why now"-signalen en de bron zelf aan (met AI, of met regels: bedrijf uit het domein of uit een LinkedIn/Indeed-titel). Irrelevante hits (Wikipedia, YouTube, lijstjes) vallen af.
+Bij ruwe resultaten vult de app `company`, `type`, locatie, "why now"-signalen en de bron zelf aan (met AI, of met regels: bedrijf uit het domein of uit een LinkedIn/Indeed-titel). Irrelevante hits (Wikipedia, YouTube, lijstjes) vallen af.
 Al het andere is optioneel. De app is ruim in wat hij accepteert:
 
 | Veld | Waarden |
 |---|---|
-| `type` | `job`, `internship`, `traineeship`, `thesis`, `working-student`, `part-time`, `freelance`, `open-application`, `event`, `hackathon`, `conference`, `networking`, `project`, `research`, `startup`. Ook synoniemen zoals `vacature`, `stage`, `meetup`, `workshop`. Onbekend wordt `job`. |
-| `source` | `linkedin`, `indeed`, `glassdoor`, `company-career-page`, `radar`, `news`, `event-platform`, `startup-database`, `web`. Ook `eventbrite`, `meetup`, `crunchbase`, `apify` enz. Onbekend wordt `web`. |
+| `type` | `job`, `internship`, `traineeship`, `thesis`, `working-student`, `part-time`, `freelance`, `open-application`, `event`, `hackathon`, `conference`, `networking`, `project`, `research`, `startup`. Ook synoniemen zoals `vacature`, `stage`, `meetup`, `workshop`. Onbekend of leeg: de app bepaalt het type (AI, of `kind`). |
+| `source` | `linkedin`, `indeed`, `glassdoor`, `company-career-page`, `radar`, `news`, `event-platform`, `startup-database`, `web`. Ook `eventbrite`, `meetup`, `crunchbase`, `apify` enz. Onbekend wordt `web`; bij `web` leidt de app de bron af uit de url. |
 | `requiredSkills`, `signals` | lijst of komma-string (`"Python, ROS"`) |
 | `startsAt`, `postedAt` | ISO-datum of timestamp |
 | `isHidden` | `true` = nog geen vacature (radar: bedrijf groeit, maar heeft niets gepost) |
 | `externalId` | id bij de bron; zonder dit veld is de url de sleutel. Opnieuw aanleveren werkt de kans bij in plaats van hem te dupliceren. |
 | `contact.email` | nodig om een mail te kunnen sturen; ongeldige adressen worden genegeerd |
-| `match` | optioneel `{ "score": 0-100, "reasons": ["…"] }` als je in n8n zelf al met AI scoort. Anders scoort de app (Claude, of regels zonder API-key). |
+| `match` | optioneel `{ "score": 0-100, "reasons": ["…"] }` als je in n8n zelf al scoort. Anders scoort de app (AI, of regels zonder API-key). |
 
 - **In delen aanleveren?** Stuur `"done": false` bij tussenleveringen en `"done": true` bij de laatste.
 - **Mislukt?** Stuur `{ "runId": "…", "items": [], "error": "Apify quota exceeded" }`. De run faalt en de credit gaat terug.
@@ -149,19 +184,18 @@ Daarna, op de achtergrond, doet de app het volgende:
 4. Voor de sterkste nieuwe matches (score ≥ 70, met e-mailadres) mails voorbereiden.
 5. Op niveau 3 die mails ook versturen, binnen de daglimiet.
 
-Runs die na 30 minuten nog geen `done: true` hebben, worden automatisch op `failed` gezet en de credit gaat terug.
+Runs die na 30 minuten nog geen `done: true` hebben, zet de app op `failed` en de credit gaat terug. Dat opruimen gebeurt bij elke aanroep van de planning (stap 3), dus alleen als die workflow actief is.
 
 ## 3. Workflow "Planning" — Schedule Trigger → HTTP Request
 
-- Schedule Trigger: elke 15 minuten.
-- HTTP Request: `POST {APP_URL}/api/n8n/scheduler` met `Authorization: Bearer <N8N_SECRET>`, zonder body.
+- Schedule Trigger: elke 30 minuten (15 mag op een eigen server of hoger plan).
+- HTTP Request: `POST {APP_URL}/api/n8n/scheduler` met `Authorization: Bearer <N8N_SECRET>`, zonder body (timeout 120 s).
 
 De app start een run voor elk zoekprofiel waarvan de geplande tijd voorbij is (de student stelt dat in op het dashboard) en roept daarvoor gewoon webhook 1 aan.
 Antwoord: `{ "ok": true, "started": 2, "expiredRuns": 0, "results": [...] }`.
 
-## 4. Workflow "E-mail versturen" — Webhook (POST) → Gmail/SMTP → Respond
+## 4. Workflow "E-mail versturen" — Webhook (POST) → Gmail → Respond
 
-Zet de productie-URL in `N8N_SEND_EMAIL_WEBHOOK_URL`.
 De app roept dit aan als de student op "Approve & send" klikt (niveau 2), of automatisch bij niveau 3:
 
 ```json
@@ -176,13 +210,15 @@ De app roept dit aan als de student op "Approve & send" klikt (niveau 2), of aut
 }
 ```
 
-- Verstuur als platte tekst, met `from.name` als afzendernaam en `replyTo` als Reply-To, zodat antwoorden bij de student terechtkomen.
-- Antwoord **pas na het versturen**, met een "Respond to Webhook"-node en status 200. Elke andere status (of een timeout na 20 seconden) zet de mail op `failed`, met de foutmelding zichtbaar voor de student.
+- De Gmail-node verstuurt platte tekst vanaf het gekoppelde Gmail-account, met `from.name` als afzendernaam en `replyTo` als Reply-To (in de Gmail-node heet die optie "Send Replies To"), zodat antwoorden bij de student terechtkomen.
+- De workflow antwoordt **pas na het versturen**: `200` bij succes, `500` met de foutmelding als Gmail faalt. Elke andere status dan 2xx (of een timeout na 20 seconden) zet de mail op `failed`, met de foutmelding zichtbaar voor de student.
+- Liever SMTP? Vervang de Gmail-node door een "Send Email"-node met dezelfde velden (to, subject, text, reply-to) en zet op die node ook "On Error → Continue (using error output)".
 - De app bewaakt de limieten zelf: niveau 3 max. de ingestelde daglimiet (standaard 3), handmatig max. 25 per 24 uur.
 
 ## Testen zonder n8n
 
-**Mock-n8n (aanrader):** test de échte koppeling (webhooks, geheim, terugsturen, mail versturen) zonder n8n of Apify.
+**Mock-n8n (aanrader):** test de echte koppeling (webhooks, geheim, terugsturen, mail versturen) zonder n8n of Apify.
+De mock stuurt hetzelfde formaat terug als de echte workflow.
 
 1. Zet in `.env.local`:
    ```
@@ -192,7 +228,8 @@ De app roept dit aan als de student op "Approve & send" klikt (niveau 2), of aut
    APP_URL=http://localhost:3000
    ```
 2. Herstart `npm run dev` en start in een tweede terminal `npm run mock:n8n`.
-3. Klik in de app op **Search**. De mock stuurt ruwe resultaten terug (LinkedIn-vacature, event, bedrijfsnieuws, startup, sommige met e-mailadres). "Approve & send" logt de mail in de mock-terminal in plaats van hem te versturen.
+3. Klik in de app op **Search**. De mock stuurt één ruw resultaat per zoekterm terug: LinkedIn-vacature, event, bedrijfsnieuws, startup (sommige met e-mailadres) en een career page voor elke `site:`-zoekterm (Company Hunter). "Approve & send" logt de mail in de mock-terminal in plaats van hem te versturen.
+4. Foutpad: start de mock met `MOCK_N8N_FAIL=search npm run mock:n8n` (run faalt, credit terug) of `MOCK_N8N_FAIL=email npm run mock:n8n` (versturen geeft `500`, mail op `failed`).
 
 Zonder mock:
 

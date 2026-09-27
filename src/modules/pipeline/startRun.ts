@@ -6,7 +6,14 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { CREDIT_COST_PER_SEARCH } from '@/shared/constants/opportunityTypes';
 import { demoItems } from './demoItems';
 import { failRun, ingestResults } from './ingest';
-import { buildSearchPlan, loadMatchProfile, MissingSearchProfileError, type RunSnapshot, type SearchOptions } from './profile';
+import {
+  buildSearchPlan,
+  loadMatchProfile,
+  loadWatchedCompanies,
+  MissingSearchProfileError,
+  type RunSnapshot,
+  type SearchOptions,
+} from './profile';
 import { parseIngestItems } from './schema';
 
 export type StartRunResult = { ok: true; runId: string } | { ok: false; error: string };
@@ -43,12 +50,20 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     includeCompanyHunting: options?.includeCompanyHunting ?? loaded.defaults.includeCompanyHunting,
     maxResults: 30,
   };
-  const searchPlan = buildSearchPlan(loaded.profile, searchOptions);
+  // Company Hunter is een extraatje: als dit faalt, zoeken we gewoon zonder
+  const watchCompanies = searchOptions.includeCompanyHunting
+    ? await loadWatchedCompanies(admin, userId).catch((error) => {
+        console.warn('[search] loading watched companies failed', error);
+        return [];
+      })
+    : [];
+  const searchPlan = buildSearchPlan(loaded.profile, searchOptions, watchCompanies);
   const snapshot: RunSnapshot = {
     profile: loaded.profile,
     options: searchOptions,
     searchQueries: searchPlan.map(({ query }) => query),
     searchPlan,
+    watchCompanies,
   };
 
   const { data: run, error: runError } = await admin

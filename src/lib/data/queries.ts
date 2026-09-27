@@ -35,6 +35,7 @@ export interface ProfileData {
   automationLevel: AutomationLevel;
   autoSendConsentAt: string | null;
   dailySendLimit: number;
+  needsIntro: boolean; // introductie na de eerste keer inloggen nog niet gezien
 }
 
 export interface SearchProfileData {
@@ -109,6 +110,8 @@ export const getProfile = cache(async (): Promise<ProfileData | null> => {
     automationLevel: (data.automation_level ?? 1) as AutomationLevel,
     autoSendConsentAt: data.auto_send_consent_at,
     dailySendLimit: data.daily_send_limit ?? 3,
+    // Zonder de onboarding-migratie bestaat de kolom niet: dan geen introductie (hij kan niet onthouden worden)
+    needsIntro: 'onboarded_at' in data && data.onboarded_at === null,
   };
 });
 
