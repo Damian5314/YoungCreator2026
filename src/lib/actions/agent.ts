@@ -37,7 +37,7 @@ export async function saveAgentSettings(_prev: FormState, formData: FormData): P
 
   const current = await getProfile();
   const level = parsed.data.automationLevel;
-  // Niveau 2 en 3 laten JobHunter mails versturen: dat is een automation (betaald)
+  // Niveau 2 en 3 laten Unlisted mails versturen: dat is een automation (betaald)
   if (level >= 2 && !(await hasPaidAccess(user.id))) return { error: AUTOMATIONS_LOCKED_MESSAGE };
   const supabase = await createClient();
   const { error } = await supabase

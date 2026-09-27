@@ -1,9 +1,12 @@
 import { revealItem } from '../../_components/revealItem';
-import { finalCta } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 import { CTAButtons } from './CTAButtons';
 
 /** Linkerkolom: de emotionele slotzin, de belofte, de knoppen en een ingetogen geruststelling. */
-export function CTAContent() {
+export async function CTAContent() {
+  const { finalCta } = buildLanding((await getT()).landing);
+
   return (
     <div className="relative px-6 pb-8 text-white sm:px-10 sm:pb-10 lg:px-14 lg:py-14 xl:px-[72px]">
       <h2

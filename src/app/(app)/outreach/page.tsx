@@ -6,20 +6,27 @@ import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { ButtonLink } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { getOutreachList, type OutreachListItem } from '@/lib/data/queries';
+import type { Locale } from '@/i18n/config';
+import type { Dictionary } from '@/i18n/dictionaries';
+import { getLocale, getT } from '@/i18n/server';
 import type { OutreachStatus } from '@/shared/types/Opportunity';
 import { formatDateTime } from '@/shared/utils/formatDate';
 
-export const metadata: Metadata = { title: 'Outreach' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.outreach.meta.title };
+}
 
-const STATUS: Record<OutreachStatus, { label: string; tone: BadgeTone }> = {
-  draft: { label: 'Ready to review', tone: 'warning' },
-  failed: { label: 'Failed', tone: 'warning' },
-  sending: { label: 'Sending', tone: 'primary' },
-  sent: { label: 'Sent', tone: 'success' },
+const STATUS_TONES: Record<OutreachStatus, BadgeTone> = {
+  draft: 'warning',
+  failed: 'warning',
+  sending: 'primary',
+  sent: 'success',
 };
 
-function MessageRow({ message }: { message: OutreachListItem }) {
+function MessageRow({ message, t, locale }: { message: OutreachListItem; t: Dictionary; locale: Locale }) {
   const when = message.status === 'sent' && message.sentAt ? message.sentAt : message.updatedAt;
+  const p = t.outreach.page;
   return (
     <li>
       <Link
@@ -31,14 +38,14 @@ function MessageRow({ message }: { message: OutreachListItem }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-2">
-            <Badge tone={STATUS[message.status].tone}>{STATUS[message.status].label}</Badge>
-            <span className="text-xs text-muted-foreground">{formatDateTime(new Date(when))}</span>
+            <Badge tone={STATUS_TONES[message.status]}>{p.statuses[message.status]}</Badge>
+            <span className="text-xs text-muted-foreground">{formatDateTime(new Date(when), locale)}</span>
           </span>
           {/* Mobiel mag het onderwerp over twee regels lopen, anders valt de helft weg */}
           <span className="mt-1 line-clamp-2 font-medium sm:line-clamp-1">{message.subject || message.opportunityTitle}</span>
           <span className="block truncate text-sm text-muted-foreground">
             {message.opportunityTitle} · {message.company}
-            {message.toEmail ? ` · to ${message.toName ?? message.toEmail}` : ' · no recipient yet'}
+            {message.toEmail ? ` · ${p.toRecipient(message.toName ?? message.toEmail)}` : ` · ${p.noRecipient}`}
           </span>
         </span>
         <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -48,52 +55,52 @@ function MessageRow({ message }: { message: OutreachListItem }) {
 }
 
 export default async function OutreachPage() {
-  const messages = await getOutreachList();
+  const [messages, t, locale] = await Promise.all([getOutreachList(), getT(), getLocale()]);
+  const p = t.outreach.page;
   const toReview = messages.filter((m) => m.status === 'draft' || m.status === 'failed');
   const sent = messages.filter((m) => m.status === 'sent' || m.status === 'sending');
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title="Outreach"
-        description="Emails your agent prepared for you, and the ones you already sent."
+        title={p.title}
+        description={p.description}
       />
 
       {messages.length === 0 ? (
         <Card className="py-12 text-center">
-          <h2 className="font-semibold">No emails yet</h2>
+          <h2 className="font-semibold">{p.empty.title}</h2>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            After a search, your agent prepares emails for your strongest matches. You can also open any result and press
-            &ldquo;Reach out&rdquo;.
+            {p.empty.body}
           </p>
           <ButtonLink href="/dashboard" size="sm" className="mt-5">
-            Go to your results
+            {p.empty.cta}
           </ButtonLink>
         </Card>
       ) : (
         <div className="space-y-8">
           <section>
             <h2 className="mb-3 font-semibold">
-              Ready to review <span className="font-normal text-muted-foreground">({toReview.length})</span>
+              {p.readyToReview} <span className="font-normal text-muted-foreground">({toReview.length})</span>
             </h2>
             {toReview.length > 0 ? (
               <ul className="space-y-3">
                 {toReview.map((message) => (
-                  <MessageRow key={message.id} message={message} />
+                  <MessageRow key={message.id} message={message} t={t} locale={locale} />
                 ))}
               </ul>
             ) : (
-              <Card className="text-center text-sm text-muted-foreground">Nothing waiting for you. Nice work.</Card>
+              <Card className="text-center text-sm text-muted-foreground">{p.nothingWaiting}</Card>
             )}
           </section>
           {sent.length > 0 && (
             <section>
               <h2 className="mb-3 font-semibold">
-                Sent <span className="font-normal text-muted-foreground">({sent.length})</span>
+                {p.sent} <span className="font-normal text-muted-foreground">({sent.length})</span>
               </h2>
               <ul className="space-y-3">
                 {sent.map((message) => (
-                  <MessageRow key={message.id} message={message} />
+                  <MessageRow key={message.id} message={message} t={t} locale={locale} />
                 ))}
               </ul>
             </section>

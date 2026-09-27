@@ -1,11 +1,14 @@
 import { Annotation } from '../../_components/Annotation';
-import { signals } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /**
  * De enige handgeschreven notitie: onder het dashboard, met een pijl omhoog naar de
  * kansenlijst. Buiten het dashboard, zodat hij nooit UI afdekt. Start na het dashboard.
  */
-export function HandwrittenAnnotation() {
+export async function HandwrittenAnnotation() {
+  const { signals } = buildLanding((await getT()).landing);
+
   return (
     <div
       data-reveal-play

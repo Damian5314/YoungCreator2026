@@ -1,11 +1,14 @@
 import { RevealGroup } from '../../_components/RevealGroup';
 import { revealItem } from '../../_components/revealItem';
-import { trust } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 import { TrustEmblem, TrustGlow } from './TrustDecoration';
 import { UniversityLogoRow } from './UniversityLogoRow';
 
 /** Klein label met een zachte groene 'status'-stip. */
-function TrustHeading() {
+async function TrustHeading() {
+  const { trust } = buildLanding((await getT()).landing);
+
   return (
     <h2
       id="trust-heading"

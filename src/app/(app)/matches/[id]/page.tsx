@@ -11,45 +11,51 @@ import { MatchScore, STATUS_TONES } from '@/components/opportunities/Opportunity
 import { OutreachPanel } from '@/components/outreach/OutreachPanel';
 import { features } from '@/lib/env';
 import { getBillingStatus, getMatch, getOutreachForMatch, getProfile } from '@/lib/data/queries';
-import {
-  OPPORTUNITY_SOURCE_LABELS,
-  OPPORTUNITY_STATUS_LABELS,
-  OPPORTUNITY_TYPE_LABELS,
-} from '@/shared/constants/opportunityTypes';
+import { getLocale, getT } from '@/i18n/server';
 import { formatDateTime, formatShortDate } from '@/shared/utils/formatDate';
 
-export const metadata: Metadata = { title: 'Opportunity' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.matches.meta.title };
+}
 
 export default async function MatchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const [match, outreach, profile, billing] = await Promise.all([
+  const [match, outreach, profile, billing, t, locale] = await Promise.all([
     getMatch(id),
     getOutreachForMatch(id),
     getProfile(),
     getBillingStatus(),
+    getT(),
+    getLocale(),
   ]);
   if (!match) notFound();
+  const d = t.matches.detail;
 
   return (
     <>
       <Link href="/dashboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden />
-        All results
+        {d.allResults}
       </Link>
-      <PageHeader title={match.title} description={match.company} action={<MatchScore score={match.matchScore} />} />
+      <PageHeader
+        title={match.title}
+        description={match.company}
+        action={<MatchScore score={match.matchScore} label={t.matches.score.label} />}
+      />
 
       <div className="grid items-start gap-6 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-3">
           <Card>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={STATUS_TONES[match.status]}>{OPPORTUNITY_STATUS_LABELS[match.status]}</Badge>
-              <Badge>{OPPORTUNITY_TYPE_LABELS[match.type]}</Badge>
+              <Badge tone={STATUS_TONES[match.status]}>{t.common.opportunityStatuses[match.status]}</Badge>
+              <Badge>{t.common.opportunityTypes[match.type]}</Badge>
               {match.isHidden && (
                 <Badge tone="primary">
                   <Radar className="size-3" aria-hidden />
-                  Hidden opportunity
+                  {d.hiddenOpportunity}
                 </Badge>
               )}
             </div>
@@ -57,31 +63,31 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               <div className="flex items-center gap-2">
                 <Building className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                <dt className="sr-only">Company</dt>
+                <dt className="sr-only">{d.company}</dt>
                 <dd>{match.company}</dd>
               </div>
               {(match.location || match.remote) && (
                 <div className="flex items-center gap-2">
                   <MapPin className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <dt className="sr-only">Location</dt>
-                  <dd>{[match.location, match.remote ? 'remote possible' : null].filter(Boolean).join(' · ')}</dd>
+                  <dt className="sr-only">{d.location}</dt>
+                  <dd>{[match.location, match.remote ? d.remotePossible : null].filter(Boolean).join(' · ')}</dd>
                 </div>
               )}
               {match.startsAt && (
                 <div className="flex items-center gap-2">
                   <CalendarDays className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <dt className="sr-only">Date</dt>
-                  <dd>{formatDateTime(match.startsAt)}</dd>
+                  <dt className="sr-only">{d.date}</dt>
+                  <dd>{formatDateTime(match.startsAt, locale)}</dd>
                 </div>
               )}
               {match.contact && (
                 <div className="flex items-center gap-2">
                   <UserRound className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <dt className="sr-only">Contact</dt>
+                  <dt className="sr-only">{d.contact}</dt>
                   <dd>
                     {match.contact.url ? (
                       <a href={match.contact.url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                        {match.contact.name ?? 'Contact'}
+                        {match.contact.name ?? d.contact}
                       </a>
                     ) : (
                       (match.contact.name ?? match.contact.email)
@@ -93,7 +99,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
               {match.companyWebsite && (
                 <div className="flex items-center gap-2">
                   <Globe className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                  <dt className="sr-only">Website</dt>
+                  <dt className="sr-only">{d.website}</dt>
                   <dd>
                     <a href={match.companyWebsite} target="_blank" rel="noreferrer" className="text-primary hover:underline">
                       {new URL(match.companyWebsite).hostname.replace(/^www\./, '')}
@@ -123,14 +129,14 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                 rel="noreferrer"
                 className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
-                View original
+                {d.viewOriginal}
                 <ExternalLink className="size-3.5" aria-hidden />
               </a>
             </div>
           </Card>
 
           <Card>
-            <CardHeader title="Why this fits you" description="How your agent matched this to your profile." />
+            <CardHeader title={d.whyFits.title} description={d.whyFits.description} />
             {match.matchReasons.length > 0 ? (
               <ul className="space-y-2 text-sm">
                 {match.matchReasons.map((reason) => (
@@ -141,13 +147,13 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">No specific reasons were recorded for this match.</p>
+              <p className="text-sm text-muted-foreground">{d.noReasons}</p>
             )}
             {match.signals.length > 0 && (
               <div className="mt-5">
                 <p className="flex items-center gap-2 text-sm font-medium">
                   <TrendingUp className="size-4 text-muted-foreground" aria-hidden />
-                  Why now
+                  {d.whyNow}
                 </p>
                 <ul className="mt-2 list-disc space-y-1 pl-6 text-sm text-muted-foreground">
                   {match.signals.map((signal) => (
@@ -157,13 +163,13 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
               </div>
             )}
             <p className="mt-5 text-xs text-muted-foreground">
-              Found via {OPPORTUNITY_SOURCE_LABELS[match.source]} on {formatShortDate(match.discoveredAt)}
+              {d.foundVia(t.common.opportunitySources[match.source], formatShortDate(match.discoveredAt, locale))}
             </p>
           </Card>
         </div>
 
         <Card className="lg:col-span-2">
-          <CardHeader title="Reach out" description="Take the first step. A personal email, ready in seconds." />
+          <CardHeader title={d.reachOut.title} description={d.reachOut.description} />
           <OutreachPanel
             key={`${outreach?.id ?? 'none'}-${outreach?.updatedAt ?? ''}-${outreach?.status ?? ''}`}
             matchId={match.id}

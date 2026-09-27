@@ -1,9 +1,11 @@
 import { Check } from 'lucide-react';
 import { FloatCard } from '../../_components/FloatCard';
-import { heroCards } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Stap 3 — een snelle, compacte match-uitkomst; bewust geen dashboard-widget. */
-export function MatchCard() {
+export async function MatchCard() {
+  const { heroCards } = buildLanding((await getT()).landing);
   const { score, label, reasons } = heroCards.match;
 
   return (

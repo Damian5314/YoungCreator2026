@@ -7,12 +7,17 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { PreferencesSummary } from '@/components/search/PreferencesSummary';
 import { RecentRuns } from '@/components/search/RecentRuns';
 import { SearchEngine } from '@/components/search/SearchEngine';
+import { getT } from '@/i18n/server';
 import { features } from '@/lib/env';
 import { getCreditBalance, getRecentRuns, getSearchProfile } from '@/lib/data/queries';
 
-export const metadata: Metadata = { title: 'Search' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.search.meta.title };
+}
 
 export default async function SearchPage() {
+  const t = await getT();
   const [searchProfile, credits, runs] = await Promise.all([getSearchProfile(), getCreditBalance(), getRecentRuns()]);
 
   // Eerst situatie en voorkeuren invullen, daarna pas de search engine
@@ -21,12 +26,12 @@ export default async function SearchPage() {
   return (
     <>
       <PageHeader
-        title="Search"
-        description="One click sends your agent out: job boards, career pages, events, startups and company news."
+        title={t.search.page.title}
+        description={t.search.page.description}
         action={
           <ButtonLink href="/search/preferences" variant="secondary" size="sm">
             <SlidersHorizontal className="size-4" aria-hidden />
-            Change preferences
+            {t.search.page.changePreferences}
           </ButtonLink>
         }
       />

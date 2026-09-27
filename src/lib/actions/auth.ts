@@ -3,7 +3,9 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { getT } from '@/i18n/server';
 import { createClient } from '@/lib/supabase/server';
+import { ensureDemoAccount, isDemoLogin, topUpDemoCredits } from '@/modules/auth/demoAccount';
 import { text, type FormState } from './formState';
 
 async function origin() {
@@ -11,12 +13,27 @@ async function origin() {
 }
 
 export async function login(_prev: FormState, formData: FormData): Promise<FormState> {
+  const email = text(formData, 'email');
+  const password = String(formData.get('password') ?? '');
+  const demo = isDemoLogin(email, password);
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
-    email: text(formData, 'email'),
-    password: String(formData.get('password') ?? ''),
-  });
-  if (error) return { error: error.message };
+  let result = await supabase.auth.signInWithPassword({ email, password });
+
+  // Demo-account: bij een fout eerst terugzetten en opnieuw proberen, zodat de live demo altijd inlogt
+  if (result.error && demo) {
+    try {
+      await ensureDemoAccount();
+      result = await supabase.auth.signInWithPassword({ email, password });
+    } catch (error) {
+      console.error('[demo] restoring the demo account failed', error);
+    }
+  }
+  if (result.error) return { error: result.error.message };
+
+  if (demo) {
+    await topUpDemoCredits(result.data.user.id).catch((error) => console.error('[demo] topping up credits failed', error));
+  }
 
   revalidatePath('/', 'layout');
   redirect('/dashboard');
@@ -35,7 +52,7 @@ export async function register(_prev: FormState, formData: FormData): Promise<Fo
   if (error) return { error: error.message };
 
   // Staat "Confirm email" aan in Supabase, dan is er pas een sessie na het klikken op de link
-  if (!data.session) return { message: 'Check your inbox and click the link to confirm your account.' };
+  if (!data.session) return { message: (await getT()).auth.messages.confirmSignup };
 
   revalidatePath('/', 'layout');
   redirect('/search/preferences');
@@ -55,12 +72,12 @@ export async function updateEmail(_prev: FormState, formData: FormData): Promise
     { emailRedirectTo: `${await origin()}/auth/callback?next=/settings` },
   );
   if (error) return { error: error.message };
-  return { message: 'Check your inbox to confirm the new address' };
+  return { message: (await getT()).auth.messages.confirmNewEmail };
 }
 
 export async function updatePassword(_prev: FormState, formData: FormData): Promise<FormState> {
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password: String(formData.get('password') ?? '') });
   if (error) return { error: error.message };
-  return { message: 'Password updated' };
+  return { message: (await getT()).auth.messages.passwordUpdated };
 }

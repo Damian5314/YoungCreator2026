@@ -140,7 +140,7 @@ export async function sendOutreach(userId: string, messageId: string, { auto = f
     return { ok: false, error: 'Sending isn’t connected yet. Copy the email or open it in your mail app instead.' };
   }
   if (!(await hasPaidAccess(userId))) {
-    return { ok: false, error: 'Sending through JobHunter comes with any credit pack. Copy the email or open it in your mail app instead.' };
+    return { ok: false, error: 'Sending through Unlisted comes with any credit pack. Copy the email or open it in your mail app instead.' };
   }
 
   const admin = createAdminClient();

@@ -1,8 +1,11 @@
 import { Logo } from '@/components/layout/Logo';
-import { footer } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Merkkolom: logo, korte belofte en een klein groen statement. */
-export function FooterBrand() {
+export async function FooterBrand() {
+  const { footer } = buildLanding((await getT()).landing);
+
   return (
     <div>
       <Logo size="lg" />

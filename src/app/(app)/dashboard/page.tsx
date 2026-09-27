@@ -8,12 +8,17 @@ import { StatsRow } from '@/components/dashboard/StatsRow';
 import { ResultsList } from '@/components/dashboard/ResultsList';
 import { ScheduleCard } from '@/components/dashboard/ScheduleCard';
 import { PreferencesSummary } from '@/components/search/PreferencesSummary';
+import { getT } from '@/i18n/server';
 import { getBillingStatus, getMatches, getOutreachList, getProfile, getSearchProfile } from '@/lib/data/queries';
 import { CREDIT_COST_PER_SEARCH } from '@/shared/constants/opportunityTypes';
 
-export const metadata: Metadata = { title: 'Dashboard' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.dashboard.meta.title };
+}
 
 export default async function DashboardPage() {
+  const t = await getT();
   const [profile, searchProfile, matches, outreach, billing] = await Promise.all([
     getProfile(),
     getSearchProfile(),
@@ -28,12 +33,12 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={firstName ? `Welcome back, ${firstName}` : 'Welcome back'}
-        description="Everything your searches have found so far."
+        title={firstName ? t.dashboard.header.welcomeName(firstName) : t.dashboard.header.welcome}
+        description={t.dashboard.header.description}
         action={
           <ButtonLink href="/search" size="sm">
             <Search className="size-4" aria-hidden />
-            New search
+            {t.dashboard.header.newSearch}
           </ButtonLink>
         }
       />
@@ -46,12 +51,12 @@ export default async function DashboardPage() {
           <Coins className="hidden size-5 shrink-0 text-primary-soft-foreground sm:block" aria-hidden />
           <p className="flex-1 text-sm text-primary-soft-foreground">
             <span className="font-semibold">
-              {billing.hasPaid ? 'You’re out of credits.' : 'You’ve used your free search.'}
+              {billing.hasPaid ? t.dashboard.credits.outOfCredits : t.dashboard.credits.freeSearchUsed}
             </span>{' '}
-            Buy a credit pack to keep searching{billing.automationsUnlocked ? '.' : ' and unlock automatic searches and sending.'}
+            {billing.automationsUnlocked ? t.dashboard.credits.keepSearching : t.dashboard.credits.keepSearchingAndUnlock}
           </p>
           <ButtonLink href="/billing" size="sm" className="shrink-0">
-            See credit packs
+            {t.dashboard.credits.seePacks}
           </ButtonLink>
         </div>
       )}
@@ -64,9 +69,9 @@ export default async function DashboardPage() {
           <Sparkles className="size-5 shrink-0" aria-hidden />
           <span className="flex-1">
             <span className="font-semibold">
-              Your agent prepared {draftsToReview} {draftsToReview === 1 ? 'email' : 'emails'} for you.
+              {t.dashboard.drafts.prepared(draftsToReview)}
             </span>{' '}
-            Review and send them to take the first step.
+            {t.dashboard.drafts.review}
           </span>
           <ArrowRight className="size-4 shrink-0" aria-hidden />
         </Link>
@@ -79,13 +84,13 @@ export default async function DashboardPage() {
             <ResultsList opportunities={matches} />
           ) : (
             <Card className="py-12 text-center">
-              <h2 className="font-semibold">No results yet</h2>
+              <h2 className="font-semibold">{t.dashboard.empty.title}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                Run your first search and your matches will show up here.
+                {t.dashboard.empty.description}
               </p>
               <ButtonLink href="/search" size="sm" className="mt-5">
                 <Search className="size-4" aria-hidden />
-                Go to search
+                {t.dashboard.empty.cta}
               </ButtonLink>
             </Card>
           )}
@@ -93,15 +98,15 @@ export default async function DashboardPage() {
 
         <aside className="space-y-6">
           <Card>
-            <CardHeader title="Search profile" description="What we're hunting for." />
+            <CardHeader title={t.dashboard.searchProfile.title} description={t.dashboard.searchProfile.description} />
             {searchProfile ? (
               <PreferencesSummary preferences={searchProfile.preferences} />
             ) : (
-              <p className="text-sm text-muted-foreground">You haven&apos;t set up your search yet.</p>
+              <p className="text-sm text-muted-foreground">{t.dashboard.searchProfile.notSetUp}</p>
             )}
             <ButtonLink href="/search/preferences" variant="secondary" size="sm" className="mt-5 w-full">
               <SlidersHorizontal className="size-4" aria-hidden />
-              {searchProfile ? 'Edit search profile' : 'Set up your search'}
+              {searchProfile ? t.dashboard.searchProfile.edit : t.dashboard.searchProfile.setUp}
             </ButtonLink>
           </Card>
           {searchProfile && (

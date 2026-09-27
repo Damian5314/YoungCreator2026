@@ -8,7 +8,7 @@ import { SignalFlowDecoration } from './beyond/SignalFlowDecoration';
 import { SignalTypeGrid } from './beyond/SignalTypeGrid';
 
 /**
- * Het verschil van Job Hunter: bedrijfssignalen → analyse → kansen → match → actie.
+ * Het verschil van Unlisted: bedrijfssignalen → analyse → kansen → match → actie.
  * Links de uitleg (42%), rechts het echte dashboard dat van rechts het beeld in komt (58%+).
  * overflow-x-clip: het dashboard mag voorbij de rechterrand lopen zonder horizontale scroll.
  */

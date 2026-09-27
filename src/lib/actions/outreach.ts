@@ -88,7 +88,7 @@ export async function sendOutreachNow(messageId: string, matchId: string): Promi
 
   const profile = await getProfile();
   if (!profile || profile.automationLevel < 2) {
-    return { ok: false, error: 'Sending from JobHunter needs automation level 2 or 3 (Settings → Agent).' };
+    return { ok: false, error: 'Sending from Unlisted needs automation level 2 or 3 (Settings → Agent).' };
   }
 
   try {

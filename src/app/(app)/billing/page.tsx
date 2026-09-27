@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: 'Credits & billing' };
 const HOW_IT_WORKS = [
   'Your first search is free.',
   `Every search costs ${CREDIT_COST_PER_SEARCH} credit, whether you start it or it runs on a schedule.`,
-  'Any credit pack unlocks automations: automatic searches and sending emails through JobHunter.',
+  'Any credit pack unlocks automations: automatic searches and sending emails through Unlisted.',
   'Credits never expire. If a search fails, you get the credit back.',
 ];
 

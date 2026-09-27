@@ -1,11 +1,14 @@
-import { footer } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 import { FooterSkyline } from './FooterSkyline';
 
 /**
  * Onderste regel. Desktop: copyright links, skyline precies in het midden, herkomst rechts;
  * alle drie op dezelfde 'grondlijn'. Kleinere schermen: skyline boven, de tekst eronder.
  */
-export function FooterBottom() {
+export async function FooterBottom() {
+  const { footer } = buildLanding((await getT()).landing);
+
   return (
     <div className="mt-8 flex flex-col items-center gap-5 text-center text-sm text-muted-foreground sm:gap-6 lg:mt-9 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-end lg:gap-8 lg:text-left">
       <FooterSkyline className="w-[min(100%,22rem)] sm:w-[26rem] lg:order-2 lg:w-[20rem] xl:w-[24rem]" />

@@ -1,12 +1,15 @@
 import { Annotation } from '../../_components/Annotation';
-import { story } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /**
  * De enige handgeschreven notitie in het verhaal (desktop): boven het hoofd van
  * de student, met een pijl naar de bovenste kaart. De animatie start pas als de
  * foto in beeld is (data-reveal-play, zie globals.css).
  */
-export function StoryAnnotation() {
+export async function StoryAnnotation() {
+  const { story } = buildLanding((await getT()).landing);
+
   return (
     <div data-reveal-play className="absolute left-[41%] top-[4%] hidden lg:block xl:left-[50%] xl:top-[6%]">
       <Annotation

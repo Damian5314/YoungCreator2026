@@ -1,0 +1,78 @@
+// Gedeelde teksten: navigatie, taalkeuze, algemene knoppen en de labels voor
+// kanstypes, bronnen en statussen (gebruikt door dashboard, matches en zoeken).
+export const common = {
+  meta: {
+    description:
+      'Unlisted helps international students find jobs, internships and hidden opportunities in the Netherlands by analyzing real-time company signals, news and hiring activity.',
+  },
+  language: {
+    label: 'Language',
+    names: { en: 'English', nl: 'Nederlands' },
+  },
+  nav: {
+    main: 'Main',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+    dashboard: 'Dashboard',
+    search: 'Search',
+    outreach: 'Outreach',
+    settings: 'Settings',
+  },
+  credits: {
+    unit: (count: number) => (count === 1 ? 'credit' : 'credits'),
+    buyMore: (count: number) => `${count} ${count === 1 ? 'credit' : 'credits'}: buy more`,
+  },
+  actions: {
+    pleaseWait: 'Please wait…',
+    save: 'Save',
+    saving: 'Saving…',
+    saved: 'Saved',
+    cancel: 'Cancel',
+    close: 'Close',
+    back: 'Back',
+    continue: 'Continue',
+    edit: 'Edit',
+    retry: 'Try again',
+  },
+  opportunityTypes: {
+    job: 'Job',
+    internship: 'Internship',
+    traineeship: 'Traineeship',
+    thesis: 'Thesis project',
+    'working-student': 'Working student',
+    'part-time': 'Part-time work',
+    freelance: 'Freelance',
+    'open-application': 'Open application',
+    event: 'Event',
+    hackathon: 'Hackathon',
+    conference: 'Conference',
+    networking: 'Networking',
+    project: 'Project',
+    research: 'Research project',
+    startup: 'Startup',
+  },
+  opportunityTypeGroups: {
+    work: 'Work',
+    events: 'Events & network',
+    companies: 'Companies & projects',
+  },
+  opportunitySources: {
+    linkedin: 'LinkedIn',
+    indeed: 'Indeed',
+    glassdoor: 'Glassdoor',
+    'company-career-page': 'Career page',
+    radar: 'Radar',
+    news: 'News',
+    'event-platform': 'Event platform',
+    'startup-database': 'Startup database',
+    web: 'Web',
+    demo: 'Demo data',
+  },
+  opportunityStatuses: {
+    new: 'New',
+    reviewed: 'Reviewed',
+    saved: 'Saved',
+    applied: 'Contacted',
+    rejected: 'Not interested',
+  },
+};

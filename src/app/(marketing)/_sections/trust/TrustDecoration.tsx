@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { revealItem } from '../../_components/revealItem';
-import { media } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Zachte mintwaas rechts in de kaart, achter het embleem. */
 export function TrustGlow() {
@@ -17,7 +18,9 @@ export function TrustGlow() {
  * en scherp in beeld; alleen het begin van de curve (links) loopt zacht uit. Bij binnenkomst
  * veegt het embleem van links naar rechts in beeld, waardoor de curve zichzelf lijkt te tekenen.
  */
-export function TrustEmblem({ className = '' }: { className?: string }) {
+export async function TrustEmblem({ className = '' }: { className?: string }) {
+  const { media } = buildLanding((await getT()).landing);
+
   return (
     <div
       aria-hidden

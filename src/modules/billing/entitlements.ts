@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 // Wat mag deze gebruiker? Op basis van betalingen, nooit op basis van een vlag die de client meestuurt.
 // Regels: elke zoekopdracht kost credits (ook zonder Mollie). Automations (automatisch zoeken,
-// mails laten versturen door JobHunter) vragen minstens één gelukte betaling. Zonder Mollie-key
+// mails laten versturen door Unlisted) vragen minstens één gelukte betaling. Zonder Mollie-key
 // staat de betaalmuur voor automations uit, zodat lokaal ontwikkelen zonder betalen werkt.
 
 export const AUTOMATIONS_LOCKED_MESSAGE = 'Automations unlock with any credit pack. Your first search is on us.';

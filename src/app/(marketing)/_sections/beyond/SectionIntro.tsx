@@ -1,6 +1,7 @@
 import { Eyebrow } from '../../_components/Eyebrow';
 import { revealItem } from '../../_components/revealItem';
-import { signals } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Dunne, licht wiebelende mint onderstreping: met de hand getrokken, niet neon. */
 function HandUnderline() {
@@ -24,7 +25,9 @@ function HandUnderline() {
   );
 }
 
-export function SectionIntro() {
+export async function SectionIntro() {
+  const { signals } = buildLanding((await getT()).landing);
+
   return (
     <>
       <div {...revealItem(0)}>

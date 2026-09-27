@@ -1,11 +1,7 @@
 import Link from 'next/link';
 import { Building, CalendarDays, ExternalLink, MapPin, Radar, Sparkles, TrendingUp, UserRound } from 'lucide-react';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
-import {
-  OPPORTUNITY_SOURCE_LABELS,
-  OPPORTUNITY_STATUS_LABELS,
-  OPPORTUNITY_TYPE_LABELS,
-} from '@/shared/constants/opportunityTypes';
+import { useLocale, useT } from '@/i18n/I18nProvider';
 import type { Opportunity } from '@/shared/types/Opportunity';
 import type { OpportunityStatus } from '@/shared/types/OpportunityType';
 import { formatDateTime, formatShortDate } from '@/shared/utils/formatDate';
@@ -19,20 +15,27 @@ export const STATUS_TONES: Record<OpportunityStatus, BadgeTone> = {
   rejected: 'neutral',
 };
 
-export function MatchScore({ score }: { score: number }) {
+// Geen hooks: wordt ook door de (server) detailpagina gerenderd, die het vertaalde label meegeeft
+export function MatchScore({ score, label }: { score: number; label: string }) {
   const tone =
     score >= 80 ? 'bg-success-soft text-success' : score >= 65 ? 'bg-warning-soft text-warning' : 'bg-muted text-muted-foreground';
 
   return (
     <div className={`flex size-14 shrink-0 flex-col items-center justify-center rounded-xl ${tone}`}>
       <span className="text-lg font-bold leading-none">{score}</span>
-      <span className="mt-1 text-[10px] font-medium uppercase tracking-wide">match</span>
+      <span className="mt-1 text-[10px] font-medium uppercase tracking-wide">{label}</span>
     </div>
   );
 }
 
+// Draait op de client (ResultsList en SearchEngine zijn Client Components)
 export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
-  const location = opportunity.remote ? `${opportunity.location || 'Remote'}${opportunity.location ? ' · remote' : ''}` : opportunity.location;
+  const t = useT();
+  const locale = useLocale();
+  const c = t.matches.card;
+  const location = opportunity.remote
+    ? `${opportunity.location || c.remote}${opportunity.location ? ` · ${c.remoteSuffix}` : ''}`
+    : opportunity.location;
 
   return (
     <article
@@ -43,16 +46,16 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
       {/* Mobiel: score zweeft rechtsboven zodat de inhoud de volle breedte krijgt; vanaf sm een eigen kolom */}
       <div className="flow-root sm:flex sm:items-start sm:gap-4">
         <div className="float-right mb-2 ml-3 sm:float-none sm:m-0">
-          <MatchScore score={opportunity.matchScore} />
+          <MatchScore score={opportunity.matchScore} label={t.matches.score.label} />
         </div>
         <div className="min-w-0 sm:flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={STATUS_TONES[opportunity.status]}>{OPPORTUNITY_STATUS_LABELS[opportunity.status]}</Badge>
-            <Badge>{OPPORTUNITY_TYPE_LABELS[opportunity.type]}</Badge>
+            <Badge tone={STATUS_TONES[opportunity.status]}>{t.common.opportunityStatuses[opportunity.status]}</Badge>
+            <Badge>{t.common.opportunityTypes[opportunity.type]}</Badge>
             {opportunity.isHidden && (
               <Badge tone="primary">
                 <Radar className="size-3" aria-hidden />
-                Hidden opportunity
+                {c.hiddenOpportunity}
               </Badge>
             )}
           </div>
@@ -75,7 +78,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
             {opportunity.startsAt && (
               <span className="flex items-center gap-1.5">
                 <CalendarDays className="size-3.5" aria-hidden />
-                {formatDateTime(opportunity.startsAt)}
+                {formatDateTime(opportunity.startsAt, locale)}
               </span>
             )}
             {opportunity.contact?.name && (
@@ -101,7 +104,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
             <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
               <TrendingUp className="mt-0.5 size-3.5 shrink-0" aria-hidden />
               <span>
-                <span className="font-medium text-foreground">Why now:</span> {opportunity.signals.join(' · ')}
+                <span className="font-medium text-foreground">{c.whyNow}</span> {opportunity.signals.join(' · ')}
               </span>
             </p>
           )}
@@ -124,7 +127,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
         <MatchActions matchId={opportunity.id} status={opportunity.status} outreachStatus={opportunity.outreachStatus} />
         <span className="flex items-center gap-3 text-xs text-muted-foreground">
           <span>
-            Found via {OPPORTUNITY_SOURCE_LABELS[opportunity.source]} · {formatShortDate(opportunity.discoveredAt)}
+            {c.foundVia(t.common.opportunitySources[opportunity.source], formatShortDate(opportunity.discoveredAt, locale))}
           </span>
           <a
             href={opportunity.sourceUrl}
@@ -132,7 +135,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
             rel="noreferrer"
             className="flex shrink-0 items-center gap-1 font-medium text-primary hover:underline"
           >
-            View
+            {c.view}
             <ExternalLink className="size-3.5" aria-hidden />
           </a>
         </span>

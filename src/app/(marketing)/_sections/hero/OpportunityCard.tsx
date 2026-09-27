@@ -1,9 +1,11 @@
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { FloatCard, glassIcon } from '../../_components/FloatCard';
-import { heroCards } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Stap 2 — de kernkaart: van bedrijfssignaal naar een persoonlijke kans. */
-export function OpportunityCard() {
+export async function OpportunityCard() {
+  const { heroCards } = buildLanding((await getT()).landing);
   const { label, title, reason, cta } = heroCards.opportunity;
 
   return (

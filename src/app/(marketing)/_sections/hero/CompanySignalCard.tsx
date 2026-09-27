@@ -2,11 +2,13 @@ import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import { CompanyLogo } from '../../_components/CompanyLogo';
 import { FloatCard } from '../../_components/FloatCard';
-import { heroCards, media } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Stap 1 — de bron: iets wat een bedrijf publiek aankondigt, als echte nieuwsmelding. */
-export function CompanySignalCard() {
-  const { company, time, title, tags } = heroCards.signal;
+export async function CompanySignalCard() {
+  const { heroCards, media } = buildLanding((await getT()).landing);
+  const { company, time, title, tags, tagsLabel } = heroCards.signal;
 
   return (
     <FloatCard className="p-3.5">
@@ -30,7 +32,7 @@ export function CompanySignalCard() {
         />
       </div>
 
-      <ul className="mt-2.5 flex flex-wrap gap-1" aria-label="Signal tags">
+      <ul className="mt-2.5 flex flex-wrap gap-1" aria-label={tagsLabel}>
         {tags.map((tag, index) => (
           <li
             key={tag}

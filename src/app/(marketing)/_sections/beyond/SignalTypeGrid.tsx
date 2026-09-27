@@ -1,5 +1,6 @@
 import { revealItem } from '../../_components/revealItem';
-import { signals, type SignalTone } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding, type SignalTone } from '../../_content/landing';
 
 const tones: Record<SignalTone, string> = {
   mint: 'bg-primary-soft text-primary',
@@ -8,8 +9,10 @@ const tones: Record<SignalTone, string> = {
   blue: 'bg-[#eaf2fd] text-[#3a78d4] dark:bg-[#3a78d4]/15 dark:text-[#95bbf2]',
 };
 
-/** De vier soorten signalen die Job Hunter volgt: kleine tegel met icoon, label eronder. */
-export function SignalTypeGrid() {
+/** De vier soorten signalen die Unlisted volgt: kleine tegel met icoon, label eronder. */
+export async function SignalTypeGrid() {
+  const { signals } = buildLanding((await getT()).landing);
+
   return (
     <ul className="mt-9 grid max-w-[31rem] grid-cols-2 gap-x-4 gap-y-6 sm:grid-cols-4 lg:mt-10">
       {signals.items.map(({ icon: Icon, label: [first, second], tone }, index) => (
