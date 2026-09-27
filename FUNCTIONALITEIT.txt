@@ -1,0 +1,293 @@
+JOB HUNTER — WAT HET SYSTEEM DOET (EN GAAT DOEN)
+Stand: 27 september 2026, op basis van de code in deze repo.
+
+Legenda
+  [WERKT]    zit in de code en werkt
+  [KOPPELEN] gebouwd, maar werkt pas echt als een externe dienst/sleutel is ingesteld
+  [GEPLAND]  nog niet gebouwd (idee, stub of openstaand punt)
+
+
+====================================================================
+0. IN EEN ZIN
+====================================================================
+Een persoonlijke AI-agent voor (internationale) studenten en starters in
+Nederland. De agent leert je kennen, zoekt breder dan vacaturesites (jobs,
+stages, events, hackathons, startups, projecten, bedrijfsnieuws), scoort elke
+kans op jouw profiel en helpt je direct contact te leggen met een persoonlijke
+e-mail.
+
+Kernflow:  KNOW ME (profiel + cv)  ->  FIND OPPORTUNITIES (zoekrun via n8n)
+           ->  MATCH (score + redenen)  ->  TAKE ACTION (outreach-mail)
+
+
+====================================================================
+1. WAT HET NU DOET
+====================================================================
+
+1.1 Account en toegang                                            [WERKT]
+  - Registreren, inloggen en uitloggen via Supabase Auth.
+  - E-mailadres en wachtwoord wijzigen (Instellingen).
+  - Beschermde pagina's: /dashboard, /search, /settings, /outreach, /matches.
+    Niet ingelogd -> naar /login; ingelogd op /login of /register -> naar
+    /dashboard (src/proxy.ts).
+  - Nieuwe gebruiker krijgt automatisch een profiel + 10 welkomstcredits.
+
+1.2 Profiel: "know me"                                            [WERKT]
+  - Situatie: nationaliteit, einddatum zoekjaar (orientation year), opleiding,
+    studierichting, universiteit, afstudeerjaar, talen, skills.
+  - "Know me": interesses, ambities, recente nieuwsgierigheid ("welk nieuws of
+    welke technologie trok je aandacht?"), LinkedIn- en portfolio-URL.
+  - CV uploaden (PDF, max 5 MB) naar een privé opslag-bucket; alleen de server
+    leest en schrijft daar.
+  - CV uitlezen: tekst uit de PDF halen, daarna met AI samenvatting, skills,
+    talen, interesses, opleiding en werkervaring eruit halen. Wat de student
+    zelf invult gaat voor; het cv vult aan.                     [KOPPELEN: AI]
+
+1.3 Zoekvoorkeuren                                                [WERKT]
+  - Gewenste rollen, locaties, alleen remote, sectoren, minimumsalaris.
+  - Soorten kansen (15 types, in 3 groepen):
+      Werk: job, internship, traineeship, working student, part-time,
+            freelance, thesis project
+      Events & netwerk: event, hackathon, conference, networking
+      Bedrijven & projecten: open application, startup, project, research
+  - Schakelaars per zoekprofiel: "Hidden opportunity radar" en "Company hunter"
+    (worden onthouden als standaard, ook voor geplande zoekopdrachten).
+
+1.4 Zoeken (search engine) en credits                             [WERKT]
+  - Eén klik start een zoekrun. Kosten: 1 credit per zoekopdracht.
+  - Credits worden atomisch afgeschreven (geen dubbel uitgeven). Te weinig
+    credits -> nette melding, geen run.
+  - De app bouwt kant-en-klare zoektermen uit het profiel (max 15), bv.
+    "<rol> internship <stad>", "<interesse> hackathon Netherlands",
+    "<sector> startups <stad>", "<interesse> company news <stad>".
+  - Het profiel (zonder e-mailadres of user-id) + zoektermen + opties gaan naar
+    n8n; n8n zoekt en stuurt resultaten terug.                  [KOPPELEN: n8n]
+  - DEMO-MODUS: zolang er geen n8n-zoekwebhook is ingesteld, levert de app zelf
+    ~11 fictieve voorbeeldkansen (hackathon, meetup, traineeships, freelance,
+    research, open application na een seed-ronde, ...). Zo is de hele flow
+    end-to-end te testen. Alle bedrijven/personen/e-mailadressen zijn nep
+    (.example), er gaat nooit echt mail uit.                    [WERKT]
+  - Voortgang van de run live volgen in de UI (polling); resultaten verschijnen
+    zodra de run klaar is.
+  - Mislukt de start van n8n, of blijft een run langer dan 30 min hangen ->
+    run op "failed" en de credit gaat automatisch terug.
+  - Overzicht van recente zoekruns.
+
+1.5 Automatisch zoeken (planning)                        [WERKT + KOPPELEN]
+  - Per zoekprofiel: dagelijks of wekelijks, dag en tijd, in de eigen tijdzone.
+  - De database rekent zelf het volgende moment uit (tijdzone-bewust).
+  - n8n roept elke 15 minuten POST /api/n8n/scheduler aan; die start alle runs
+    die aan de beurt zijn (max 25 per keer, nooit dubbel) en ruimt vastgelopen
+    runs op. Zonder die n8n-trigger draait de planning niet.   [KOPPELEN: n8n]
+
+1.6 Resultaten verwerken en matchen                               [WERKT]
+  - n8n levert kansen aan via POST /api/n8n/results (Bearer-geheim). Mag in
+    meerdere leveringen; "done: true" sluit de run af. Kapotte items worden
+    los afgewezen, de rest gaat gewoon door.
+  - Minimaal nodig per kans: titel, url, bedrijf. Optioneel: type, locatie,
+    remote, beschrijving, skills, salaris, "hidden" (nog niet publiek),
+    datum/startdatum (events), signalen ("why now": funding, nieuw kantoor, ...),
+    contactpersoon (naam, e-mail, rol, LinkedIn), en een eigen score.
+  - Bedrijven worden samengevoegd op domein (anders op naam); kansen op
+    bron + extern id. Dubbele kansen in één levering worden één keer verwerkt.
+  - Scoren (0-100 + 1-3 redenen gericht aan de student), in deze volgorde:
+      1. score die n8n zelf meestuurt
+      2. Claude AI (in batches van 25)                          [KOPPELEN: AI]
+      3. uitlegbare regels zonder AI (fallback): skills, interesses/sectoren,
+         gewenste rol in de titel, type kans, locatie/remote, "alleen remote",
+         hidden opportunity, why-now-signaal, event binnen 60 dagen, al
+         voorbije events tellen niet mee.
+  - Kansen onder score 25 komen niet op het dashboard (ruis).
+  - Bestaande matches krijgen een nieuwe score; hun status blijft staan.
+
+1.7 Dashboard en kanspagina                                        [WERKT]
+  - Dashboard: welkom, statistieken (o.a. einddatum zoekjaar), gevonden kansen,
+    zoekprofiel, planning. Creditsaldo zichtbaar in de header.
+  - Kanskaart: score, type, locatie, skills, "Hidden opportunity"-label.
+  - Kanspagina (/matches/[id]): "Why this fits you" (redenen) en "Reach out".
+  - Status per kans: New, Reviewed, Saved, Contacted, Not interested.
+  - Snelle acties: bewaren, niet interessant, e-mail schrijven.
+
+1.8 Outreach: de action engine                                    [WERKT]
+  - "Write email": de agent schrijft een korte, persoonlijke eerste mail
+    (90-150 woorden) die de specifieke kans/het nieuws noemt, koppelt aan het
+    profiel en eindigt met één kleine vraag (call, koffie, zien op het event).
+    Engels, of Nederlands als de kans Nederlandstalig is. Geen verzonnen feiten.
+    Zonder AI: een nette standaardtekst.                        [KOPPELEN: AI]
+  - Student past aan (aan, naam, onderwerp, tekst) en slaat op.
+  - Versturen op 3 manieren:
+      - kopiëren naar klembord
+      - openen in eigen mailprogramma (mailto)
+      - versturen via n8n (met reply-to naar de student)       [KOPPELEN: n8n]
+  - "Ik heb hem zelf verstuurd" markeren. Na versturen -> kans op "Contacted".
+  - Outreach-pagina: alle concepten en verstuurde mails.
+  - Automatisch na elke zoekrun: voor de 3 sterkste nieuwe kansen (score >= 70)
+    mét contactpersoon maakt de agent zelf een concept klaar.
+  - Automatiseringsniveau (Instellingen -> Your agent):
+      1 Assistant       agent schrijft, student verstuurt zelf
+      2 Semi-automatic  student keurt goed, systeem verstuurt
+      3 Fully automatic agent verstuurt zelf (alleen met expliciete toestemming,
+                        binnen een daglimiet van 0-20 mails per 24 uur)
+  - Veiligheidsgrenzen: handmatig max 25 mails per 24 uur, één mail per kans,
+    een mail kan nooit dubbel verstuurd worden.
+
+1.9 Instellingen                                                  [WERKT]
+  - Agent (niveau, daglimiet, LinkedIn/portfolio onder de mails), account
+    (e-mail, wachtwoord), dark mode, uitloggen.
+
+1.10 AI (Claude)                                                [KOPPELEN: AI]
+  - Gebruikt voor: cv uitlezen, kansen scoren, outreach-mails schrijven.
+  - Model instelbaar (ANTHROPIC_MODEL, standaard claude-opus-5), JSON-antwoord
+    gegarandeerd via schema. Bij een fout, limiet of weigering valt alles
+    automatisch terug op regels/templates, de app blijft werken.
+
+1.11 Beveiliging en data                                          [WERKT]
+  - Row Level Security: een student ziet alleen eigen profiel, runs, matches en
+    mails; concepten zijn alleen bewerkbaar zolang ze niet verstuurd zijn.
+  - Alles wat het systeem schrijft (runs, credits, matches, verzendstatus) gaat
+    via de server met de secret key; systeemfuncties zijn niet aanroepbaar
+    vanuit de browser.
+  - n8n <-> app beveiligd met een gedeeld geheim (header / Bearer,
+    timing-safe vergeleken).
+  - Gedeelde data (bedrijven, kansen) apart van persoonlijke data (matches).
+
+1.12 Landingspagina                                               [WERKT]
+  - Hero met student-foto en product-kaarten (bedrijfsnieuws -> kans -> 92%
+    match -> voorgesteld bericht), trust strip, verhaalblok, "We look beyond job
+    boards" met dashboard-preview en 4 signaaltypes, afsluitende CTA, footer.
+  - Altijd licht thema; responsive van mobiel tot 1920px+.
+  - Alle teksten in src/app/(marketing)/_content/landing.ts.
+
+
+====================================================================
+2. GEBOUWD, NOG KOPPELEN (instellen in .env.local / Vercel)
+====================================================================
+  N8N_SEARCH_WEBHOOK_URL    n8n-workflow die echt zoekt. Zonder: demo-modus.
+  N8N_SEND_EMAIL_WEBHOOK_URL n8n-workflow die mails verstuurt. Zonder: alleen
+                            kopiëren / mailprogramma.
+  N8N_SECRET                gedeeld geheim tussen app en n8n (beide kanten).
+  APP_URL                   publieke URL van de app (callback voor n8n).
+  ANTHROPIC_API_KEY         AI voor cv, scoren en mails. Zonder: regels/templates.
+  ANTHROPIC_MODEL           optioneel, standaard claude-opus-5.
+  n8n Schedule Trigger      elke 15 min POST /api/n8n/scheduler (planning).
+
+  Let op: de n8n-workflows zelf (welke bronnen er echt doorzocht worden:
+  Google, job boards, Eventbrite/Meetup, nieuws, Apify, ...) staan NIET in deze
+  repo. De app levert de zoektermen en verwerkt wat terugkomt.
+
+
+====================================================================
+3. GEPLAND / TOEKOMST
+====================================================================
+(Bron: Radar_Requirements.md + TODO-stubs in de code. Let op: de vinkjes in
+Radar_Requirements.md zijn van 26 sep en deels achterhaald; login en echte data
+werken inmiddels wel.)
+
+3.1 Hidden Opportunity Radar (bedrijven vinden vóór ze een vacature plaatsen)
+  [GEPLAND] Bedrijven importeren per sector (KvK-codes, Dealroom/Crunchbase,
+            Holland Robotics, TechLeap), klanten uit "case studies"/persberichten
+            halen, dubbelen samenvoegen op domein.
+  [GEPLAND] Signalen verzamelen: Google News RSS, GDELT, NewsAPI, zakelijke pers,
+            persberichten/RSS, PR-wires (ANP, Business Wire), KvK-vestigingen,
+            bouwvergunningen, subsidies, career/team/locatiepagina's,
+            LinkedIn-headcount, GitHub-activiteit. Keyword-voorfilter vóór AI.
+            Dagelijkse job.
+  [GEPLAND] AI zet elk artikel om in een gestructureerd signaal (type, bedrijf,
+            locatie, bedrag, datum, verwachte rollen, sentiment, letterlijk citaat
+            als bewijs, bron-URL).
+  [GEPLAND] Signaaltypes: funding, capex/nieuwe fabriek, nieuw kantoor, grote
+            klant, overname, productlaunch, subsidie/R&D; negatief: ontslagen,
+            reorganisatie, faillissement.
+  [GEPLAND] Radar-score zonder AI: gewicht per signaaltype, verval in de tijd,
+            grootte (Series B > seed), bonus voor meerdere signalen, aftrek voor
+            negatieve signalen.
+  [GEPLAND] Rollen afleiden en controleren of er nog géén vacature is
+            (LinkedIn, Indeed, career page) -> "hidden opportunity".
+
+3.2 Company Hunter
+  [GEPLAND] Career pages van gevolgde bedrijven bewaken (velden bestaan al in de
+            database: is_monitored, career_page_hash, last_checked_at) en de
+            student waarschuwen zodra de vacature online komt.
+  [GEPLAND] Eigen scrapers voor LinkedIn, Indeed en career pages (nu stubs die
+            niets teruggeven; de echte zoektocht loopt via n8n).
+
+3.3 Slimmer matchen
+  [GEPLAND] Harde filters: land/stad, visumfilter via het IND-register van
+            erkende referenten, taalfilter (geen bedrijven die beter Nederlands
+            vragen dan je spreekt), type kans.
+  [GEPLAND] Embeddings (vectoren) van cv's, bedrijven en rollen; eerst grof
+            selecteren (~50), daarna AI-herrangschikking.
+  [GEPLAND] Eindvolgorde = matchscore + radarscore.
+  [GEPLAND] "Not interested"-feedback gebruiken om beter te matchen (status
+            wordt al opgeslagen, maar nog niet gebruikt).
+
+3.4 Wat de student ziet
+  [GEPLAND] "Why now"-sectie met signalen en datums, links naar bronartikelen,
+            visumsponsor-indicator, voorgestelde rol voor een open sollicitatie.
+
+3.5 Betalen en infrastructuur
+  [GEPLAND] Credits kopen: prijzen staan klaar (Starter 10 credits €9, Pro 50
+            credits €35, Unlimited €79, eenmalig, geen abonnement), maar er is
+            nog geen checkout/betaalprovider. Nu alleen 10 welkomstcredits.
+  [GEPLAND] "Application action" kost 2 credits (reden bestaat in de database,
+            wordt nog niet afgeschreven).
+  [GEPLAND] Goedkoop model voor artikel-extractie, sterk model alleen voor
+            herrangschikken en mails.
+  [GEPLAND] Job queue en cache (alleen interfaces), notificaties (interface).
+
+3.6 Hackathon-demo
+  [GEPLAND] Eén sector (robotics) + één regio (Nederland), Google News RSS +
+            bedrijfswebsites als bronnen, ~20 echte bedrijven handmatig checken,
+            een paar echte, herleidbare signalen met een duidelijke "why now".
+
+3.7 Landingspagina
+  [GEPLAND] Verhaalfoto, CTA-foto en de "Watch our story"-video (plekken staan
+            klaar in landing.ts; nu een nette tijdelijke achtergrond).
+  [GEPLAND] Echte cijfers i.p.v. placeholders ("5,000+ students", "4.9/5",
+            universiteiten) vóór livegang.
+
+
+====================================================================
+4. BEKENDE LOSSE EINDJES
+====================================================================
+  - pnpm typecheck faalt in src/lib/data/queries.ts,
+    src/modules/profile/CVParser.ts en src/shared/mocks/mockData.ts: de types
+    Opportunity (matchReasons, signals) en CVData (interests) zijn uitgebreid,
+    deze bestanden nog niet.
+  - api/n8n/results verwijst naar docs/n8n.md voor het dataformaat, maar die map
+    bestaat niet. Voorbeeld van het formaat: src/modules/pipeline/demoItems.ts
+    en src/modules/pipeline/schema.ts.
+  - Oude architectuur (src/agents, src/scrapers, SearchService) is grotendeels
+    vervangen door de n8n-pipeline (src/modules/pipeline) en bevat alleen stubs.
+
+
+====================================================================
+5. WAAR STAAT WAT
+====================================================================
+  Zoekrun starten        src/modules/pipeline/startRun.ts
+  Profiel -> zoektermen  src/modules/pipeline/profile.ts
+  n8n-contract           src/modules/pipeline/schema.ts (+ demoItems.ts)
+  Resultaten verwerken   src/modules/pipeline/ingest.ts
+  Scoren                 src/modules/opportunities/matchScorer.ts (AI)
+                         src/modules/opportunities/heuristicScore.ts (regels)
+  Outreach               src/modules/outreach/outreachService.ts, emailWriter.ts
+  CV uitlezen            src/modules/profile/CVParser.ts
+  AI-aanroep             src/lib/ai/claude.ts
+  n8n-aanroep/beveiliging src/lib/n8n.ts, src/lib/env.ts
+  API voor n8n           src/app/api/n8n/results, src/app/api/n8n/scheduler
+  Voortgang zoekrun      src/app/api/search/runs/[id]
+  Server actions         src/lib/actions/*.ts
+  Database               supabase/migrations/*.sql
+  Roadmap radar          Radar_Requirements.md
+  Landingspagina-teksten src/app/(marketing)/_content/landing.ts
+  Afbeeldingen           public/images/<sectie>/<sectie>-<omschrijving>.<ext>
+                           brand/   logo.png (header/logo)
+                           hero/    hero-student-canal.png, hero-news-thumb.jpg
+                           trust/   trust-lion-emblem.png
+                           story/   story-student-late-night.png
+                           beyond/  beyond-dashboard-signals.png
+                           cta/     cta-sunset-canal.jpg
+                           footer/  footer-skyline.png
+                         Sectienamen = mappen in src/app/(marketing)/_sections/.
+                         Favicon: src/app/icon.png (Next.js-conventie).
+  Bronbestanden beeld    design/originals/<sectie>/ (niet geserveerd)

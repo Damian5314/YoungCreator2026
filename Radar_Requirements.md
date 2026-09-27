@@ -4,7 +4,7 @@ How the AI finds companies that will hire soon, before they post a vacancy, and 
 
 **Legend:** `[x]` done · `[ ]` open. "Schema only" means the database table or column exists, but no code uses it yet.
 
-Status checked against the `YoungCreator2026` code on 2026-09-26. At that point the UI runs on hardcoded mock data, and every agent and scraper is still a stub that returns an empty result.
+Status checked against the `YoungCreator2026` code on 2026-09-27. The app side is complete: profile, scoring, matches, outreach, credits and scheduling work end to end. Collecting data (steps 1–3) is the job of the n8n workflows; see `docs/n8n.md` for the contract. Without n8n the app runs in demo mode with sample opportunities.
 
 ---
 
@@ -14,8 +14,8 @@ Status checked against the `YoungCreator2026` code on 2026-09-26. At that point 
 - [x] Supabase database schema (`supabase/migrations/20260926170000_initial_schema.sql`)
 - [x] Shared data (companies, opportunities) kept separate from personal data (matches)
 - [x] `radar` exists as an opportunity source; `is_hidden` flag on opportunities
-- [ ] Login and registration connected to Supabase Auth (pages exist, not wired up)
-- [ ] App reads real data from the database instead of `mockData.ts`
+- [x] Login and registration connected to Supabase Auth
+- [x] App reads real data from the database (mock data removed; demo mode uses the same pipeline as n8n)
 
 ## 1. Find the companies
 
@@ -25,7 +25,7 @@ Status checked against the `YoungCreator2026` code on 2026-09-26. At that point 
 - [ ] Import from sector groups (Holland Robotics, TechLeap)
 - [ ] Scrape "Customers" / "Case studies" pages of robotics companies
 - [ ] AI pulls customer names out of press releases ("X deploys robots at Y") and adds them as companies
-- [ ] Merge duplicate companies by domain when importing
+- [x] Merge duplicate companies by domain when importing (`/api/n8n/results` upserts on domain, else on name)
 
 ## 2. Collect signals
 
@@ -35,11 +35,11 @@ Status checked against the `YoungCreator2026` code on 2026-09-26. At that point 
 - [ ] Company website: career page, team page, "we're growing" banners, locations page
 - [ ] Indirect signals: LinkedIn headcount growth, GitHub activity, new job titles on other platforms
 - [ ] Keyword pre-filter ("funding", "expand", "new facility", "acquires", "opens office", "contract") before any AI call
-- [ ] Scheduled job that runs the collection daily
+- [ ] Scheduled job that runs the collection daily (app side done: `POST /api/n8n/scheduler`; n8n Schedule Trigger still to build)
 
 ## 3. AI turns each article into a structured signal
 
-- [ ] Table for signals: company, type, detail, location, amount, date, implied roles, sentiment, evidence quote, source URL
+- [ ] Table for signals: company, type, detail, location, amount, date, implied roles, sentiment, evidence quote, source URL (for now: `opportunities.signals` holds the "why now" lines n8n sends)
 - [ ] AI extraction prompt that returns the fixed JSON fields
 - [ ] Model must quote the article (`evidence_quote`) so signals can't be invented
 - [ ] Link each signal to a company (by domain or name)
@@ -67,7 +67,7 @@ Status checked against the `YoungCreator2026` code on 2026-09-26. At that point 
 
 - [ ] AI infers likely roles from signals, website content and tech stack
 - [ ] Check LinkedIn, Indeed and the career page for an existing vacancy
-- [ ] Mark as hidden opportunity (`is_hidden = true`) when no vacancy exists
+- [ ] Mark as hidden opportunity (`is_hidden = true`) when no vacancy exists (app stores `isHidden` from n8n; the check itself is n8n's job)
 - [x] Career page monitoring fields: `is_monitored`, `career_page_hash`, `last_checked_at` (schema only)
 - [ ] Company Hunter watches the career page and alerts the user when the vacancy goes up
 
@@ -76,38 +76,38 @@ Status checked against the `YoungCreator2026` code on 2026-09-26. At that point 
 **Hard filters (never outweighed by other scores)**
 
 - [x] User preferences stored: locations, remote only, opportunity types, desired roles, industries, minimum salary (schema + preferences page)
-- [x] User profile stored: nationality, languages, skills, CV text, end of search year (schema only)
+- [x] User profile stored: nationality, languages, skills, interests, ambitions, recent curiosity, CV (PDF in private storage + text + parsed), end of search year
 - [ ] Filter by country or city (company or its new office)
 - [ ] Visa filter using the IND recognised sponsor register
 - [ ] Language filter (skip companies requiring Dutch above the user's level)
-- [ ] Filter by opportunity type (internship, job, thesis, …)
+- [x] Opportunity type counts in the score (soft filter); types now include events, hackathons, conferences, networking, projects, research, startups, freelance and part-time
 
 **Relevance and ranking**
 
-- [ ] CV parsing (`CVParser.ts` exists as a stub)
+- [x] CV parsing (`CVParser.ts`: PDF text with unpdf, structured with Claude; skills/languages/interests merged into the profile)
 - [ ] Embeddings (vectors) for CVs, companies and inferred roles
 - [ ] Rough relevance search that narrows thousands of companies down to about 50
-- [ ] AI re-ranking of the shortlist with a match score and plain-language reason
-- [x] `matches` table with `match_score` and `match_reasons` (schema only)
+- [x] AI scoring with a match score and plain-language reasons (Claude; rule-based fallback without API key; n8n may also send its own score)
+- [x] `matches` table with `match_score` and `match_reasons`
 - [ ] Final order combines match score and radar score
 
 ## 7. What the user sees
 
-- [x] Opportunity card with match score, type, location, skills and "Hidden opportunity" badge (mock data)
+- [x] Opportunity card with match score, reasons, type, location, date, contact, skills and "Hidden opportunity" badge
 - [x] Opportunity status: new, reviewed, saved, applied, rejected (schema + UI)
-- [ ] "Why now" section listing the signals with dates
-- [ ] Links to source articles on the card
+- [x] "Why now" section listing the signals (without dates for now)
+- [x] Links to the source on the card and detail page
 - [ ] Visa sponsor indicator on the card
 - [ ] Suggested role for the open application
-- [ ] "Draft open application" button (one AI call that refers to the specific news)
-- [ ] "Not interested" feedback stored and used to improve matching
+- [x] "Reach out" → personal email draft (one AI call using the opportunity, signals and profile); editable, copy / open in mail app / send via n8n
+- [ ] "Not interested" feedback stored and used to improve matching (stored as match status; not yet used for matching)
 
 ## Practical / infrastructure
 
-- [x] Search runs and schedules stored (`search_runs`, schedule fields in `search_profiles`) (schema only)
-- [x] Credit ledger (`credit_transactions`, `credit_balances` view) (schema only)
+- [x] Search runs and schedules stored and used (next run computed in the database, time-zone aware)
+- [x] Credit ledger used: 10 welcome credits, 1 credit per search, automatic refund when a run fails
 - [ ] Nightly job (n8n workflow or job queue) runs steps 1–5
-- [ ] Step 6 runs when the user searches and charges one credit
+- [x] Step 6 runs when the user searches and charges one credit
 - [ ] Cheap/small model for article extraction (step 3); stronger model only for re-ranking and drafts
 - [ ] Job queue and cache implemented (only interfaces exist)
 
@@ -117,3 +117,12 @@ Status checked against the `YoungCreator2026` code on 2026-09-26. At that point 
 - [ ] Use Google News RSS plus company websites as sources
 - [ ] Hand-check about 20 real companies
 - [ ] Show a few real, traceable signals with a clear "why now"
+
+## Action engine (outreach)
+
+- [x] Automation levels 1–3 in Settings (assistant, semi-automatic, fully automatic with explicit consent and a daily limit)
+- [x] After every run the agent prepares emails for the 3 strongest new matches that have a contact email (score ≥ 70)
+- [x] Level 2: "Approve & send" sends through the n8n email webhook with the student as Reply-To
+- [x] Level 3: sends automatically within the daily limit (max 20, default 3)
+- [x] Outreach overview page (ready to review / sent), status per match ("Contacted")
+- [ ] n8n workflow that sends the email (Gmail/SMTP), see `docs/n8n.md` §4
