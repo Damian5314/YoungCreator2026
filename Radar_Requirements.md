@@ -22,7 +22,7 @@ Status checked against the `YoungCreator2026` code on 2026-09-27. The app side i
 - [x] `companies` table with web domain as the unique key (schema only)
 - [ ] Import companies by sector from KvK industry codes
 - [ ] Import companies from Dealroom or Crunchbase (tag: "robotics")
-- [ ] Import from sector groups (Holland Robotics, TechLeap)
+- [ ] Import from sector groups like (Holland Robotics, TechLeap)
 - [ ] Scrape "Customers" / "Case studies" pages of robotics companies
 - [ ] AI pulls customer names out of press releases ("X deploys robots at Y") and adds them as companies
 - [x] Merge duplicate companies by domain when importing (`/api/n8n/results` upserts on domain, else on name)
