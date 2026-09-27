@@ -52,6 +52,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
 
       <Card>
         <CardHeader
+          step={1}
           title="Your situation"
           description="Helps us understand your deadline and what you bring to the table."
         />
@@ -131,6 +132,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
 
       <Card>
         <CardHeader
+          step={2}
           title="Get to know you"
           description="Your agent looks beyond your CV: what excites you decides which companies, events and people it finds."
         />
@@ -164,7 +166,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
       </Card>
 
       <Card>
-        <CardHeader title="Your preferences" description="What kind of opportunities should we hunt for?" />
+        <CardHeader step={3} title="Your preferences" description="What kind of opportunities should we hunt for?" />
         <div className="space-y-5">
           <Field label="Desired roles" htmlFor="desiredRoles" hint="Separate with commas.">
             <Input id="desiredRoles" name="desiredRoles" defaultValue={preferences?.desiredRoles.join(', ') ?? ''} />

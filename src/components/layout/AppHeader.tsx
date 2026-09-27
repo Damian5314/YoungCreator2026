@@ -2,17 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Coins, LayoutDashboard, Mail, Search, Settings } from 'lucide-react';
+import { Coins } from 'lucide-react';
 import { useT } from '@/i18n/I18nProvider';
+import { appNavItems as navItems, isNavActive } from './appNav';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
-
-const navItems = [
-  { href: '/dashboard', key: 'dashboard', icon: LayoutDashboard },
-  { href: '/search', key: 'search', icon: Search },
-  { href: '/outreach', key: 'outreach', icon: Mail },
-  { href: '/settings', key: 'settings', icon: Settings },
-] as const;
 
 interface AppHeaderProps {
   name: string;
@@ -22,11 +16,12 @@ interface AppHeaderProps {
 /**
  * Bovenbalk met logo, credits en avatar. De navigatie staat vanaf sm bovenin
  * (labels vanaf md); op telefoons is het een vaste tabbalk onderin, binnen duimbereik.
+ * Vanaf xl staan logo en menu in AppSidebar en houdt deze balk alleen taal, credits en avatar.
  */
 export function AppHeader({ name, credits }: AppHeaderProps) {
   const t = useT();
   const pathname = usePathname();
-  const isActive = (href: string) => pathname.startsWith(href);
+  const isActive = (href: string) => isNavActive(pathname, href);
   const initials =
     name
       .split(/[\s@.]+/)
@@ -38,10 +33,12 @@ export function AppHeader({ name, credits }: AppHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-6">
-          <Logo href="/dashboard" />
-          <nav aria-label={t.common.nav.main} className="ml-4 hidden items-center gap-1 sm:flex">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur xl:border-transparent">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-4 sm:px-6 xl:px-10">
+          <div className="shrink-0 xl:hidden">
+            <Logo href="/dashboard" />
+          </div>
+          <nav aria-label={t.common.nav.main} className="ml-4 hidden items-center gap-1 sm:flex xl:hidden">
             {navItems.map(({ href, key, icon: Icon }) => (
               <Link
                 key={href}
@@ -49,7 +46,7 @@ export function AppHeader({ name, credits }: AppHeaderProps) {
                 aria-label={t.common.nav[key]}
                 aria-current={isActive(href) ? 'page' : undefined}
                 className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive(href) ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  isActive(href) ? 'bg-selected text-selected-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <Icon className="size-4" aria-hidden />
@@ -91,12 +88,12 @@ export function AppHeader({ name, credits }: AppHeaderProps) {
                 href={href}
                 aria-current={isActive(href) ? 'page' : undefined}
                 className={`flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors ${
-                  isActive(href) ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                  isActive(href) ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <span
                   className={`grid h-7 w-12 place-items-center rounded-full transition-colors ${
-                    isActive(href) ? 'bg-primary-soft' : ''
+                    isActive(href) ? 'bg-selected' : ''
                   }`}
                 >
                   <Icon className="size-[18px]" aria-hidden />

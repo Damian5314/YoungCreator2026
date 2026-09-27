@@ -12,7 +12,7 @@ export function Chip({ selected, className = '', ...props }: ChipProps) {
       aria-pressed={selected}
       className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 ${
         selected
-          ? 'border-primary bg-primary-soft font-medium text-primary-soft-foreground'
+          ? 'border-selected-border bg-selected font-medium text-selected-foreground'
           : 'border-border bg-card text-muted-foreground hover:text-foreground'
       } ${className}`}
       {...props}

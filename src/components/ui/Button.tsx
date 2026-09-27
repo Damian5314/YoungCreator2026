@@ -9,7 +9,8 @@ const base =
   'inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-[color,background-color,border-color,box-shadow,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-50';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-primary text-primary-foreground hover:bg-primary-hover',
+  // action = merkgroen, in de ingelogde app zwart (zie .app-theme in globals.css)
+  primary: 'bg-action text-action-foreground hover:bg-action-hover',
   secondary: 'border border-border bg-card text-foreground hover:bg-muted',
   ghost: 'text-foreground hover:bg-muted',
   // Voor gebruik op foto's / donkere vlakken

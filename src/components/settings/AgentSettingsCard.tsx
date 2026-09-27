@@ -59,7 +59,7 @@ export function AgentSettingsCard({ profile, canSendEmail, automationsUnlocked }
                   key={option.value}
                   className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
                     locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
-                  } ${level === option.value ? 'border-primary bg-primary-soft' : 'border-border hover:bg-muted'}`}
+                  } ${level === option.value ? 'border-selected-border bg-selected' : 'border-border hover:bg-muted'}`}
                 >
                   <input
                     type="radio"
@@ -69,7 +69,7 @@ export function AgentSettingsCard({ profile, canSendEmail, automationsUnlocked }
                     onChange={() => setLevel(option.value)}
                     // Een al gekozen niveau blijft aanklikbaar, anders valt het veld weg uit het formulier
                     disabled={locked && level !== option.value}
-                    className="mt-1 accent-[var(--primary)]"
+                    className="mt-1 accent-action"
                   />
                   <span className="text-sm">
                     <span className="flex items-center gap-2 font-medium">
@@ -105,7 +105,7 @@ export function AgentSettingsCard({ profile, canSendEmail, automationsUnlocked }
                 name="autoSendConsent"
                 defaultChecked={Boolean(profile?.autoSendConsentAt)}
                 required
-                className="mt-1 accent-[var(--primary)]"
+                className="mt-1 accent-action"
               />
               <span>
                 I allow Unlisted to send emails on my behalf to contacts at opportunities that strongly match my profile. Replies

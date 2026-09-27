@@ -11,6 +11,7 @@ export default async function SearchPreferencesPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
+        eyebrow="Profile setup"
         title="Your situation & preferences"
         description={
           searchProfile

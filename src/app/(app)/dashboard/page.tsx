@@ -33,6 +33,7 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader
+        eyebrow={t.dashboard.meta.title}
         title={firstName ? t.dashboard.header.welcomeName(firstName) : t.dashboard.header.welcome}
         description={t.dashboard.header.description}
         action={

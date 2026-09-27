@@ -201,7 +201,7 @@ export function OutreachPanel({
           href={mailto}
           onClick={() => void saveOutreachDraft(undefined, formData())}
           className={`col-span-2 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-            automationLevel >= 2 ? 'border border-border bg-card hover:bg-muted' : 'bg-primary text-primary-foreground hover:bg-primary-hover'
+            automationLevel >= 2 ? 'border border-border bg-card hover:bg-muted' : 'bg-action text-action-foreground hover:bg-action-hover'
           }`}
         >
           <Mail className="size-4" aria-hidden />

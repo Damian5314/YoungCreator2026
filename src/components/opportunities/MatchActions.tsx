@@ -38,7 +38,7 @@ export function MatchActions({ matchId, status: initialStatus, outreachStatus }:
     <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
       <Link
         href={`/matches/${matchId}`}
-        className="col-span-2 flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-8 sm:justify-start sm:text-xs"
+        className="col-span-2 flex h-10 items-center justify-center gap-1.5 rounded-lg bg-action px-3 text-sm font-medium text-action-foreground transition-colors hover:bg-action-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-8 sm:justify-start sm:text-xs"
       >
         <Mail className="size-3.5" aria-hidden />
         {outreachStatus ? a.outreachStatus[outreachStatus] : a.reachOut}
