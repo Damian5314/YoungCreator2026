@@ -54,7 +54,8 @@ export default async function DashboardPage() {
       )}
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        {/* min-w-0: de horizontaal scrollende filterrij mag de kolom niet breder maken dan het scherm */}
+        <div className="min-w-0 lg:col-span-2">
           {matches.length > 0 ? (
             <ResultsList opportunities={matches} />
           ) : (

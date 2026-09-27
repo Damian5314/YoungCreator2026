@@ -65,12 +65,13 @@ export function HeroCopy() {
         {hero.body}
       </p>
 
-      <div style={after(270)} className={`${RISE} mt-8 flex flex-wrap items-center gap-3`}>
+      {/* Mobiel: twee even brede knoppen onder elkaar, net als in de slot-CTA */}
+      <div style={after(270)} className={`${RISE} mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center`}>
         <ButtonLink
           href={hero.primaryCta.href}
           shape="pill"
           size="lg"
-          className="h-13 px-7 text-[15px] font-semibold shadow-[0_10px_24px_-10px_rgb(8_127_99/0.65)] hover:-translate-y-px"
+          className="h-13 w-full px-7 text-[15px] font-semibold shadow-[0_10px_24px_-10px_rgb(8_127_99/0.65)] hover:-translate-y-px sm:w-auto"
         >
           {hero.primaryCta.label}
           <ArrowRight className="size-4" aria-hidden />
@@ -80,7 +81,7 @@ export function HeroCopy() {
           variant="secondary"
           shape="pill"
           size="lg"
-          className="h-13 border-foreground/12 bg-white/80 pl-2 pr-6 text-[15px] font-semibold hover:-translate-y-px hover:bg-white"
+          className="h-13 w-full border-foreground/12 bg-white/80 pl-2 pr-6 text-[15px] font-semibold hover:-translate-y-px hover:bg-white sm:w-auto"
         >
           <span className="grid size-9 place-items-center rounded-full bg-primary-soft text-primary">
             <Play className="size-3.5 fill-current" aria-hidden />

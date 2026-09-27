@@ -169,12 +169,14 @@ export function OutreachPanel({ matchId, company, contact, outreach, automationL
 
       <FormMessage state={state?.error ? state : undefined} />
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Mobiel: hoofdactie over de volle breedte, de rest in twee even brede kolommen */}
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
         {automationLevel >= 2 && (
           <Button
             onClick={() => run('send', () => saveThen(() => sendOutreachNow(outreach.id, matchId)))}
             disabled={working || Boolean(sendDisabledReason)}
             title={sendDisabledReason ?? undefined}
+            className="col-span-2"
           >
             {busy === 'send' ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Send className="size-4" aria-hidden />}
             {automationLevel === 3 ? 'Send now' : 'Approve & send'}
@@ -183,7 +185,7 @@ export function OutreachPanel({ matchId, company, contact, outreach, automationL
         <a
           href={mailto}
           onClick={() => void saveOutreachDraft(undefined, formData())}
-          className={`inline-flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+          className={`col-span-2 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             automationLevel >= 2 ? 'border border-border bg-card hover:bg-muted' : 'bg-primary text-primary-foreground hover:bg-primary-hover'
           }`}
         >
@@ -194,7 +196,12 @@ export function OutreachPanel({ matchId, company, contact, outreach, automationL
           {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
           {copied ? 'Copied' : 'Copy'}
         </Button>
-        <Button variant="ghost" onClick={() => run('save', () => saveThen())} disabled={working}>
+        <Button
+          variant="ghost"
+          onClick={() => run('save', () => saveThen())}
+          disabled={working}
+          className="border border-border sm:border-0"
+        >
           {busy === 'save' ? 'Saving…' : 'Save'}
         </Button>
         {state?.message && busy === null && <SavedNote>{state.message}</SavedNote>}

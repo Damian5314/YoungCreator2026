@@ -24,9 +24,9 @@ function MessageRow({ message }: { message: OutreachListItem }) {
     <li>
       <Link
         href={`/matches/${message.matchId}`}
-        className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
+        className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:gap-4"
       >
-        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+        <span className="hidden size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground min-[400px]:grid">
           {message.createdBy === 'agent' ? <Sparkles className="size-5 text-primary" aria-hidden /> : <Mail className="size-5" aria-hidden />}
         </span>
         <span className="min-w-0 flex-1">
@@ -34,7 +34,8 @@ function MessageRow({ message }: { message: OutreachListItem }) {
             <Badge tone={STATUS[message.status].tone}>{STATUS[message.status].label}</Badge>
             <span className="text-xs text-muted-foreground">{formatDateTime(new Date(when))}</span>
           </span>
-          <span className="mt-1 block truncate font-medium">{message.subject || message.opportunityTitle}</span>
+          {/* Mobiel mag het onderwerp over twee regels lopen, anders valt de helft weg */}
+          <span className="mt-1 line-clamp-2 font-medium sm:line-clamp-1">{message.subject || message.opportunityTitle}</span>
           <span className="block truncate text-sm text-muted-foreground">
             {message.opportunityTitle} · {message.company}
             {message.toEmail ? ` · to ${message.toName ?? message.toEmail}` : ' · no recipient yet'}

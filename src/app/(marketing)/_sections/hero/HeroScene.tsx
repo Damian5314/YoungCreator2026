@@ -9,7 +9,8 @@ import { OutreachCard } from './OutreachCard';
 /**
  * De product-kaarten rond de student, als verhaal van boven naar beneden:
  * bedrijfsnieuws → kans gevonden → 92% match → voorgesteld bericht.
- * - Mobiel/tablet: een gewone stapel (2 kolommen op tablet) die iets over de foto valt.
+ * - Mobiel: alleen nieuws + kans, als stapel die iets over de foto valt (vier kaarten is te lang).
+ * - Tablet: alle vier in 2 kolommen.
  * - Desktop: een laag met exact dezelfde maat als de hero-foto, zodat de posities
  *   (in % van de foto) altijd op dezelfde plek rond de student blijven. Gezicht, haar
  *   en laptop blijven vrij. lg toont alleen nieuws + kans; vanaf xl de volledige compositie.
@@ -37,7 +38,7 @@ export function HeroScene() {
 
       {/* Rechts-midden, kleiner: de match */}
       <Floating
-        className="lg:hidden xl:right-[2.2%] xl:top-[50%] xl:z-20 xl:block xl:w-[192px] xl:rotate-1 2xl:w-[204px]"
+        className="hidden sm:block lg:hidden xl:right-[2.2%] xl:top-[50%] xl:z-20 xl:block xl:w-[192px] xl:rotate-1 2xl:w-[204px]"
         delay={0.75}
         duration={6.5}
       >
@@ -46,7 +47,7 @@ export function HeroScene() {
 
       {/* Onderaan, kleinst en iets naar achteren: de volgende actie */}
       <Floating
-        className="lg:hidden xl:left-[56%] xl:top-[72.5%] xl:z-10 xl:block xl:w-[222px] xl:-rotate-[0.5deg] 2xl:w-[236px]"
+        className="hidden sm:block lg:hidden xl:left-[56%] xl:top-[72.5%] xl:z-10 xl:block xl:w-[222px] xl:-rotate-[0.5deg] 2xl:w-[236px]"
         delay={0.9}
         duration={7}
       >

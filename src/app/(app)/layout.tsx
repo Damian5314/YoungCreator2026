@@ -9,7 +9,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <AppHeader name={profile?.fullName || user?.email || ''} credits={credits} />
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      {/* Mobiel: extra ruimte onderin voor de vaste tabbalk uit AppHeader */}
+      <main className="mx-auto max-w-6xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 sm:px-6 sm:py-10">
+        {children}
+      </main>
     </div>
   );
 }

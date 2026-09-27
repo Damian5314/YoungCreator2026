@@ -1,7 +1,8 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
+// Mobiel 16px: iOS Safari zoomt anders in zodra je een veld aantikt
 const controlClasses =
-  'h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:opacity-50';
+  'h-10 w-full rounded-lg border border-input bg-card px-3 text-base text-foreground sm:text-sm placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:opacity-50';
 
 interface FieldProps {
   label: string;
