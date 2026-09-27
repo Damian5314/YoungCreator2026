@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarClock } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, CalendarClock, Lock } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
@@ -48,10 +49,11 @@ function getNextRun({ frequency, dayOfWeek, time }: SearchSchedule, now: Date): 
 interface ScheduleCardProps {
   searchProfileId: string;
   initialSchedule: SearchSchedule;
+  locked?: boolean; // automations nog niet ontgrendeld (nog nooit betaald)
 }
 
 // Timer management: wanneer de search automatisch moet draaien
-export function ScheduleCard({ searchProfileId, initialSchedule }: ScheduleCardProps) {
+export function ScheduleCard({ searchProfileId, initialSchedule, locked = false }: ScheduleCardProps) {
   const [schedule, setSchedule] = useState<SearchSchedule>(initialSchedule);
   const [dirty, setDirty] = useState(false);
   const { state, pending, submit } = useFormAction(saveSchedule);
@@ -90,11 +92,27 @@ export function ScheduleCard({ searchProfileId, initialSchedule }: ScheduleCardP
     <Card>
       <CardHeader title="Automatic search" description="Let JobHunter search for you on a schedule." />
 
+      {locked && (
+        <Link
+          href="/billing"
+          className="mb-5 flex items-start gap-2 rounded-lg bg-muted p-3 text-sm transition-colors hover:bg-primary-soft"
+        >
+          <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="flex-1">
+            Automatic search comes with any credit pack.{' '}
+            <span className="font-medium text-primary">See credit packs</span>
+          </span>
+          <ArrowRight className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+        </Link>
+      )}
+
       <Switch
         id="schedule-enabled"
         label="Run automatically"
         checked={schedule.enabled}
         onChange={(enabled) => update({ enabled })}
+        // Vergrendeld: aanzetten kan niet, uitzetten wel
+        disabled={locked && !schedule.enabled}
       />
 
       <fieldset disabled={!schedule.enabled} className="mt-5 space-y-4 disabled:opacity-50">
@@ -148,7 +166,7 @@ export function ScheduleCard({ searchProfileId, initialSchedule }: ScheduleCardP
         </p>
         <div className="flex items-center gap-3">
           {state?.message && !dirty && !pending && <SavedNote>{state.message}</SavedNote>}
-          <Button size="sm" onClick={handleSave} disabled={pending}>
+          <Button size="sm" onClick={handleSave} disabled={pending || (locked && schedule.enabled)}>
             {pending ? 'Saving…' : 'Save'}
           </Button>
         </div>

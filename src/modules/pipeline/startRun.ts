@@ -18,6 +18,8 @@ import { parseIngestItems } from './schema';
 
 export type StartRunResult = { ok: true; runId: string } | { ok: false; error: string };
 
+export const OUT_OF_CREDITS_MESSAGE = 'You’re out of credits. Buy a credit pack to keep searching.';
+
 interface StartRunInput {
   userId: string;
   searchProfileId?: string | null;
@@ -43,6 +45,13 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
   } catch (error) {
     if (error instanceof MissingSearchProfileError) return { ok: false, error: error.message };
     throw error;
+  }
+
+  // Geen credits (de gratis eerste zoekopdracht is op): meteen stoppen, zonder mislukte run.
+  // spend_credits hieronder blijft de echte, atomische check.
+  const { data: balance } = await admin.from('credit_balances').select('balance').eq('user_id', userId).maybeSingle();
+  if ((balance?.balance ?? 0) < CREDIT_COST_PER_SEARCH) {
+    return { ok: false, error: OUT_OF_CREDITS_MESSAGE };
   }
 
   const searchOptions: SearchOptions = {
@@ -92,7 +101,7 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
       .from('search_runs')
       .update({ status: 'failed', credits_charged: 0, error_message: 'Not enough credits.', finished_at: new Date().toISOString() })
       .eq('id', run.id);
-    return { ok: false, error: 'You don’t have enough credits for a search.' };
+    return { ok: false, error: OUT_OF_CREDITS_MESSAGE };
   }
 
   if (features.demoMode) {

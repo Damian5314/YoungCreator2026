@@ -55,14 +55,17 @@ export function AppHeader({ name, credits }: AppHeaderProps) {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3">
-            <span
-              title={`${credits} ${creditLabel}`}
-              className="flex items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary-soft-foreground lg:px-3"
+            {/* Saldo → credits kopen */}
+            <Link
+              href="/billing"
+              title={`${credits} ${creditLabel}: buy more`}
+              aria-current={isActive('/billing') ? 'page' : undefined}
+              className="flex min-h-8 items-center gap-1.5 rounded-full bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary-soft-foreground transition-colors hover:bg-primary hover:text-primary-foreground lg:px-3"
             >
               <Coins className="size-3.5" aria-hidden />
               {credits}
               <span className="sr-only lg:not-sr-only">{creditLabel}</span>
-            </span>
+            </Link>
             <span
               title={name}
               className="grid size-8 place-items-center rounded-full bg-foreground text-xs font-semibold text-background"

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser, getProfile } from '@/lib/data/queries';
+import { AUTOMATIONS_LOCKED_MESSAGE, hasPaidAccess } from '@/modules/billing/entitlements';
 import { text, type FormState } from './formState';
 
 const optionalUrl = z.union([z.literal(''), z.url({ protocol: /^https?$/, error: 'Enter a full link, starting with https://' })]);
@@ -36,6 +37,8 @@ export async function saveAgentSettings(_prev: FormState, formData: FormData): P
 
   const current = await getProfile();
   const level = parsed.data.automationLevel;
+  // Niveau 2 en 3 laten JobHunter mails versturen: dat is een automation (betaald)
+  if (level >= 2 && !(await hasPaidAccess(user.id))) return { error: AUTOMATIONS_LOCKED_MESSAGE };
   const supabase = await createClient();
   const { error } = await supabase
     .from('profiles')

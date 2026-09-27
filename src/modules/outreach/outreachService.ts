@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { env, features } from '@/lib/env';
 import { callN8nWebhook } from '@/lib/n8n';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { hasPaidAccess } from '@/modules/billing/entitlements';
 import type { OpportunityType } from '@/shared/types/OpportunityType';
 import { writeOutreachEmail } from './emailWriter';
 
@@ -137,6 +138,9 @@ async function markMatchContacted(matchId: string) {
 export async function sendOutreach(userId: string, messageId: string, { auto = false } = {}): Promise<ActionResult> {
   if (!features.canSendEmail || !env.n8nSendEmailWebhookUrl) {
     return { ok: false, error: 'Sending isn’t connected yet. Copy the email or open it in your mail app instead.' };
+  }
+  if (!(await hasPaidAccess(userId))) {
+    return { ok: false, error: 'Sending through JobHunter comes with any credit pack. Copy the email or open it in your mail app instead.' };
   }
 
   const admin = createAdminClient();

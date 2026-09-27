@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { ArrowRight, Coins, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ButtonLink } from '@/components/ui/Button';
@@ -8,17 +8,20 @@ import { StatsRow } from '@/components/dashboard/StatsRow';
 import { ResultsList } from '@/components/dashboard/ResultsList';
 import { ScheduleCard } from '@/components/dashboard/ScheduleCard';
 import { PreferencesSummary } from '@/components/search/PreferencesSummary';
-import { getMatches, getOutreachList, getProfile, getSearchProfile } from '@/lib/data/queries';
+import { getBillingStatus, getMatches, getOutreachList, getProfile, getSearchProfile } from '@/lib/data/queries';
+import { CREDIT_COST_PER_SEARCH } from '@/shared/constants/opportunityTypes';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
 export default async function DashboardPage() {
-  const [profile, searchProfile, matches, outreach] = await Promise.all([
+  const [profile, searchProfile, matches, outreach, billing] = await Promise.all([
     getProfile(),
     getSearchProfile(),
     getMatches(),
     getOutreachList(),
+    getBillingStatus(),
   ]);
+  const outOfCredits = billing.credits < CREDIT_COST_PER_SEARCH;
   const draftsToReview = outreach.filter((message) => message.status === 'draft' || message.status === 'failed').length;
   const firstName = profile?.fullName?.split(' ')[0];
 
@@ -36,6 +39,22 @@ export default async function DashboardPage() {
       />
 
       <StatsRow opportunities={matches} searchYearEndsOn={profile?.searchYearEndsOn ?? null} />
+
+      {/* Gratis zoekopdracht op (of credits op): hier kopen, dat ontgrendelt ook de automations */}
+      {outOfCredits && (
+        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-primary/30 bg-primary-soft p-4 sm:flex-row sm:items-center">
+          <Coins className="hidden size-5 shrink-0 text-primary-soft-foreground sm:block" aria-hidden />
+          <p className="flex-1 text-sm text-primary-soft-foreground">
+            <span className="font-semibold">
+              {billing.hasPaid ? 'You’re out of credits.' : 'You’ve used your free search.'}
+            </span>{' '}
+            Buy a credit pack to keep searching{billing.automationsUnlocked ? '.' : ' and unlock automatic searches and sending.'}
+          </p>
+          <ButtonLink href="/billing" size="sm" className="shrink-0">
+            See credit packs
+          </ButtonLink>
+        </div>
+      )}
 
       {draftsToReview > 0 && (
         <Link
@@ -86,7 +105,11 @@ export default async function DashboardPage() {
             </ButtonLink>
           </Card>
           {searchProfile && (
-            <ScheduleCard searchProfileId={searchProfile.id} initialSchedule={searchProfile.schedule} />
+            <ScheduleCard
+              searchProfileId={searchProfile.id}
+              initialSchedule={searchProfile.schedule}
+              locked={!billing.automationsUnlocked}
+            />
           )}
         </aside>
       </div>

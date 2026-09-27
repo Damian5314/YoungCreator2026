@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { env, features } from '@/lib/env';
+import { isPublicUrl } from '@/lib/mollie';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,7 @@ export async function GET() {
         initialSchema: await tableStatus('search_runs'),
         agentPipeline: await tableStatus('outreach_messages'),
         onboardingIntro: await tableStatus('profiles', 'onboarded_at'),
+        billing: await tableStatus('payments'),
       }
     : 'not-configured';
 
@@ -39,6 +41,10 @@ export async function GET() {
     warnings.push('APP_URL is empty: n8n gets the request origin as callback URL (localhost is not reachable from n8n cloud).');
   if (env.appUrl && /localhost|127\.0\.0\.1/.test(env.appUrl) && env.n8nSearchWebhookUrl && !/localhost|127\.0\.0\.1/.test(env.n8nSearchWebhookUrl))
     warnings.push('APP_URL points to localhost while n8n runs elsewhere: use a tunnel (ngrok) or the deployed URL.');
+  if (env.mollieApiKey && !/^(test|live)_\w+$/.test(env.mollieApiKey))
+    warnings.push('MOLLIE_API_KEY should start with test_ or live_ (copy it from Mollie → Developers → API keys).');
+  if (env.mollieApiKey && !isPublicUrl(`${env.appUrl ?? ''}/api/mollie/webhook`))
+    warnings.push('Mollie webhooks are off because APP_URL is not a public https URL: payments are confirmed when the student returns from the checkout.');
 
   return NextResponse.json(
     {
@@ -51,6 +57,9 @@ export async function GET() {
         sendEmailWebhook: Boolean(env.n8nSendEmailWebhookUrl),
         secret: Boolean(env.n8nSecret),
       },
+      payments: env.mollieApiKey
+        ? { provider: 'mollie', mode: features.paymentsTestMode ? 'test' : 'live', webhook: isPublicUrl(`${env.appUrl ?? ''}/api/mollie/webhook`) }
+        : 'not-configured (no MOLLIE_API_KEY)',
       ai: env.aiProvider
         ? { provider: env.aiProvider, model: env.aiProvider === 'openai' ? env.openaiModel : env.anthropicModel }
         : 'rules only (no OPENAI_API_KEY or ANTHROPIC_API_KEY)',

@@ -35,6 +35,8 @@ export const env = {
   openaiBaseUrl: (optional('OPENAI_BASE_URL') ?? 'https://api.openai.com/v1').replace(/\/+$/, ''),
   anthropicApiKey: optional('ANTHROPIC_API_KEY'),
   anthropicModel: optional('ANTHROPIC_MODEL') ?? 'claude-opus-5',
+  // Mollie: test_… (demo, geen echt geld) of live_…
+  mollieApiKey: optional('MOLLIE_API_KEY'),
 };
 
 export const features = {
@@ -42,4 +44,7 @@ export const features = {
   demoMode: !env.n8nSearchWebhookUrl,
   canSendEmail: Boolean(env.n8nSendEmailWebhookUrl),
   ai: env.aiProvider !== null,
+  // Zonder Mollie-key kun je geen credits kopen (de prijzen staan er wel)
+  payments: Boolean(env.mollieApiKey),
+  paymentsTestMode: env.mollieApiKey?.startsWith('test_') ?? false,
 };

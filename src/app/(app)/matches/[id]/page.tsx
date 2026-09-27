@@ -10,7 +10,7 @@ import { MatchActions } from '@/components/opportunities/MatchActions';
 import { MatchScore, STATUS_TONES } from '@/components/opportunities/OpportunityCard';
 import { OutreachPanel } from '@/components/outreach/OutreachPanel';
 import { features } from '@/lib/env';
-import { getMatch, getOutreachForMatch, getProfile } from '@/lib/data/queries';
+import { getBillingStatus, getMatch, getOutreachForMatch, getProfile } from '@/lib/data/queries';
 import {
   OPPORTUNITY_SOURCE_LABELS,
   OPPORTUNITY_STATUS_LABELS,
@@ -24,7 +24,12 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const [match, outreach, profile] = await Promise.all([getMatch(id), getOutreachForMatch(id), getProfile()]);
+  const [match, outreach, profile, billing] = await Promise.all([
+    getMatch(id),
+    getOutreachForMatch(id),
+    getProfile(),
+    getBillingStatus(),
+  ]);
   if (!match) notFound();
 
   return (
@@ -167,6 +172,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             outreach={outreach}
             automationLevel={profile?.automationLevel ?? 1}
             canSend={features.canSendEmail}
+            sendLocked={!billing.automationsUnlocked}
             aiEnabled={features.ai}
           />
         </Card>

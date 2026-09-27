@@ -41,7 +41,12 @@ export function WelcomeIntro({ firstName, credits, demoMode }: WelcomeIntroProps
       icon: Sparkles,
       title: firstName ? `Welcome, ${firstName}! Meet your opportunity agent.` : 'Welcome! Meet your opportunity agent.',
       body: 'Job Hunter finds jobs, internships, events and hidden opportunities in the Netherlands, and tells you why each one fits you. Here’s how it works in three steps.',
-      note: credits > 0 ? `You have ${credits} free credits to get started.` : undefined,
+      note:
+        credits === 1
+          ? 'Your first search is free.'
+          : credits > 1
+            ? `You have ${credits} credits to get started.`
+            : undefined,
     },
     {
       icon: UserRound,
@@ -52,14 +57,14 @@ export function WelcomeIntro({ firstName, credits, demoMode }: WelcomeIntroProps
     {
       icon: Radar,
       title: 'Let it hunt for you',
-      body: 'Each search costs 1 credit. Your agent scans job boards, events and company news for signals like funding or a new office, often before a vacancy is even posted. Schedule a daily or weekly search to keep it running on autopilot.',
+      body: 'Your agent scans job boards, events and company news for signals like funding or a new office, often before a vacancy is even posted. Your first search is free; after that each search costs 1 credit. Any credit pack also lets you schedule searches on autopilot.',
       note: demoMode ? 'Demo mode: searches return sample opportunities, scored against your real profile.' : undefined,
       where: 'Search · Dashboard',
     },
     {
       icon: Send,
       title: 'Review your matches and reach out',
-      body: 'Every opportunity gets a match score from 0 to 100, with the reasons it fits you. For strong matches your agent drafts a short, personal email. You review, edit and send it, and you decide how independent your agent is.',
+      body: 'Every opportunity gets a match score from 0 to 100, with the reasons it fits you. For strong matches your agent drafts a short, personal email. You review, edit and send it yourself, or, with a credit pack, let JobHunter send it for you.',
       where: 'Dashboard · Outreach · Settings',
     },
   ];

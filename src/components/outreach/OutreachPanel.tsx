@@ -20,11 +20,21 @@ interface OutreachPanelProps {
   outreach: OutreachMessageData | null;
   automationLevel: AutomationLevel;
   canSend: boolean; // n8n send-webhook is gekoppeld
+  sendLocked?: boolean; // versturen via JobHunter is een automation: nog geen creditpakket gekocht
   aiEnabled: boolean;
 }
 
 // Action engine: de agent schrijft een persoonlijke mail, de student controleert en verstuurt
-export function OutreachPanel({ matchId, company, contact, outreach, automationLevel, canSend, aiEnabled }: OutreachPanelProps) {
+export function OutreachPanel({
+  matchId,
+  company,
+  contact,
+  outreach,
+  automationLevel,
+  canSend,
+  sendLocked = false,
+  aiEnabled,
+}: OutreachPanelProps) {
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<'draft' | 'save' | 'send' | 'manual' | null>(null);
   const [state, setState] = useState<FormState>(undefined);
@@ -136,7 +146,9 @@ export function OutreachPanel({ matchId, company, contact, outreach, automationL
 
   const sendDisabledReason = !canSend
     ? 'Sending from JobHunter isn’t connected yet. Use your mail app instead.'
-    : automationLevel < 2
+    : sendLocked
+      ? 'Sending through JobHunter comes with any credit pack. Use your mail app for now.'
+      : automationLevel < 2
       ? 'You send emails yourself (automation level 1).'
       : !toEmail
         ? 'Add the recipient’s email address first.'

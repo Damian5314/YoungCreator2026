@@ -1,28 +1,19 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/data/queries';
+import { requestOrigin } from '@/lib/requestOrigin';
+import { AUTOMATIONS_LOCKED_MESSAGE, hasPaidAccess } from '@/modules/billing/entitlements';
 import { CVParser } from '@/modules/profile/CVParser';
 import { startSearchRun } from '@/modules/pipeline/startRun';
 import { OPPORTUNITY_TYPE_LABELS } from '@/shared/constants/opportunityTypes';
 import { list, mergeUnique, optionalInt, optionalText, text, type FormState } from './formState';
 
 const MAX_CV_BYTES = 5 * 1024 * 1024;
-
-// Basis-URL van de app zoals de browser hem ziet (voor de callback van n8n als APP_URL ontbreekt)
-async function requestOrigin(): Promise<string> {
-  const h = await headers();
-  const origin = h.get('origin');
-  if (origin) return origin;
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
-  const protocol = h.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https');
-  return `${protocol}://${host}`;
-}
 
 type CvResult =
   | { ok: true; update: Record<string, unknown>; skills: string[]; interests: string[]; languages: string[] }
@@ -143,11 +134,15 @@ export async function saveSchedule(_prev: FormState, formData: FormData): Promis
   const time = text(formData, 'time');
   const timezone = text(formData, 'timezone');
   const dayOfWeek = optionalInt(formData, 'dayOfWeek') ?? 1;
+  const enabled = text(formData, 'enabled') === 'true';
+  // Automatisch zoeken is een automation: alleen aanzetten met een betaald account
+  if (enabled && !(await hasPaidAccess(user.id))) return { error: AUTOMATIONS_LOCKED_MESSAGE };
+
   const supabase = await createClient();
   const { error } = await supabase
     .from('search_profiles')
     .update({
-      schedule_enabled: text(formData, 'enabled') === 'true',
+      schedule_enabled: enabled,
       schedule_frequency: text(formData, 'frequency') === 'weekly' ? 'weekly' : 'daily',
       schedule_day_of_week: dayOfWeek >= 0 && dayOfWeek <= 6 ? dayOfWeek : 1,
       schedule_time: /^\d{2}:\d{2}$/.test(time) ? time : '08:00',

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { Lock } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Field';
@@ -30,10 +32,11 @@ const LEVELS: { value: AutomationLevel; title: string; description: string }[] =
 interface AgentSettingsCardProps {
   profile: ProfileData | null;
   canSendEmail: boolean;
+  automationsUnlocked: boolean; // niveau 2 en 3 vragen een betaald account
 }
 
 // Hoe zelfstandig de agent mag werken + links onder de e-mails
-export function AgentSettingsCard({ profile, canSendEmail }: AgentSettingsCardProps) {
+export function AgentSettingsCard({ profile, canSendEmail, automationsUnlocked }: AgentSettingsCardProps) {
   const { state, pending, submit } = useFormAction(saveAgentSettings);
   const [level, setLevel] = useState<AutomationLevel>(profile?.automationLevel ?? 1);
 
@@ -49,30 +52,44 @@ export function AgentSettingsCard({ profile, canSendEmail }: AgentSettingsCardPr
         <fieldset>
           <legend className="text-sm font-medium">Automation level</legend>
           <div className="mt-2 space-y-2">
-            {LEVELS.map((option) => (
-              <label
-                key={option.value}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                  level === option.value ? 'border-primary bg-primary-soft' : 'border-border hover:bg-muted'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="automationLevel"
-                  value={option.value}
-                  checked={level === option.value}
-                  onChange={() => setLevel(option.value)}
-                  className="mt-1 accent-[var(--primary)]"
-                />
-                <span className="text-sm">
-                  <span className="block font-medium">
-                    {option.value}. {option.title}
+            {LEVELS.map((option) => {
+              const locked = !automationsUnlocked && option.value >= 2;
+              return (
+                <label
+                  key={option.value}
+                  className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
+                    locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                  } ${level === option.value ? 'border-primary bg-primary-soft' : 'border-border hover:bg-muted'}`}
+                >
+                  <input
+                    type="radio"
+                    name="automationLevel"
+                    value={option.value}
+                    checked={level === option.value}
+                    onChange={() => setLevel(option.value)}
+                    // Een al gekozen niveau blijft aanklikbaar, anders valt het veld weg uit het formulier
+                    disabled={locked && level !== option.value}
+                    className="mt-1 accent-[var(--primary)]"
+                  />
+                  <span className="text-sm">
+                    <span className="flex items-center gap-2 font-medium">
+                      {option.value}. {option.title}
+                      {locked && <Lock className="size-3.5 text-muted-foreground" aria-label="Needs a credit pack" />}
+                    </span>
+                    <span className="block text-muted-foreground">{option.description}</span>
                   </span>
-                  <span className="block text-muted-foreground">{option.description}</span>
-                </span>
-              </label>
-            ))}
+                </label>
+              );
+            })}
           </div>
+          {!automationsUnlocked && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Levels 2 and 3 come with any credit pack.{' '}
+              <Link href="/billing" className="font-medium text-primary hover:underline">
+                See credit packs
+              </Link>
+            </p>
+          )}
           {level >= 2 && !canSendEmail && (
             <p className="mt-2 rounded-lg bg-warning-soft p-3 text-sm text-warning">
               Email sending isn&apos;t connected yet (n8n). Until it is, you can still copy emails or open them in your mail app.

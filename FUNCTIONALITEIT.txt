@@ -30,7 +30,8 @@ Kernflow:  KNOW ME (profiel + cv)  ->  FIND OPPORTUNITIES (zoekrun via n8n)
   - Beschermde pagina's: /dashboard, /search, /settings, /outreach, /matches.
     Niet ingelogd -> naar /login; ingelogd op /login of /register -> naar
     /dashboard (src/proxy.ts).
-  - Nieuwe gebruiker krijgt automatisch een profiel + 10 welkomstcredits.
+  - Nieuwe gebruiker krijgt automatisch een profiel + 1 welkomstcredit
+    (= eerste zoekopdracht gratis). Daarna credits kopen via Mollie.
   - Eerste keer ingelogd: korte introductie (welkom + 3 stappen: profiel,
     zoeken, matches & outreach), met het aantal credits en een melding als
     de app in demo-modus draait. Sluiten/overslaan telt als gezien
@@ -179,6 +180,8 @@ Kernflow:  KNOW ME (profiel + cv)  ->  FIND OPPORTUNITIES (zoekrun via n8n)
   APP_URL                   publieke URL van de app (callback voor n8n).
   OPENAI_API_KEY of         AI voor cv, opschonen, scoren en mails.
   ANTHROPIC_API_KEY         Zonder: regels/templates. Beide? AI_PROVIDER kiest.
+  MOLLIE_API_KEY            betalen (test_... voor de demo). Zonder: geen
+                            betaalgrens, automations staan voor iedereen open.
 
   In n8n zelf (workflows staan in n8n/, uitleg in docs/n8n.md):
   Apify API-token           zoeken (Google Search) + contactgegevens.
@@ -237,9 +240,10 @@ werken inmiddels wel.)
             visumsponsor-indicator, voorgestelde rol voor een open sollicitatie.
 
 3.5 Betalen en infrastructuur
-  [GEPLAND] Credits kopen: prijzen staan klaar (Starter 10 credits €9, Pro 50
-            credits €35, Unlimited €79, eenmalig, geen abonnement), maar er is
-            nog geen checkout/betaalprovider. Nu alleen 10 welkomstcredits.
+  [WERKT + KOPPELEN: Mollie] Credits kopen via Mollie (eenmalige bundels,
+            geen abonnement). Eerste zoekopdracht gratis; automations (planning,
+            niveau 2/3, versturen via JobHunter) vragen minstens één betaling.
+            Zonder MOLLIE_API_KEY staat die grens uit. Zie docs/billing.md.
   [GEPLAND] "Application action" kost 2 credits (reden bestaat in de database,
             wordt nog niet afgeschreven).
   [GEPLAND] Goedkoop model voor artikel-extractie, sterk model alleen voor
@@ -261,12 +265,13 @@ werken inmiddels wel.)
 ====================================================================
 4. BEKENDE LOSSE EINDJES
 ====================================================================
-  - Supabase-project (stand 27 sep, volgens /api/health): 20260927090100
-    (agent-pipeline) en 20260927120000 (introductie) ontbreken. Zonder die
-    twee werken zoeken (spend_credits), outreach en de introductie niet.
-    Draai 20260927090000, 20260927090100 en 20260927120000 op volgorde in de
-    SQL editor (090000 voegt alleen enum-waarden toe met "if not exists" en
-    is dus veilig om nog eens te draaien).
+  - Supabase-project (stand 27 sep, volgens /api/health): alleen de eerste
+    migratie is zeker gedraaid; 20260927090100 (agent-pipeline) en de latere
+    ontbreken. Zonder die migraties werken zoeken (spend_credits), outreach,
+    de introductie en betalen niet. Draai op volgorde in de SQL editor:
+    20260927090000, 20260927090100, 20260927120000, 20260927130000
+    (090000 voegt alleen enum-waarden toe met "if not exists" en is dus
+    veilig om nog eens te draaien).
   - Oude architectuur (src/agents, src/scrapers, SearchService) is grotendeels
     vervangen door de n8n-pipeline (src/modules/pipeline) en bevat alleen stubs.
 

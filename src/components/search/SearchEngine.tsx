@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, FlaskConical, LoaderCircle, Search, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Check, Coins, FlaskConical, LoaderCircle, Search, TriangleAlert } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { Button, ButtonLink } from '@/components/ui/Button';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { Switch } from '@/components/ui/Switch';
 import { OpportunityCard } from '@/components/opportunities/OpportunityCard';
@@ -163,13 +163,22 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
           <p className="text-sm text-muted-foreground">
             Costs {CREDIT_COST_PER_SEARCH} credit · You have {credits} {credits === 1 ? 'credit' : 'credits'}
           </p>
-          <Button size="lg" onClick={runSearch} disabled={busy || credits < CREDIT_COST_PER_SEARCH}>
-            {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Search className="size-4" aria-hidden />}
-            {busy ? 'Searching…' : phase === 'done' || phase === 'failed' ? 'Search again' : 'Search'}
-          </Button>
+          {credits < CREDIT_COST_PER_SEARCH && !busy ? (
+            <ButtonLink href="/billing" size="lg">
+              <Coins className="size-4" aria-hidden />
+              Buy credits
+            </ButtonLink>
+          ) : (
+            <Button size="lg" onClick={runSearch} disabled={busy}>
+              {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Search className="size-4" aria-hidden />}
+              {busy ? 'Searching…' : phase === 'done' || phase === 'failed' ? 'Search again' : 'Search'}
+            </Button>
+          )}
         </div>
         {credits < CREDIT_COST_PER_SEARCH && !busy && (
-          <p className="mt-3 text-sm text-muted-foreground">You&apos;re out of credits.</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            You&apos;re out of credits. Buy a credit pack to keep searching; any pack also unlocks automations.
+          </p>
         )}
         {error && phase === 'idle' && (
           <div className="mt-4">

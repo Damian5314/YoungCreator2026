@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { features } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
 import type { Opportunity, OutreachStatus } from '@/shared/types/Opportunity';
 import type { OpportunitySource, OpportunityStatus, OpportunityType } from '@/shared/types/OpportunityType';
@@ -160,6 +161,76 @@ export const getCreditBalance = cache(async (): Promise<number> => {
   const supabase = await createClient();
   const { data } = await supabase.from('credit_balances').select('balance').eq('user_id', user.id).maybeSingle();
   return data?.balance ?? 0;
+});
+
+export type PaymentStatus = 'open' | 'pending' | 'authorized' | 'paid' | 'failed' | 'canceled' | 'expired';
+
+export interface PaymentData {
+  id: string;
+  packId: string;
+  credits: number;
+  amountCents: number;
+  currency: string;
+  status: PaymentStatus;
+  mode: 'test' | 'live' | null;
+  createdAt: string;
+  paidAt: string | null;
+}
+
+// Aankopen van creditpakketten (Mollie), nieuwste eerst. Zonder de billing-migratie: lege lijst.
+export const getPayments = cache(async (): Promise<PaymentData[]> => {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('payments')
+    .select('id, pack_id, credits, amount_cents, currency, status, mode, created_at, paid_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    packId: row.pack_id,
+    credits: row.credits,
+    amountCents: row.amount_cents,
+    currency: row.currency,
+    status: row.status,
+    mode: row.mode,
+    createdAt: row.created_at,
+    paidAt: row.paid_at,
+  }));
+});
+
+export interface BillingStatus {
+  credits: number;
+  hasPaid: boolean; // minstens één gelukte betaling
+  paymentsEnabled: boolean; // Mollie-key ingesteld
+  testMode: boolean; // test_-key: Mollie-testcheckout, geen echt geld
+  automationsUnlocked: boolean; // automatisch zoeken en mails laten versturen
+}
+
+// Saldo en wat de student mag. Zelfde regels als modules/billing/entitlements.ts (server-side check).
+export const getBillingStatus = cache(async (): Promise<BillingStatus> => {
+  const user = await getCurrentUser();
+  const credits = await getCreditBalance();
+  let hasPaid = false;
+  if (user) {
+    const supabase = await createClient();
+    const { count } = await supabase
+      .from('payments')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'paid');
+    hasPaid = (count ?? 0) > 0;
+  }
+  return {
+    credits,
+    hasPaid,
+    paymentsEnabled: features.payments,
+    testMode: features.paymentsTestMode,
+    automationsUnlocked: !features.payments || hasPaid,
+  };
 });
 
 interface MatchRow {

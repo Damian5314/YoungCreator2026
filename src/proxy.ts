@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PROTECTED_PATHS = ['/dashboard', '/search', '/settings', '/outreach', '/matches'];
+const PROTECTED_PATHS = ['/dashboard', '/search', '/settings', '/outreach', '/matches', '/billing'];
 const AUTH_PATHS = ['/login', '/register'];
 
 // Ververst bij elk verzoek de Supabase-sessie en stuurt door op basis van de inlogstatus
