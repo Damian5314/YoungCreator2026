@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, GraduationCap, Play, Radar, RadioTower, Send } from 'lucide-react';
 import { ButtonLink, Button } from '@/components/ui/Button';
-import { HeroVisual } from './hero/HeroVisual';
+import { HeroMobileVisual } from './hero/HeroMobileVisual';
+import { HeroDesktopScene } from './hero/HeroDesktopScene';
 
 const benefits = [
   { icon: RadioTower, label: 'Real-time company signals' },
@@ -24,11 +25,34 @@ export function HeroSection() {
   const delay = (ms: number) => ({ transitionDelay: `${ms}ms` });
 
   return (
-    <section className="overflow-x-clip">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-24 pt-14 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8 lg:pt-20">
-        {/* ---------------------------------------------------------------- */}
-        {/* Left: message + CTA                                              */}
-        {/* ---------------------------------------------------------------- */}
+    <section className="relative isolate overflow-hidden bg-background">
+      {/* ------------------------------------------------------------------ */}
+      {/* Full-bleed background photograph (desktop only)                    */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="absolute inset-0 hidden lg:block" aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/hero-canal.png"
+          alt=""
+          className="h-full w-full object-cover object-[right_center]"
+          loading="eager"
+          decoding="async"
+        />
+        {/* Blend the photo's white edge into the page and guarantee text contrast. */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-transparent" />
+        {/* Soft fades top & bottom so the crop melts into the page. */}
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
+      </div>
+
+      {/* Floating signal cards + annotations, layered over the photo (desktop). */}
+      <HeroDesktopScene shown={shown} />
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Content                                                            */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="relative z-30 mx-auto grid max-w-7xl items-center gap-10 px-4 pb-20 pt-14 sm:px-6 lg:min-h-[42rem] lg:grid-cols-2 lg:gap-8 lg:pb-28 lg:pt-24">
+        {/* Left: message + CTA */}
         <div className="max-w-xl">
           <span
             className={`inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary-soft-foreground ${revealClass}`}
@@ -90,11 +114,10 @@ export function HeroSection() {
           </ul>
         </div>
 
-        {/* ---------------------------------------------------------------- */}
-        {/* Right: visual storytelling composition                          */}
-        {/* ---------------------------------------------------------------- */}
-        <div className="relative lg:pl-6">
-          <HeroVisual shown={shown} />
+        {/* Right: on mobile/tablet, the contained photo + stacked cards.       */}
+        {/* On desktop this column stays empty — the scene floats over the bg.  */}
+        <div className="relative">
+          <HeroMobileVisual shown={shown} />
         </div>
       </div>
     </section>
