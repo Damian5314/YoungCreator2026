@@ -57,10 +57,13 @@ export const onboarding: typeof en = {
     stepOf: (step: number, total: number) => `Stap ${step} van ${total}`,
     whereToFind: 'Waar je het vindt: ',
     goToStep: (step: number) => `Naar stap ${step}`,
+    goToWelcome: 'Naar welkomst',
     skip: 'Overslaan',
     back: 'Terug',
     startFinding: 'Start met kansen vinden',
     showMe: 'Laat zien hoe',
     next: 'Volgende',
+    letsGo: 'Aan de slag',
+    setUpProfile: 'Mijn profiel instellen',
   },
 };

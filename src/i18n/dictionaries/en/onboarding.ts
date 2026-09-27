@@ -60,10 +60,13 @@ export const onboarding = {
     stepOf: (step: number, total: number) => `Step ${step} of ${total}`,
     whereToFind: 'Where to find it: ',
     goToStep: (step: number) => `Go to step ${step}`,
+    goToWelcome: 'Go to welcome',
     skip: 'Skip',
     back: 'Back',
     startFinding: 'Start finding opportunities',
     showMe: 'Show me how',
     next: 'Next',
+    letsGo: "Let's go",
+    setUpProfile: 'Set up my profile',
   },
 };
