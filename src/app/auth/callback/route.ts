@@ -12,8 +12,15 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${origin}${safeNext}`);
+    if (!error) {
+      console.log('[auth/callback] session exchanged, redirecting to', safeNext);
+      return NextResponse.redirect(`${origin}${safeNext}`);
+    }
+    console.error('[auth/callback] exchangeCodeForSession failed', error.message, error);
+  } else {
+    console.warn('[auth/callback] no code in query params', Object.fromEntries(searchParams.entries()));
   }
 
+  console.log('[auth/callback] falling back to /login');
   return NextResponse.redirect(`${origin}/login`);
 }
