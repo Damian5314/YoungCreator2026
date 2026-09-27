@@ -1,0 +1,70 @@
+// Dashboard: welkom, credit- en conceptmeldingen, statistieken, resultatenlijst en automatisch zoeken.
+export const dashboard = {
+  meta: {
+    title: 'Dashboard',
+  },
+  header: {
+    welcomeName: (name: string) => `Welcome back, ${name}`,
+    welcome: 'Welcome back',
+    description: 'Everything your searches have found so far.',
+    newSearch: 'New search',
+  },
+  credits: {
+    outOfCredits: 'You’re out of credits.',
+    freeSearchUsed: 'You’ve used your free search.',
+    keepSearching: 'Buy a credit pack to keep searching.',
+    keepSearchingAndUnlock: 'Buy a credit pack to keep searching and unlock automatic searches and sending.',
+    seePacks: 'See credit packs',
+  },
+  drafts: {
+    prepared: (count: number) => `Your agent prepared ${count} ${count === 1 ? 'email' : 'emails'} for you.`,
+    review: 'Review and send them to take the first step.',
+  },
+  empty: {
+    title: 'No results yet',
+    description: 'Run your first search and your matches will show up here.',
+    cta: 'Go to search',
+  },
+  searchProfile: {
+    title: 'Search profile',
+    description: "What we're hunting for.",
+    notSetUp: "You haven't set up your search yet.",
+    edit: 'Edit search profile',
+    setUp: 'Set up your search',
+  },
+  stats: {
+    found: 'Opportunities found',
+    newSinceLast: 'New since last search',
+    hidden: 'Hidden opportunities',
+    daysLeft: 'Days left in search year',
+  },
+  results: {
+    title: 'Results',
+    filterByStatus: 'Filter by status',
+    allExceptRejected: 'All except not interested',
+    allStatuses: 'All statuses',
+    allTypes: 'All types',
+    noMatches: 'No results match these filters.',
+  },
+  schedule: {
+    title: 'Automatic search',
+    description: 'Let Unlisted search for you on a schedule.',
+    locked: 'Automatic search comes with any credit pack.',
+    seePacks: 'See credit packs',
+    runAutomatically: 'Run automatically',
+    frequency: 'Frequency',
+    frequencies: {
+      daily: 'Daily',
+      weekly: 'Weekly',
+    },
+    day: 'Day',
+    days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    time: 'Time',
+    paused: 'Automatic search is paused.',
+    pickTime: 'Pick a time to schedule your search.',
+    nextRun: (when: string) => `Next run: ${when}`,
+    nextRunPending: 'Next run: …',
+    costNote: (cost: number) =>
+      `Each run uses ${cost} ${cost === 1 ? 'credit' : 'credits'}. Your agent also prepares emails for the best matches.`,
+  },
+};

@@ -15,7 +15,7 @@ export function Logo({ href = '/', size = 'md' }: { href?: string; size?: keyof 
     >
       {/* object-cover snijdt de transparante rand boven/onder weg, zodat merk en tekst optisch gelijk staan */}
       <Image src="/images/brand/logo.png" alt="" width={48} height={48} className={`object-cover ${sizes[size].mark}`} />
-      Job Hunter
+      Unlisted
     </Link>
   );
 }

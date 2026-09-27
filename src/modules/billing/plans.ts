@@ -1,6 +1,8 @@
 // Prijzen en regels voor betalen. Eén plek: pas hier bedragen of pakketten aan.
 // Bedragen in centen (integer), nooit als kommagetal.
 
+import { defaultLocale, type Locale } from '@/i18n/config';
+
 export const CURRENCY = 'EUR';
 
 // De eerste zoekopdracht is gratis: nieuwe accounts krijgen 1 credit (zie de billing-migratie)
@@ -48,13 +50,17 @@ export function findPack(id: string): CreditPack | undefined {
   return CREDIT_PACKS.find((pack) => pack.id === id);
 }
 
-const euro = new Intl.NumberFormat('en-IE', { style: 'currency', currency: CURRENCY });
+// "€4.99" in het Engels, "€ 4,99" in het Nederlands
+const euro: Record<Locale, Intl.NumberFormat> = {
+  en: new Intl.NumberFormat('en-IE', { style: 'currency', currency: CURRENCY }),
+  nl: new Intl.NumberFormat('nl-NL', { style: 'currency', currency: CURRENCY }),
+};
 
-export function formatMoney(cents: number): string {
-  return euro.format(cents / 100);
+export function formatMoney(cents: number, locale: Locale = defaultLocale): string {
+  return euro[locale].format(cents / 100);
 }
 
 // Prijs per zoekopdracht, afgerond op hele centen ("€0.40 per search")
-export function pricePerCredit(pack: CreditPack): string {
-  return formatMoney(Math.round(pack.amountCents / pack.credits));
+export function pricePerCredit(pack: CreditPack, locale: Locale = defaultLocale): string {
+  return formatMoney(Math.round(pack.amountCents / pack.credits), locale);
 }

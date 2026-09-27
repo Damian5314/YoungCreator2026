@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { Annotation } from '../../_components/Annotation';
 import { revealItem } from '../../_components/revealItem';
-import { footer, type SocialPlatform } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding, type SocialPlatform } from '../../_content/landing';
 
 /* Lijn-iconen in dezelfde stijl als lucide (lucide heeft geen merklogo's meer). */
 const icons: Record<SocialPlatform, ReactNode> = {
@@ -37,8 +38,9 @@ const icons: Record<SocialPlatform, ReactNode> = {
  * "Follow the signal": korte zin, social-tegels en één handgeschreven notitie.
  * De tegels verschijnen pas als er echte account-URL's in de content staan.
  */
-export function FooterSocial() {
-  const { title, text, links, annotation } = footer.social;
+export async function FooterSocial() {
+  const { footer } = buildLanding((await getT()).landing);
+  const { title, text, links, linkLabel, annotation } = footer.social;
 
   return (
     <div>
@@ -51,7 +53,7 @@ export function FooterSocial() {
             <li key={platform} {...revealItem(420 + index * 70, 8)}>
               <a
                 href={href}
-                aria-label={`Job Hunter on ${label}`}
+                aria-label={linkLabel(label)}
                 className="grid size-12 place-items-center rounded-[14px] border border-primary/5 bg-primary-soft text-foreground transition-[background-color,color,translate,box-shadow] duration-200 ease-soft hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground hover:shadow-[0_10px_22px_-10px_rgb(8_127_99/0.7)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <svg

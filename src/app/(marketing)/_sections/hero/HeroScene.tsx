@@ -1,5 +1,6 @@
 import { Annotation } from '../../_components/Annotation';
-import { hero } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 import { CompanySignalCard } from './CompanySignalCard';
 import { Floating } from './Floating';
 import { MatchCard } from './MatchCard';
@@ -15,7 +16,9 @@ import { OutreachCard } from './OutreachCard';
  *   (in % van de foto) altijd op dezelfde plek rond de student blijven. Gezicht, haar
  *   en laptop blijven vrij. lg toont alleen nieuws + kans; vanaf xl de volledige compositie.
  */
-export function HeroScene() {
+export async function HeroScene() {
+  const { hero } = buildLanding((await getT()).landing);
+
   return (
     <div className="relative z-20 -mt-10 grid gap-3 px-3 sm:-mt-14 sm:grid-cols-2 sm:gap-4 sm:px-5 lg:pointer-events-none lg:absolute lg:right-0 lg:top-0 lg:mt-0 lg:block lg:aspect-[1671/941] lg:h-[var(--hero-h)] lg:px-0">
       {/* Bron: het bedrijfsnieuws — boven, iets achter de kans-kaart */}
@@ -47,7 +50,7 @@ export function HeroScene() {
 
       {/* Onderaan, kleinst en iets naar achteren: de volgende actie */}
       <Floating
-        className="hidden sm:block lg:hidden xl:left-[56%] xl:top-[72.5%] xl:z-10 xl:block xl:w-[222px] xl:-rotate-[0.5deg] 2xl:w-[236px]"
+        className="hidden sm:block lg:hidden xl:left-[56%] xl:top-[74%] xl:z-10 xl:block xl:w-49 xl:rotate-[-0.5deg] 2xl:top-[72.5%] 2xl:w-56"
         delay={0.9}
         duration={7}
       >

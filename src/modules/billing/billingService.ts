@@ -29,7 +29,7 @@ export async function startCheckout(userId: string, packId: string, origin: stri
     const mollie = await createMolliePayment({
       amountCents: pack.amountCents,
       currency: CURRENCY,
-      description: `Job Hunter: ${pack.credits} credits (${pack.name})`,
+      description: `Unlisted: ${pack.credits} credits (${pack.name})`,
       redirectUrl: `${baseUrl}/billing/return?payment=${payment.id}`,
       // Lokaal (localhost) kan Mollie ons niet bereiken; dan bevestigt de terugkeerpagina de betaling
       webhookUrl: isPublicUrl(webhookUrl) ? webhookUrl : undefined,

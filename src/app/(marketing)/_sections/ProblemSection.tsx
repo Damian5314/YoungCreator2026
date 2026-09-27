@@ -1,6 +1,7 @@
 import { Container } from '@/components/layout/Container';
 import { revealItem } from '../_components/revealItem';
-import { story } from '../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../_content/landing';
 import { ProblemSignalCard } from './story/ProblemSignalCard';
 import { StoryAnnotation } from './story/StoryAnnotation';
 import { StoryBackground } from './story/StoryBackground';
@@ -16,7 +17,9 @@ const cardPlacement = [
 ];
 
 // S: alleen verantwoordelijk voor het emotionele verhaal op de landingspagina
-export function ProblemSection() {
+export async function ProblemSection() {
+  const { story } = buildLanding((await getT()).landing);
+
   return (
     <section id="problem" aria-labelledby="story-title" className="scroll-mt-24 py-20 lg:py-28">
       <Container>

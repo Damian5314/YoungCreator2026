@@ -1,11 +1,14 @@
 import { Eyebrow } from '../../_components/Eyebrow';
 import { RevealGroup } from '../../_components/RevealGroup';
 import { revealItem } from '../../_components/revealItem';
-import { story, storyVideo } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 import { StoryVideoButton } from './StoryVideoButton';
 
 /** Linkerkolom van het verhaal: label, kop, korte intro en de video-knop. */
-export function StoryContent() {
+export async function StoryContent() {
+  const { story, storyVideo } = buildLanding((await getT()).landing);
+
   return (
     <RevealGroup className="relative z-10 px-6 pb-10 pt-12 sm:px-10 sm:pb-12 sm:pt-16 lg:flex lg:min-h-[33rem] lg:w-[45%] lg:flex-col lg:justify-center lg:py-12 lg:pl-14 lg:pr-0 xl:min-h-[36rem] xl:pl-20">
       <div {...revealItem(0, 12)}>

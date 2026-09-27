@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, Input, Textarea } from '@/components/ui/Field';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { SavedNote } from '@/components/ui/SavedNote';
+import { useLocale, useT } from '@/i18n/I18nProvider';
 import { draftOutreach, markOutreachSent, saveOutreachDraft, sendOutreachNow } from '@/lib/actions/outreach';
 import type { FormState } from '@/lib/actions/formState';
 import type { AutomationLevel, OutreachMessageData } from '@/lib/data/queries';
@@ -20,7 +21,7 @@ interface OutreachPanelProps {
   outreach: OutreachMessageData | null;
   automationLevel: AutomationLevel;
   canSend: boolean; // n8n send-webhook is gekoppeld
-  sendLocked?: boolean; // versturen via JobHunter is een automation: nog geen creditpakket gekocht
+  sendLocked?: boolean; // versturen via Unlisted is een automation: nog geen creditpakket gekocht
   aiEnabled: boolean;
 }
 
@@ -39,6 +40,9 @@ export function OutreachPanel({
   const [busy, setBusy] = useState<'draft' | 'save' | 'send' | 'manual' | null>(null);
   const [state, setState] = useState<FormState>(undefined);
   const [copied, setCopied] = useState(false);
+  const t = useT();
+  const locale = useLocale();
+  const p = t.outreach.panel;
 
   const [toEmail, setToEmail] = useState(outreach?.toEmail ?? '');
   const [toName, setToName] = useState(outreach?.toName ?? '');
@@ -86,7 +90,7 @@ export function OutreachPanel({
   };
 
   async function copyEmail() {
-    await navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);
+    await navigator.clipboard.writeText(`${p.clipboardSubject} ${subject}\n\n${body}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -97,30 +101,29 @@ export function OutreachPanel({
     return (
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Let your agent write a short, personal email to {recipient}, based on this opportunity and your profile. You check it before
-          anything is sent.
+          {p.intro(recipient)}
         </p>
         {!contact?.email && (
           <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-            We don&apos;t have an email address for this contact yet. You can add one after the draft is written
+            {p.noEmail.text}
             {contact?.url ? (
               <>
                 {' '}
-                (try{' '}
+                {p.noEmail.tryBefore}
                 <a href={contact.url} target="_blank" rel="noreferrer" className="font-medium text-primary hover:underline">
-                  their profile
+                  {p.noEmail.profileLink}
                 </a>
-                )
+                {p.noEmail.tryAfter}
               </>
             ) : null}
-            .
+            {p.noEmail.end}
           </p>
         )}
         <Button onClick={writeDraft} disabled={working} className="w-full">
           {busy === 'draft' ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
-          {busy === 'draft' ? 'Writing your email…' : 'Write email'}
+          {busy === 'draft' ? p.writing : p.write}
         </Button>
-        {!aiEnabled && <p className="text-xs text-muted-foreground">AI isn&apos;t connected, so we start from a personal template.</p>}
+        {!aiEnabled && <p className="text-xs text-muted-foreground">{p.noAi}</p>}
         <FormMessage state={state} />
       </div>
     );
@@ -132,11 +135,11 @@ export function OutreachPanel({
         <p className="flex items-center gap-2 rounded-lg bg-success-soft p-3 text-sm font-medium text-success">
           <Check className="size-4" aria-hidden />
           {outreach.status === 'sending'
-            ? 'Sending…'
-            : `Sent ${outreach.sentAt ? formatDateTime(new Date(outreach.sentAt)) : ''}${outreach.sentVia === 'manual' ? ' from your own mailbox' : ' by JobHunter'}`}
+            ? p.sending
+            : p.sent(outreach.sentAt ? formatDateTime(new Date(outreach.sentAt), locale) : '', outreach.sentVia === 'manual')}
         </p>
         <div className="space-y-1 text-sm">
-          <p className="text-muted-foreground">To: {outreach.toName ? `${outreach.toName} <${outreach.toEmail}>` : outreach.toEmail}</p>
+          <p className="text-muted-foreground">{p.to(outreach.toName ? `${outreach.toName} <${outreach.toEmail}>` : (outreach.toEmail ?? ''))}</p>
           <p className="font-medium">{outreach.subject}</p>
           <p className="whitespace-pre-wrap text-muted-foreground">{outreach.body}</p>
         </div>
@@ -145,13 +148,13 @@ export function OutreachPanel({
   }
 
   const sendDisabledReason = !canSend
-    ? 'Sending from JobHunter isn’t connected yet. Use your mail app instead.'
+    ? p.sendDisabled.notConnected
     : sendLocked
-      ? 'Sending through JobHunter comes with any credit pack. Use your mail app for now.'
+      ? p.sendDisabled.locked
       : automationLevel < 2
-      ? 'You send emails yourself (automation level 1).'
+      ? p.sendDisabled.level1
       : !toEmail
-        ? 'Add the recipient’s email address first.'
+        ? p.sendDisabled.noRecipient
         : null;
 
   return (
@@ -159,23 +162,23 @@ export function OutreachPanel({
       {outreach.createdBy === 'agent' && (
         <p className="flex items-start gap-2 rounded-lg bg-primary-soft p-3 text-sm text-primary-soft-foreground">
           <Sparkles className="mt-0.5 size-4 shrink-0" aria-hidden />
-          Your agent prepared this email because this is one of your strongest matches.
+          {p.agentPrepared}
         </p>
       )}
       {outreach.status === 'failed' && outreach.errorMessage && <FormMessage state={{ error: outreach.errorMessage }} />}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="To (email)" htmlFor="outreach-to">
-          <Input id="outreach-to" type="email" value={toEmail} onChange={(event) => setToEmail(event.target.value)} placeholder="name@company.com" />
+        <Field label={p.fields.to} htmlFor="outreach-to">
+          <Input id="outreach-to" type="email" value={toEmail} onChange={(event) => setToEmail(event.target.value)} placeholder={p.fields.toPlaceholder} />
         </Field>
-        <Field label="Name" htmlFor="outreach-name">
+        <Field label={p.fields.name} htmlFor="outreach-name">
           <Input id="outreach-name" value={toName} onChange={(event) => setToName(event.target.value)} />
         </Field>
       </div>
-      <Field label="Subject" htmlFor="outreach-subject">
+      <Field label={p.fields.subject} htmlFor="outreach-subject">
         <Input id="outreach-subject" value={subject} onChange={(event) => setSubject(event.target.value)} maxLength={200} />
       </Field>
-      <Field label="Message" htmlFor="outreach-body">
+      <Field label={p.fields.message} htmlFor="outreach-body">
         <Textarea id="outreach-body" rows={12} value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} />
       </Field>
 
@@ -191,7 +194,7 @@ export function OutreachPanel({
             className="col-span-2"
           >
             {busy === 'send' ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Send className="size-4" aria-hidden />}
-            {automationLevel === 3 ? 'Send now' : 'Approve & send'}
+            {automationLevel === 3 ? p.sendNow : p.approveSend}
           </Button>
         )}
         <a
@@ -202,11 +205,11 @@ export function OutreachPanel({
           }`}
         >
           <Mail className="size-4" aria-hidden />
-          Open in mail app
+          {p.openMailApp}
         </a>
         <Button variant="secondary" onClick={copyEmail} disabled={working}>
           {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? p.copied : p.copy}
         </Button>
         <Button
           variant="ghost"
@@ -214,7 +217,7 @@ export function OutreachPanel({
           disabled={working}
           className="border border-border sm:border-0"
         >
-          {busy === 'save' ? 'Saving…' : 'Save'}
+          {busy === 'save' ? t.common.actions.saving : t.common.actions.save}
         </Button>
         {state?.message && busy === null && <SavedNote>{state.message}</SavedNote>}
       </div>
@@ -241,7 +244,7 @@ export function OutreachPanel({
       </div>
       {automationLevel === 1 && (
         <p className="text-xs text-muted-foreground">
-          Want JobHunter to send approved emails for you?{' '}
+          Want Unlisted to send approved emails for you?{' '}
           <Link href="/settings" className="font-medium text-primary hover:underline">
             Change your automation level
           </Link>

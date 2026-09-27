@@ -1,9 +1,12 @@
 import { ArrowRight, Play } from 'lucide-react';
 import { ButtonLink } from '@/components/ui/Button';
-import { finalCta } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Dezelfde knoppen als in de hero: groen en dominant, daarnaast een rustige witte met play-icoon. */
-export function CTAButtons() {
+export async function CTAButtons() {
+  const { finalCta } = buildLanding((await getT()).landing);
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
       <ButtonLink

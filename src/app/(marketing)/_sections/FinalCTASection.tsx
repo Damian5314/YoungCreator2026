@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { Container } from '@/components/layout/Container';
 import { RevealGroup } from '../_components/RevealGroup';
-import { media } from '../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../_content/landing';
 import { CTAAnnotation } from './cta/CTAAnnotation';
 import { CTAContent } from './cta/CTAContent';
 
@@ -10,7 +11,9 @@ import { CTAContent } from './cta/CTAContent';
  * donkerder voor de kop. Mobiel/tablet: een beeld bovenin dat onderin overloopt in de
  * donkere kaart, zodat de tekst nooit over de student valt.
  */
-function CTABackground() {
+async function CTABackground() {
+  const { media } = buildLanding((await getT()).landing);
+
   return (
     <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-[62%] sm:h-[60%] lg:inset-0 lg:h-auto">
       <div data-reveal-play className="absolute inset-0">

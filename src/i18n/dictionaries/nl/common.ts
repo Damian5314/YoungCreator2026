@@ -1,0 +1,78 @@
+import type { common as en } from '../en/common';
+
+export const common: typeof en = {
+  meta: {
+    description:
+      'Unlisted helpt internationale studenten banen, stages en verborgen kansen in Nederland te vinden door realtime bedrijfssignalen, nieuws en wervingsactiviteit te analyseren.',
+  },
+  language: {
+    label: 'Taal',
+    names: { en: 'English', nl: 'Nederlands' },
+  },
+  nav: {
+    main: 'Hoofdmenu',
+    openMenu: 'Menu openen',
+    closeMenu: 'Menu sluiten',
+    dashboard: 'Dashboard',
+    search: 'Zoeken',
+    outreach: 'Berichten',
+    settings: 'Instellingen',
+  },
+  credits: {
+    unit: (count: number) => (count === 1 ? 'credit' : 'credits'),
+    buyMore: (count: number) => `${count} ${count === 1 ? 'credit' : 'credits'}: meer kopen`,
+  },
+  actions: {
+    pleaseWait: 'Even geduld…',
+    save: 'Opslaan',
+    saving: 'Opslaan…',
+    saved: 'Opgeslagen',
+    cancel: 'Annuleren',
+    close: 'Sluiten',
+    back: 'Terug',
+    continue: 'Doorgaan',
+    edit: 'Bewerken',
+    retry: 'Opnieuw proberen',
+  },
+  opportunityTypes: {
+    job: 'Baan',
+    internship: 'Stage',
+    traineeship: 'Traineeship',
+    thesis: 'Afstudeerproject',
+    'working-student': 'Werkstudent',
+    'part-time': 'Bijbaan',
+    freelance: 'Freelance',
+    'open-application': 'Open sollicitatie',
+    event: 'Evenement',
+    hackathon: 'Hackathon',
+    conference: 'Congres',
+    networking: 'Netwerken',
+    project: 'Project',
+    research: 'Onderzoeksproject',
+    startup: 'Startup',
+  },
+  opportunityTypeGroups: {
+    work: 'Werk',
+    events: 'Evenementen & netwerk',
+    companies: 'Bedrijven & projecten',
+  },
+  opportunitySources: {
+    linkedin: 'LinkedIn',
+    indeed: 'Indeed',
+    glassdoor: 'Glassdoor',
+    'company-career-page': 'Carrièrepagina',
+    radar: 'Radar',
+    news: 'Nieuws',
+    'event-platform': 'Evenementenplatform',
+    'startup-database': 'Startupdatabase',
+    web: 'Web',
+    demo: 'Demodata',
+  },
+  opportunityStatuses: {
+    new: 'Nieuw',
+    reviewed: 'Bekeken',
+    saved: 'Opgeslagen',
+    applied: 'Benaderd',
+    rejected: 'Niet interessant',
+  },
+};

@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { MediaSlot } from '../../_components/MediaSlot';
 import { RevealGroup } from '../../_components/RevealGroup';
-import { media } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Tijdelijke, filmische achtergrond zolang er geen verhaalfoto is (laptoplicht in een donkere kamer). */
 function StoryFallback() {
@@ -18,7 +19,9 @@ function StoryFallback() {
  * Desktop: vult de hele kaart, achter de tekst. `children` (kaarten, notitie)
  * worden ten opzichte van dit blok gepositioneerd.
  */
-export function StoryBackground({ children }: { children: ReactNode }) {
+export async function StoryBackground({ children }: { children: ReactNode }) {
+  const { media } = buildLanding((await getT()).landing);
+
   return (
     <RevealGroup className="relative lg:absolute lg:inset-0">
       <div className="relative aspect-[4/5] overflow-hidden sm:aspect-[16/10] lg:absolute lg:inset-0 lg:aspect-auto">

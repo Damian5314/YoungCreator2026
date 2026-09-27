@@ -16,7 +16,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title="Settings" description="Manage your agent, your account and how JobHunter looks." />
+      <PageHeader title="Settings" description="Manage your agent, your account and how Unlisted looks." />
       <AgentSettingsCard
         profile={profile}
         canSendEmail={features.canSendEmail}

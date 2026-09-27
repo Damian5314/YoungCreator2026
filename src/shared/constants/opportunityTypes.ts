@@ -18,11 +18,15 @@ export const OPPORTUNITY_TYPE_LABELS: Record<OpportunityType, string> = {
   'startup': 'Startup',
 };
 
-// Groepen voor het voorkeurenformulier: we zoeken bewust breder dan vacatures
-export const OPPORTUNITY_TYPE_GROUPS: { label: string; types: OpportunityType[] }[] = [
-  { label: 'Work', types: ['job', 'internship', 'traineeship', 'working-student', 'part-time', 'freelance', 'thesis'] },
-  { label: 'Events & network', types: ['event', 'hackathon', 'conference', 'networking'] },
-  { label: 'Companies & projects', types: ['open-application', 'startup', 'project', 'research'] },
+// Groepen voor het voorkeurenformulier: we zoeken bewust breder dan vacatures.
+// `id` is de sleutel voor de vertaalde naam (t.common.opportunityTypeGroups[id]).
+// Deze Engelse labels (hier en hierboven) voeden ook de AI-prompts; de UI toont de vertaling.
+export type OpportunityTypeGroupId = 'work' | 'events' | 'companies';
+
+export const OPPORTUNITY_TYPE_GROUPS: { id: OpportunityTypeGroupId; label: string; types: OpportunityType[] }[] = [
+  { id: 'work', label: 'Work', types: ['job', 'internship', 'traineeship', 'working-student', 'part-time', 'freelance', 'thesis'] },
+  { id: 'events', label: 'Events & network', types: ['event', 'hackathon', 'conference', 'networking'] },
+  { id: 'companies', label: 'Companies & projects', types: ['open-application', 'startup', 'project', 'research'] },
 ];
 
 export const OPPORTUNITY_SOURCE_LABELS: Record<OpportunitySource, string> = {

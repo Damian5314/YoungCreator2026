@@ -1,5 +1,6 @@
 import Image from 'next/image';
-import { media } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /**
  * Eén foto-element voor alle schermen (dus ook één download):
@@ -7,7 +8,9 @@ import { media } from '../../_content/landing';
  * - desktop: rechts verankerde achtergrond op ware verhoudingen, die links, boven
  *   en onder zacht in de pagina overloopt. De kaarten (HeroScene) delen dezelfde maat.
  */
-export function HeroImage() {
+export async function HeroImage() {
+  const { media } = buildLanding((await getT()).landing);
+
   return (
     <div className="relative aspect-[5/4] overflow-hidden rounded-block shadow-soft sm:aspect-[4/3] lg:absolute lg:right-0 lg:top-0 lg:z-0 lg:aspect-[1671/941] lg:h-[var(--hero-h)] lg:overflow-visible lg:rounded-none lg:shadow-none">
       <Image

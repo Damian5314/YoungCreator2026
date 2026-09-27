@@ -20,7 +20,7 @@ const LEVELS: { value: AutomationLevel; title: string; description: string }[] =
   {
     value: 2,
     title: 'Semi-automatic',
-    description: 'Your agent prepares everything. You approve with one click and JobHunter sends it.',
+    description: 'Your agent prepares everything. You approve with one click and Unlisted sends it.',
   },
   {
     value: 3,
@@ -108,7 +108,7 @@ export function AgentSettingsCard({ profile, canSendEmail, automationsUnlocked }
                 className="mt-1 accent-[var(--primary)]"
               />
               <span>
-                I allow JobHunter to send emails on my behalf to contacts at opportunities that strongly match my profile. Replies
+                I allow Unlisted to send emails on my behalf to contacts at opportunities that strongly match my profile. Replies
                 go to my own email address.
               </span>
             </label>

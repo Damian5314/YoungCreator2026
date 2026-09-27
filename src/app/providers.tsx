@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { ThemeProvider } from 'next-themes';
 
-// De landingspagina is ontworpen op warm off-white en blijft daarom altijd licht
-const LIGHT_ONLY_PATHS = ['/'];
+// De landingspagina en de auth-pagina's zijn ontworpen op warm off-white en blijven daarom altijd licht
+const LIGHT_ONLY_PATHS = ['/', '/login', '/register'];
 
 // Dark mode: next-themes zet class="dark" op <html>, de kleur-tokens in globals.css doen de rest
 export function Providers({ children }: { children: ReactNode }) {

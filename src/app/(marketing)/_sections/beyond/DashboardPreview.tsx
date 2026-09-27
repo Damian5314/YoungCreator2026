@@ -1,13 +1,15 @@
 import Image from 'next/image';
 import { revealItem } from '../../_components/revealItem';
-import { signals } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /**
  * Het echte dashboard als zwevend productbeeld (transparante PNG, niet nagebouwd in HTML).
  * Desktop: begint in het midden en komt van rechts het beeld in (beyond-bleed in globals.css).
  * Mobiel: 130% breed en loopt rechts van het scherm af (de sectie knipt af), zodat de UI leesbaar blijft.
  */
-export function DashboardPreview() {
+export async function DashboardPreview() {
+  const { signals } = buildLanding((await getT()).landing);
   const { src, width, height, alt } = signals.dashboard;
 
   return (

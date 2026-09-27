@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Menu, X } from 'lucide-react';
+import { useT } from '@/i18n/I18nProvider';
 import { Container } from './Container';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
 import { ButtonLink } from '../ui/Button';
 
@@ -32,6 +34,7 @@ const desktopLink = `relative rounded-md py-2 text-[15px] font-medium text-foreg
  * het midden, acties rechts. Onder lg klapt de navigatie in een menu.
  */
 export function MarketingHeader({ nav }: { nav: MarketingNav }) {
+  const t = useT();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -72,7 +75,7 @@ export function MarketingHeader({ nav }: { nav: MarketingNav }) {
           <Logo href={nav.home} />
         </div>
 
-        <nav aria-label="Main" className="hidden lg:block">
+        <nav aria-label={t.common.nav.main} className="hidden lg:block">
           <ul className="flex items-center gap-8 whitespace-nowrap xl:gap-10">
             {nav.links.map((link) => (
               <li key={link.label}>
@@ -85,6 +88,7 @@ export function MarketingHeader({ nav }: { nav: MarketingNav }) {
         </nav>
 
         <div className="flex items-center gap-2 justify-self-end sm:gap-3">
+          <LanguageSwitcher />
           <Link
             href={nav.signIn.href}
             className={`hidden h-11 items-center whitespace-nowrap rounded-full px-3 text-[15px] font-medium text-foreground/80 transition-colors duration-200 hover:text-primary sm:inline-flex ${focusRing}`}
@@ -108,7 +112,7 @@ export function MarketingHeader({ nav }: { nav: MarketingNav }) {
             onClick={() => setOpen((value) => !value)}
             aria-expanded={open}
             aria-controls="mobile-menu"
-            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-label={open ? t.common.nav.closeMenu : t.common.nav.openMenu}
             className={`grid size-11 place-items-center rounded-full text-foreground transition-colors hover:bg-foreground/5 lg:hidden ${focusRing}`}
           >
             {open ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
@@ -118,7 +122,7 @@ export function MarketingHeader({ nav }: { nav: MarketingNav }) {
 
       <div id="mobile-menu" hidden={!open} className="border-t border-foreground/6 lg:hidden">
         <Container className="py-3">
-          <nav aria-label="Main">
+          <nav aria-label={t.common.nav.main}>
             <ul className="flex flex-col">
               {nav.links.map((link) => (
                 <li key={link.label}>

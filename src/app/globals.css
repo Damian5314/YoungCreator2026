@@ -85,6 +85,9 @@
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   --animate-rise: rise 0.9s var(--ease-soft) both;
+  --animate-fade: fade 1s var(--ease-soft) both;
+  --animate-fade-up: fade-up 0.6s var(--ease-soft) both;
+  --animate-pop-in: pop-in 0.45s var(--ease-soft) both;
   --animate-bob: bob 7s ease-in-out infinite;
   --animate-wipe-in: wipe-in 1.6s var(--ease-soft) both;
   --animate-settle: settle 2.2s var(--ease-soft) both;
@@ -93,6 +96,28 @@
     from {
       opacity: 0;
       transform: translateY(18px);
+    }
+  }
+
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Kleiner broertje van rise: kaarten in een dialoog komen 12px omhoog */
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  /* Dialoog verschijnt: vervagen + heel licht inzoomen (0.97 → 1) */
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
     }
   }
 

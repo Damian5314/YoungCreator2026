@@ -1,10 +1,13 @@
 import { ArrowRight, Play } from 'lucide-react';
 import { ButtonLink } from '@/components/ui/Button';
 import { revealItem } from '../../_components/revealItem';
-import { signals } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Dezelfde knoppen als in de hero, zodat de pagina één geheel blijft. */
-export function SectionActions() {
+export async function SectionActions() {
+  const { signals } = buildLanding((await getT()).landing);
+
   return (
     <>
       <div {...revealItem(560)} className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">

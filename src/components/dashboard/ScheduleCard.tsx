@@ -10,25 +10,22 @@ import { Field, Input, Select } from '@/components/ui/Field';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { SavedNote } from '@/components/ui/SavedNote';
 import { Switch } from '@/components/ui/Switch';
+import { intlLocale } from '@/i18n/config';
+import { useLocale, useT } from '@/i18n/I18nProvider';
 import { saveSchedule } from '@/lib/actions/search';
 import { useFormAction } from '@/lib/hooks/useFormAction';
 import { CREDIT_COST_PER_SEARCH } from '@/shared/constants/opportunityTypes';
 import type { ScheduleFrequency, SearchSchedule } from '@/shared/types/SearchSchedule';
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const FREQUENCIES: ScheduleFrequency[] = ['daily', 'weekly'];
 
-const FREQUENCIES: { value: ScheduleFrequency; label: string }[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'weekly', label: 'Weekly' },
-];
-
-const nextRunFormat = new Intl.DateTimeFormat('en-GB', {
+const nextRunOptions: Intl.DateTimeFormatOptions = {
   weekday: 'short',
   day: 'numeric',
   month: 'short',
   hour: '2-digit',
   minute: '2-digit',
-});
+};
 
 function getNextRun({ frequency, dayOfWeek, time }: SearchSchedule, now: Date): Date {
   const [hours, minutes] = time.split(':').map(Number);
@@ -54,6 +51,8 @@ interface ScheduleCardProps {
 
 // Timer management: wanneer de search automatisch moet draaien
 export function ScheduleCard({ searchProfileId, initialSchedule, locked = false }: ScheduleCardProps) {
+  const t = useT();
+  const locale = useLocale();
   const [schedule, setSchedule] = useState<SearchSchedule>(initialSchedule);
   const [dirty, setDirty] = useState(false);
   const { state, pending, submit } = useFormAction(saveSchedule);
@@ -81,16 +80,19 @@ export function ScheduleCard({ searchProfileId, initialSchedule, locked = false 
     submit(formData);
   }
 
-  let nextRunText = 'Automatic search is paused.';
+  let nextRunText = t.dashboard.schedule.paused;
   if (schedule.enabled) {
-    if (!schedule.time) nextRunText = 'Pick a time to schedule your search.';
-    else if (now) nextRunText = `Next run: ${nextRunFormat.format(getNextRun(schedule, now))}`;
-    else nextRunText = 'Next run: …';
+    if (!schedule.time) nextRunText = t.dashboard.schedule.pickTime;
+    else if (now)
+      nextRunText = t.dashboard.schedule.nextRun(
+        new Intl.DateTimeFormat(intlLocale[locale], nextRunOptions).format(getNextRun(schedule, now)),
+      );
+    else nextRunText = t.dashboard.schedule.nextRunPending;
   }
 
   return (
     <Card>
-      <CardHeader title="Automatic search" description="Let JobHunter search for you on a schedule." />
+      <CardHeader title={t.dashboard.schedule.title} description={t.dashboard.schedule.description} />
 
       {locked && (
         <Link
@@ -99,8 +101,8 @@ export function ScheduleCard({ searchProfileId, initialSchedule, locked = false 
         >
           <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
           <span className="flex-1">
-            Automatic search comes with any credit pack.{' '}
-            <span className="font-medium text-primary">See credit packs</span>
+            {t.dashboard.schedule.locked}{' '}
+            <span className="font-medium text-primary">{t.dashboard.schedule.seePacks}</span>
           </span>
           <ArrowRight className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
         </Link>
@@ -108,7 +110,7 @@ export function ScheduleCard({ searchProfileId, initialSchedule, locked = false 
 
       <Switch
         id="schedule-enabled"
-        label="Run automatically"
+        label={t.dashboard.schedule.runAutomatically}
         checked={schedule.enabled}
         onChange={(enabled) => update({ enabled })}
         // Vergrendeld: aanzetten kan niet, uitzetten wel
@@ -118,25 +120,25 @@ export function ScheduleCard({ searchProfileId, initialSchedule, locked = false 
       <fieldset disabled={!schedule.enabled} className="mt-5 space-y-4 disabled:opacity-50">
         <div>
           <p id="schedule-frequency" className="text-sm font-medium">
-            Frequency
+            {t.dashboard.schedule.frequency}
           </p>
           <div role="group" aria-labelledby="schedule-frequency" className="mt-2 flex gap-2">
-            {FREQUENCIES.map(({ value, label }) => (
+            {FREQUENCIES.map((value) => (
               <Chip key={value} selected={schedule.frequency === value} onClick={() => update({ frequency: value })}>
-                {label}
+                {t.dashboard.schedule.frequencies[value]}
               </Chip>
             ))}
           </div>
         </div>
 
         {schedule.frequency === 'weekly' && (
-          <Field label="Day" htmlFor="schedule-day">
+          <Field label={t.dashboard.schedule.day} htmlFor="schedule-day">
             <Select
               id="schedule-day"
               value={schedule.dayOfWeek}
               onChange={(event) => update({ dayOfWeek: Number(event.target.value) })}
             >
-              {DAYS.map((day, index) => (
+              {t.dashboard.schedule.days.map((day, index) => (
                 <option key={day} value={index}>
                   {day}
                 </option>
@@ -145,7 +147,7 @@ export function ScheduleCard({ searchProfileId, initialSchedule, locked = false 
           </Field>
         )}
 
-        <Field label="Time" htmlFor="schedule-time">
+        <Field label={t.dashboard.schedule.time} htmlFor="schedule-time">
           <Input
             id="schedule-time"
             type="time"
@@ -162,12 +164,12 @@ export function ScheduleCard({ searchProfileId, initialSchedule, locked = false 
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          Each run uses {CREDIT_COST_PER_SEARCH} credit. Your agent also prepares emails for the best matches.
+          {t.dashboard.schedule.costNote(CREDIT_COST_PER_SEARCH)}
         </p>
         <div className="flex items-center gap-3">
           {state?.message && !dirty && !pending && <SavedNote>{state.message}</SavedNote>}
           <Button size="sm" onClick={handleSave} disabled={pending || (locked && schedule.enabled)}>
-            {pending ? 'Saving…' : 'Save'}
+            {pending ? t.common.actions.saving : t.common.actions.save}
           </Button>
         </div>
       </div>

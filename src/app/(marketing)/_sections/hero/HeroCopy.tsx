@@ -1,6 +1,7 @@
 import { ArrowRight, GraduationCap, Play } from 'lucide-react';
 import { ButtonLink } from '@/components/ui/Button';
-import { hero } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 
 /** Rustige entree: elk blok komt iets later op dan het vorige. */
 const RISE = 'motion-safe:animate-rise';
@@ -28,7 +29,8 @@ function HandUnderline() {
   );
 }
 
-export function HeroCopy() {
+export async function HeroCopy() {
+  const { hero } = buildLanding((await getT()).landing);
   const { lead, accent } = hero.headline;
 
   return (

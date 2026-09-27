@@ -1,7 +1,8 @@
 import { Container } from '@/components/layout/Container';
 import { RevealGroup } from '../../_components/RevealGroup';
 import { revealItem } from '../../_components/revealItem';
-import { footer } from '../../_content/landing';
+import { getT } from '@/i18n/server';
+import { buildLanding } from '../../_content/landing';
 import { FooterBottom } from './FooterBottom';
 import { FooterBrand } from './FooterBrand';
 import { FooterLinks } from './FooterLinks';
@@ -11,7 +12,8 @@ import { FooterSocial } from './FooterSocial';
  * Afsluiter van de landingspagina: een lichte, afgeronde kaart met merk, links en
  * socials. Desktop 4 kolommen, laptop merk + 3 kolommen, tablet 2×2, mobiel gestapeld.
  */
-export function Footer() {
+export async function Footer() {
+  const { footer } = buildLanding((await getT()).landing);
   const [product, getStarted] = footer.columns;
 
   return (
