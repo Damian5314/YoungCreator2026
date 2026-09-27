@@ -95,7 +95,10 @@ export async function savePreferences(_prev: FormState, formData: FormData): Pro
       ...(cv?.ok ? cv.update : {}),
     })
     .eq('id', user.id);
-  if (profileError) return { error: profileError.message };
+  if (profileError) {
+    console.error('[search] savePreferences: profile update failed', profileError);
+    return { error: profileError.message };
+  }
 
   const minSalary = optionalInt(formData, 'minSalary');
   const preferences = {
@@ -111,7 +114,10 @@ export async function savePreferences(_prev: FormState, formData: FormData): Pro
   const { error } = searchProfileId
     ? await supabase.from('search_profiles').update(preferences).eq('id', searchProfileId).eq('user_id', user.id)
     : await supabase.from('search_profiles').insert({ ...preferences, user_id: user.id });
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('[search] savePreferences: search_profiles upsert failed', error);
+    return { error: error.message };
+  }
 
   revalidatePath('/', 'layout');
   redirect('/search');
@@ -150,7 +156,10 @@ export async function saveSchedule(_prev: FormState, formData: FormData): Promis
     })
     .eq('id', text(formData, 'searchProfileId'))
     .eq('user_id', user.id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('[search] saveSchedule: schedule update failed', error);
+    return { error: error.message };
+  }
 
   revalidatePath('/dashboard');
   return { message: 'Saved' };

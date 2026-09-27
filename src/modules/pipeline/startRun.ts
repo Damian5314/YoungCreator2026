@@ -18,7 +18,7 @@ import { parseIngestItems } from './schema';
 
 export type StartRunResult = { ok: true; runId: string } | { ok: false; error: string };
 
-export const OUT_OF_CREDITS_MESSAGE = 'You’re out of credits. Buy a credit pack to keep searching.';
+export const OUT_OF_CREDITS_MESSAGE = "You’re out of credits. Buy a credit pack to keep searching.";
 
 interface StartRunInput {
   userId: string;
@@ -44,13 +44,17 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     loaded = await loadMatchProfile(admin, userId, searchProfileId);
   } catch (error) {
     if (error instanceof MissingSearchProfileError) return { ok: false, error: error.message };
+    console.error('[startRun] loadMatchProfile failed', error);
     throw error;
   }
 
   // Geen credits (de gratis eerste zoekopdracht is op): meteen stoppen, zonder mislukte run.
   // spend_credits hieronder blijft de echte, atomische check.
-  const { data: balance } = await admin.from('credit_balances').select('balance').eq('user_id', userId).maybeSingle();
+  const { data: balance, error: balanceError } = await admin.from('credit_balances').select('balance').eq('user_id', userId).maybeSingle();
+  if (balanceError) console.error('[startRun] failed to fetch credit balance', balanceError);
+  console.log('[startRun] credit balance for', userId, ':', balance?.balance ?? 0, '(need', CREDIT_COST_PER_SEARCH, ')');
   if ((balance?.balance ?? 0) < CREDIT_COST_PER_SEARCH) {
+    console.warn('[startRun] insufficient credits for user', userId);
     return { ok: false, error: OUT_OF_CREDITS_MESSAGE };
   }
 
@@ -87,7 +91,11 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     })
     .select('id')
     .single();
-  if (runError) throw runError;
+  if (runError) {
+    console.error('[startRun] inserting search_run failed', runError);
+    throw runError;
+  }
+  console.log('[startRun] run created:', run.id, 'for user', userId);
 
   const { data: charged, error: creditError } = await admin.rpc('spend_credits', {
     p_user_id: userId,
@@ -95,7 +103,10 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     p_reason: 'search',
     p_search_run_id: run.id,
   });
-  if (creditError) throw creditError;
+  if (creditError) {
+    console.error('[startRun] spend_credits RPC failed', creditError);
+    throw creditError;
+  }
   if (!charged) {
     await admin
       .from('search_runs')
@@ -117,16 +128,19 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     ...snapshot,
   };
   try {
+    console.log("[startRun] calling n8n webhook for run", run.id);
     const response = (await callN8nWebhook(env.n8nSearchWebhookUrl!, payload)) as { executionId?: unknown } | null;
-    const executionId = response && typeof response.executionId !== 'undefined' ? String(response.executionId) : null;
+    const executionId = response && typeof response.executionId !== "undefined" ? String(response.executionId) : null;
+    console.log("[startRun] n8n responded, executionId:", executionId);
     await admin
-      .from('search_runs')
-      .update({ status: 'running', started_at: new Date().toISOString(), n8n_execution_id: executionId })
-      .eq('id', run.id);
+      .from("search_runs")
+      .update({ status: "running", started_at: new Date().toISOString(), n8n_execution_id: executionId })
+      .eq("id", run.id);
   } catch (error) {
-    const message = error instanceof N8nError || error instanceof Error ? error.message : 'Could not reach n8n';
+    const message = error instanceof N8nError || error instanceof Error ? error.message : "Could not reach n8n";
+    console.error("[startRun] n8n webhook call failed for run", run.id, ":", message, error);
     await failRun(run.id, `Could not start the n8n workflow: ${message}`);
-    return { ok: false, error: 'The search agent couldn’t be started. Your credit was refunded, please try again later.' };
+    return { ok: false, error: "The search agent could not be started. Your credit was refunded, please try again later." };
   }
 
   return { ok: true, runId: run.id };
