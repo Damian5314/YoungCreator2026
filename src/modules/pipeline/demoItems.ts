@@ -1,0 +1,173 @@
+// Voorbeeldkansen voor de demo-modus (zolang N8N_SEARCH_WEBHOOK_URL niet is ingesteld).
+// Precies het formaat dat n8n naar POST /api/n8n/results stuurt, dus ook een voorbeeld voor de workflow.
+// Alle bedrijven en personen zijn fictief; .example-adressen bestaan nooit (RFC 2606), er gaat dus nooit echt mail uit.
+
+function daysFromNow(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  date.setHours(18, 0, 0, 0);
+  return date.toISOString();
+}
+
+export function demoItems() {
+  return [
+    {
+      externalId: 'demo-robotics-hackathon',
+      title: 'Warehouse Robotics Hackathon',
+      type: 'hackathon',
+      url: 'https://nordwind-robotics.example/hackathon',
+      company: { name: 'Nordwind Robotics', domain: 'nordwind-robotics.example', industry: 'Robotics', location: 'Rotterdam' },
+      location: 'Rotterdam',
+      startsAt: daysFromNow(12),
+      description:
+        'A 24-hour hackathon on path planning and computer vision for warehouse robots. Teams get access to real robot data; the engineering team joins as mentors and is scouting for interns and junior developers.',
+      requiredSkills: ['Python', 'Computer vision', 'ROS'],
+      signals: ['Opening a second test facility in Rotterdam this year'],
+      contact: { name: 'Sanne de Wit', role: 'Engineering Manager', email: 'sanne@nordwind-robotics.example' },
+    },
+    {
+      externalId: 'demo-ai-meetup',
+      title: 'Applied AI Meetup: LLMs in production',
+      type: 'networking',
+      url: 'https://grachtwerk.example/meetups/applied-ai',
+      company: { name: 'Grachtwerk Digital', domain: 'grachtwerk.example', industry: 'Software', location: 'Amsterdam' },
+      location: 'Amsterdam',
+      startsAt: daysFromNow(9),
+      description:
+        'Monthly meetup with short talks from teams running AI features in production. Around 60 developers and founders from Amsterdam startups attend; drinks afterwards.',
+      requiredSkills: ['Machine learning', 'Python'],
+      contact: { name: 'Joris Bakker', role: 'Community lead', email: 'joris@grachtwerk.example' },
+    },
+    {
+      externalId: 'demo-frontend-job',
+      title: 'Frontend Developer',
+      type: 'job',
+      url: 'https://grachtwerk.example/careers/frontend-developer',
+      company: { name: 'Grachtwerk Digital', domain: 'grachtwerk.example', industry: 'Software', location: 'Amsterdam' },
+      location: 'Amsterdam',
+      postedAt: daysFromNow(-5),
+      description: 'Build customer-facing web apps in React and TypeScript in a small product team. Hybrid, three days in the office.',
+      requiredSkills: ['React', 'TypeScript', 'CSS'],
+      contact: { name: 'Joris Bakker', role: 'Community lead', email: 'joris@grachtwerk.example' },
+    },
+    {
+      externalId: 'demo-stroopwafel-radar',
+      title: 'Open application: Frontend Engineer',
+      type: 'open-application',
+      url: 'https://stroopwafel-labs.example/news/seed-round',
+      company: { name: 'Stroopwafel Labs', domain: 'stroopwafel-labs.example', industry: 'Food tech', location: 'Utrecht' },
+      location: 'Utrecht',
+      isHidden: true,
+      description:
+        'No vacancy yet. They just raised a €2.4M seed round and hired two backend engineers; a frontend role is the obvious next hire.',
+      requiredSkills: ['React', 'TypeScript'],
+      signals: ['Raised a €2.4M seed round last month', 'Hired two backend engineers in the past 6 weeks'],
+      contact: { name: 'Mila Jansen', role: 'Co-founder & CTO', email: 'mila@stroopwafel-labs.example' },
+    },
+    {
+      externalId: 'demo-energy-conference',
+      title: 'Energy Transition Tech Days',
+      type: 'conference',
+      url: 'https://havenlicht-energy.example/tech-days',
+      company: { name: 'Havenlicht Energy', domain: 'havenlicht-energy.example', industry: 'Energy', location: 'Rotterdam' },
+      location: 'Rotterdam',
+      startsAt: daysFromNow(21),
+      description:
+        'Two-day conference on battery storage, smart grids and energy data. Free student tickets; a career corner with twelve scale-ups that are hiring engineers and data people.',
+      requiredSkills: ['Data analysis', 'Python'],
+      signals: ['Launched a new battery-storage product last month'],
+      contact: { name: 'Pieter Visser', role: 'Talent partner', email: 'pieter@havenlicht-energy.example' },
+    },
+    {
+      externalId: 'demo-data-traineeship',
+      title: 'Graduate Data Analyst Traineeship',
+      type: 'traineeship',
+      source: 'company-career-page',
+      url: 'https://polderdata.example/careers/data-traineeship',
+      company: { name: 'Polderdata', domain: 'polderdata.example', industry: 'Data & analytics', location: 'Utrecht' },
+      location: 'Utrecht',
+      postedAt: daysFromNow(-7),
+      description: 'Two-year traineeship rotating through analytics teams. Only posted on their own career page, not on job boards.',
+      requiredSkills: ['SQL', 'Python', 'Power BI'],
+    },
+    {
+      externalId: 'demo-working-student',
+      title: 'Working Student Software Engineering',
+      type: 'working-student',
+      source: 'indeed',
+      url: 'https://nordwind-robotics.example/careers/working-student',
+      company: { name: 'Nordwind Robotics', domain: 'nordwind-robotics.example', industry: 'Robotics', location: 'Rotterdam' },
+      location: 'Rotterdam',
+      postedAt: daysFromNow(-12),
+      description: '16 to 24 hours a week on the tooling team that builds dashboards for warehouse robots.',
+      requiredSkills: ['TypeScript', 'Node.js'],
+      contact: { name: 'Sanne de Wit', role: 'Engineering Manager', email: 'sanne@nordwind-robotics.example' },
+    },
+    {
+      externalId: 'demo-grid-research',
+      title: 'Research project: ML for grid forecasting',
+      type: 'research',
+      url: 'https://windkracht.example/research/grid-forecasting',
+      company: { name: 'Windkracht Systems', domain: 'windkracht.example', industry: 'Energy', location: 'Delft' },
+      location: 'Delft',
+      description:
+        'Six-month research or graduation project forecasting grid load with machine learning, together with a TU Delft lab. Funded by a new national grid-innovation grant.',
+      requiredSkills: ['Python', 'Machine learning'],
+      signals: ['Received a national grid-innovation grant'],
+      contact: { name: 'Dr. Anouk Smit', role: 'Research lead', email: 'anouk@windkracht.example' },
+    },
+    {
+      externalId: 'demo-remote-react',
+      title: 'Junior React Developer',
+      type: 'job',
+      source: 'linkedin',
+      url: 'https://tulpstack.example/jobs/junior-react',
+      company: { name: 'Tulpstack', domain: 'tulpstack.example', industry: 'SaaS', location: 'Amsterdam' },
+      location: 'Remote (NL)',
+      remote: true,
+      postedAt: daysFromNow(-3),
+      description: 'Fully remote role in a Dutch SaaS scale-up. Recognised sponsor, so visa sponsorship is available.',
+      requiredSkills: ['React', 'Next.js', 'Testing'],
+    },
+    {
+      externalId: 'demo-freelance-dashboard',
+      title: 'Freelance: data dashboard for a bike-sharing pilot',
+      type: 'freelance',
+      source: 'web',
+      url: 'https://fietsroute.example/projects/dashboard-pilot',
+      company: { name: 'Fietsroute Mobility', domain: 'fietsroute.example', industry: 'Mobility', location: 'Eindhoven' },
+      location: 'Eindhoven',
+      remote: true,
+      description: 'A paid 6-week project to build a usage dashboard for a city bike-sharing pilot. Suits a student with data and web skills.',
+      requiredSkills: ['Python', 'Data visualisation', 'SQL'],
+      contact: { name: 'Lotte Mulder', role: 'Product owner', email: 'lotte@fietsroute.example' },
+    },
+    {
+      externalId: 'demo-fintech-traineeship',
+      title: 'Business Intelligence Trainee',
+      type: 'traineeship',
+      source: 'glassdoor',
+      url: 'https://deltafinance.example/careers/bi-trainee',
+      company: { name: 'Delta Finance Group', domain: 'deltafinance.example', industry: 'Finance', location: 'Amsterdam' },
+      location: 'Amsterdam',
+      postedAt: daysFromNow(-20),
+      description: 'One-year BI traineeship in a fintech team. Dutch at B2 level is required.',
+      requiredSkills: ['SQL', 'Tableau', 'Dutch (B2)'],
+    },
+    {
+      externalId: 'demo-startup-climate',
+      title: 'Kaasmarkt Analytics is expanding to Eindhoven',
+      type: 'startup',
+      source: 'news',
+      url: 'https://kaasmarkt-analytics.example/press/eindhoven-office',
+      company: { name: 'Kaasmarkt Analytics', domain: 'kaasmarkt-analytics.example', industry: 'Retail analytics', location: 'Amsterdam' },
+      location: 'Eindhoven',
+      isHidden: true,
+      description:
+        'The retail-analytics startup opens a second office in Eindhoven next quarter and plans to double its data team. No job posts yet.',
+      requiredSkills: ['SQL', 'Python', 'dbt'],
+      signals: ['Opening an office in Eindhoven next quarter', 'Plans to double the data team'],
+      contact: { name: 'Youssef El Amrani', role: 'Head of Data', email: 'youssef@kaasmarkt-analytics.example' },
+    },
+  ];
+}

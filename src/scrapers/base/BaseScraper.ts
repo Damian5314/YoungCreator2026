@@ -33,6 +33,8 @@ export abstract class BaseScraper implements IScraper {
       description: raw.description ?? '',
       requiredSkills: raw.requiredSkills ?? [],
       matchScore: 0,
+      matchReasons: [],
+      signals: [],
       isHidden: false,
       status: 'new',
       postedAt: raw.postedAt,

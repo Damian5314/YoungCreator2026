@@ -1,0 +1,326 @@
+{
+  "name": "JobHunter — Zoeken (Apify)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jobhunter-search",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1654fa50-ba8e-4123-a6d3-fedee9d1a746",
+      "name": "Webhook: search request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "89625718-fe0e-4336-9289-b998cbd16f67"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ executionId: $execution.id }) }}",
+        "options": {}
+      },
+      "id": "39814177-e73a-4c1a-9387-f118850a7572",
+      "name": "Respond: accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Zoekplan van de app → invoer voor de Apify Google Search Scraper\nconst body = $('Webhook: search request').first().json.body;\nconst plan = Array.isArray(body.searchPlan) && body.searchPlan.length\n  ? body.searchPlan\n  : (body.searchQueries || []).map((query) => ({ query, kind: 'job' }));\n\nreturn [{\n  json: {\n    runId: body.runId,\n    callbackUrl: body.callbackUrl,\n    plan,\n    apifyInput: {\n      queries: plan.map((entry) => entry.query).join('\\n'),\n      countryCode: 'nl',\n      languageCode: 'en',\n      maxPagesPerQuery: 1,\n      resultsPerPage: 10,\n      mobileResults: false,\n      saveHtml: false,\n      saveHtmlToKeyValueStore: false,\n    },\n  },\n}];"
+      },
+      "id": "ae003d9f-74c0-4867-b69b-6f5c7d4262e2",
+      "name": "Build Apify input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apify~google-search-scraper/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.apifyInput) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "ac3f7478-e50b-4699-add4-db9f26a966f2",
+      "name": "Apify: Google Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Google-resultaten → ruwe items voor de app (title, url, description, kind, query).\n// De app vult bedrijf, type, locatie en 'why now' zelf aan met AI (of regels).\nconst input = $('Build Apify input').first().json;\nconst kindByQuery = new Map(input.plan.map((entry) => [String(entry.query).trim().toLowerCase(), entry.kind]));\nconst seen = new Set();\nconst items = [];\n\nfor (const page of $input.all()) {\n  const term = String(page.json.searchQuery?.term ?? '').trim();\n  const kind = kindByQuery.get(term.toLowerCase()) ?? 'job';\n  for (const result of page.json.organicResults ?? []) {\n    if (!result.url || seen.has(result.url)) continue;\n    seen.add(result.url);\n    items.push({ title: result.title, url: result.url, description: result.description, kind, query: term, source: 'web' });\n  }\n}\n\nreturn [{ json: { runId: input.runId, callbackUrl: input.callbackUrl, items: items.slice(0, 60) } }];"
+      },
+      "id": "20284a08-2b58-4e82-8c43-da8626f94157",
+      "name": "Map results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Eigen websites van bedrijven (geen jobboards, eventplatforms of nieuwssites) → contactgegevens zoeken\nconst PLATFORMS = ['linkedin.', 'indeed.', 'glassdoor.', 'eventbrite.', 'meetup.com', 'lu.ma', 'luma.com', 'devpost.com', 'crunchbase.com', 'dealroom.co', 'wellfound.com', 'facebook.com', 'x.com', 'twitter.com', 'medium.com', 'youtube.com', 'wikipedia.org', 'reddit.com', 'instagram.com', 'nos.nl', 'nu.nl', 'fd.nl', 'emerce.nl', 'sprout.nl', 'techcrunch.com', 'tweakers.net', 'news.google.com', 'werkzoeken.nl', 'nationalevacaturebank.nl', 'studentjob.nl', 'iamexpat.nl'];\nconst MAX_SITES = 10;\nconst hosts = [];\n\nfor (const item of $('Map results').first().json.items) {\n  let host = '';\n  try {\n    host = new URL(item.url).hostname.replace(/^www\\./, '');\n  } catch {\n    continue;\n  }\n  if (PLATFORMS.some((platform) => host.includes(platform)) || hosts.includes(host)) continue;\n  hosts.push(host);\n  if (hosts.length >= MAX_SITES) break;\n}\n\nreturn [{ json: { startUrls: hosts.map((host) => ({ url: `https://${host}/` })) } }];"
+      },
+      "id": "1240f888-a479-44dd-86a1-42e497a99c9a",
+      "name": "Pick company sites",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "9e255cf1-c6ac-4d6f-8a63-84b667afa298",
+              "leftValue": "={{ $json.startUrls.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "07182969-66c8-4c60-b575-ab1230553143",
+      "name": "Any company sites?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/vdrmota~contact-info-scraper/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ startUrls: $json.startUrls, maxDepth: 1, maxRequestsPerStartUrl: 4, sameDomain: true }) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "e6ecb0bf-ada7-47fe-95f7-1c55eb845747",
+      "name": "Apify: Contact details",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1560,
+        100
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Beste e-mailadres per domein aan de items hangen (jobs@/careers@ > hello@/info@ > de rest)\nconst mapped = $('Map results').first().json;\nlet rows = [];\ntry {\n  rows = $('Apify: Contact details').all().map((item) => item.json);\n} catch {\n  rows = []; // geen bedrijfssites gevonden: contact-stap is overgeslagen\n}\n\nconst rank = (email) =>\n  /^(jobs|careers?|werken|recruit\\w*|talent|hr|people)@/.test(email) ? 0 : /^(hello|hi|info|contact)@/.test(email) ? 1 : 2;\nconst emailByHost = new Map();\n\nfor (const row of rows) {\n  let host = String(row.domain || '').replace(/^www\\./, '');\n  if (!host && row.url) {\n    try {\n      host = new URL(row.url).hostname.replace(/^www\\./, '');\n    } catch {}\n  }\n  const emails = (row.emails || [])\n    .map((email) => String(email).trim().toLowerCase())\n    .filter((email) => email.includes('@') && !/\\.(png|jpe?g|gif|webp|svg)$/.test(email));\n  if (!host || emails.length === 0) continue;\n  const best = emails.sort((a, b) => rank(a) - rank(b))[0];\n  if (!emailByHost.has(host) || rank(best) < rank(emailByHost.get(host))) emailByHost.set(host, best);\n}\n\nconst items = mapped.items.map((item) => {\n  let host = '';\n  try {\n    host = new URL(item.url).hostname.replace(/^www\\./, '');\n  } catch {}\n  const email = emailByHost.get(host);\n  return email ? { ...item, contact: { email } } : item;\n});\n\nreturn [{ json: { runId: mapped.runId, callbackUrl: mapped.callbackUrl, done: true, items } }];"
+      },
+      "id": "1608a7ae-d5f5-4e43-951a-ae42c69a7e00",
+      "name": "Attach contacts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.callbackUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ runId: $json.runId, done: true, items: $json.items }) }}",
+        "options": {}
+      },
+      "id": "520c21b0-b517-4073-8162-484ebac90759",
+      "name": "Send results to app",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Build Apify input').first().json.callbackUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ runId: $('Build Apify input').first().json.runId, items: [], error: 'Apify search failed: ' + ($json.error?.message ?? 'unknown error') }) }}",
+        "options": {}
+      },
+      "id": "202051cb-1e85-472b-ac8f-b8276e795363",
+      "name": "Report failure to app",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        440
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: search request": {
+      "main": [
+        [
+          {
+            "node": "Respond: accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: accepted": {
+      "main": [
+        [
+          {
+            "node": "Build Apify input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Apify input": {
+      "main": [
+        [
+          {
+            "node": "Apify: Google Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify: Google Search": {
+      "main": [
+        [
+          {
+            "node": "Map results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report failure to app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map results": {
+      "main": [
+        [
+          {
+            "node": "Pick company sites",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick company sites": {
+      "main": [
+        [
+          {
+            "node": "Any company sites?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any company sites?": {
+      "main": [
+        [
+          {
+            "node": "Apify: Contact details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Attach contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify: Contact details": {
+      "main": [
+        [
+          {
+            "node": "Attach contacts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach contacts": {
+      "main": [
+        [
+          {
+            "node": "Send results to app",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

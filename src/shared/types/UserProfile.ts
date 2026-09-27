@@ -18,6 +18,7 @@ export interface CVData {
   education: EducationEntry[];
   experience: ExperienceEntry[];
   languages: string[];
+  interests: string[];
   summary: string;
 }
 

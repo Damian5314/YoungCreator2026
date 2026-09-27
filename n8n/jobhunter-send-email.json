@@ -1,0 +1,113 @@
+{
+  "name": "JobHunter — E-mail versturen",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "jobhunter-send-email",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6bc3705a-8ae5-46ce-a46e-2c72f2683d53",
+      "name": "Webhook: send email",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "3dcd3d61-c2b9-4934-95de-28f81b818277"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.body.to.email }}",
+        "subject": "={{ $json.body.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body.body }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "={{ $json.body.from.name }}",
+          "replyTo": "={{ $json.body.replyTo ? $json.body.replyTo.email : '' }}"
+        }
+      },
+      "id": "729adf5c-ec8d-4175-81ee-e69024230add",
+      "name": "Gmail: send",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, messageId: $('Webhook: send email').first().json.body.messageId }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "c505ee11-26a8-45eb-883d-d7f35941fbef",
+      "name": "Respond: sent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, error: $json.error?.message ?? 'send failed' }) }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "d78e2881-aa70-4f7d-a7ff-8dc96cfae5f0",
+      "name": "Respond: failed",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: send email": {
+      "main": [
+        [
+          {
+            "node": "Gmail: send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail: send": {
+      "main": [
+        [
+          {
+            "node": "Respond: sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
