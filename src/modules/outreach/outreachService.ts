@@ -137,7 +137,7 @@ async function markMatchContacted(matchId: string) {
 // Verstuurt via de n8n-webhook. auto = door de agent (niveau 3), dan geldt de daglimiet van de gebruiker.
 export async function sendOutreach(userId: string, messageId: string, { auto = false } = {}): Promise<ActionResult> {
   if (!features.canSendEmail || !env.n8nSendEmailWebhookUrl) {
-    return { ok: false, error: 'Sending isn’t connected yet. Copy the email or open it in your mail app instead.' };
+    return { ok: false, error: 'Sending from Unlisted isn’t available right now. Copy the email or open it in your mail app instead.' };
   }
   if (!(await hasPaidAccess(userId))) {
     return { ok: false, error: 'Sending through Unlisted comes with any credit pack. Copy the email or open it in your mail app instead.' };
@@ -192,7 +192,9 @@ export async function sendOutreach(userId: string, messageId: string, { auto = f
   } catch (sendError) {
     const reason = sendError instanceof Error ? sendError.message : 'Unknown error';
     await admin.from('outreach_messages').update({ status: 'failed', error_message: reason }).eq('id', messageId);
-    return { ok: false, error: `Sending failed: ${reason}` };
+    // De technische reden staat in de database en de serverlog, niet in beeld
+    console.error('[outreach] n8n send webhook failed for message', messageId, ':', reason);
+    return { ok: false, error: 'Sending failed. Please try again.' };
   }
 
   await admin

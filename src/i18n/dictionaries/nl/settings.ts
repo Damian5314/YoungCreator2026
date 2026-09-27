@@ -65,8 +65,6 @@ export const settings: typeof en = {
       text: 'Niveau 2 en 3 zitten bij elk creditpakket.',
       link: 'Bekijk creditpakketten',
     },
-    notConnected:
-      'E-mail versturen is nog niet gekoppeld (n8n). Tot die tijd kun je e-mails nog steeds kopiëren of openen in je mailapp.',
     consent:
       'Ik geef Unlisted toestemming om namens mij e-mails te versturen naar contactpersonen bij kansen die sterk bij mijn profiel passen. Antwoorden gaan naar mijn eigen e-mailadres.',
     dailyLimitLabel: 'Maximaal aantal e-mails per dag',

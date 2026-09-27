@@ -37,7 +37,6 @@ export const onboarding: typeof en = {
       title: 'Laat Unlisted de signalen vinden',
       body: 'Unlisted kijkt verder dan vacaturesites. Het doorzoekt banen, stages, evenementen en bedrijfsnieuws op signalen die tot je volgende kans kunnen leiden.',
       highlight: 'Soms bestaat de kans al voordat er een vacature is.',
-      demoNote: 'Demomodus: zie hoe Unlisted kansen vindt en matcht met jouw profiel.',
       where: 'Zoeken → Dashboard',
       opportunityDetected: 'Mogelijke kans gevonden',
     },

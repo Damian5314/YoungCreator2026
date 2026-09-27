@@ -42,14 +42,11 @@ export const search: typeof en = {
       manual: 'handmatig',
     },
     resultSummary: (newResults: number, found: number) => `${newResults} nieuw van ${found} gevonden`,
-    failedFallback: 'Er ging iets mis',
     working: 'Je agent is ermee bezig…',
   },
   engine: {
     title: 'Start een zoekopdracht',
     description: 'Je agent zoekt banen, evenementen, hackathons, startups en projecten die bij je passen.',
-    demoNotice:
-      'Demomodus: n8n is nog niet gekoppeld, dus zoekopdrachten geven voorbeeldkansen terug, gescoord op je echte profiel.',
     radarLabel: 'Radar voor verborgen kansen',
     radarDescription: 'Vind bedrijven die je waarschijnlijk nodig hebben, nog voordat ze een vacature plaatsen.',
     hunterLabel: 'Bedrijvenjager',
@@ -66,7 +63,6 @@ export const search: typeof en = {
     failedRefunded: 'De zoekopdracht is mislukt. Je credit is teruggestort.',
     steps: {
       started: 'Zoekopdracht gestart',
-      demoLoading: 'Demokansen laden (n8n is nog niet gekoppeld)',
       agentSearching: 'Je agent doorzoekt vacaturesites, carrièrepagina’s, evenementen en bedrijfsnieuws',
       scoring: 'Matches scoren en e-mails voorbereiden voor de beste',
     },

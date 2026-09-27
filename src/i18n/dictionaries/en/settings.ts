@@ -64,8 +64,6 @@ export const settings = {
       text: 'Levels 2 and 3 come with any credit pack.',
       link: 'See credit packs',
     },
-    notConnected:
-      'Email sending isn’t connected yet (n8n). Until it is, you can still copy emails or open them in your mail app.',
     consent:
       'I allow Unlisted to send emails on my behalf to contacts at opportunities that strongly match my profile. Replies go to my own email address.',
     dailyLimitLabel: 'Maximum emails per day',

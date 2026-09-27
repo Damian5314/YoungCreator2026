@@ -41,14 +41,11 @@ export const search = {
       manual: 'manual',
     },
     resultSummary: (newResults: number, found: number) => `${newResults} new of ${found} found`,
-    failedFallback: 'Something went wrong',
     working: 'Your agent is working on it…',
   },
   engine: {
     title: 'Run a search',
     description: 'Your agent looks for jobs, events, hackathons, startups and projects that fit you.',
-    demoNotice:
-      "Demo mode: n8n isn't connected yet, so searches return sample opportunities scored against your real profile.",
     radarLabel: 'Hidden opportunity radar',
     radarDescription: 'Find companies that probably need you before they post a vacancy.',
     hunterLabel: 'Company hunter',
@@ -64,7 +61,6 @@ export const search = {
     failedRefunded: 'The search failed. Your credit was refunded.',
     steps: {
       started: 'Search started',
-      demoLoading: 'Loading demo opportunities (n8n isn’t connected yet)',
       agentSearching: 'Your agent is searching job boards, career pages, events and company news',
       scoring: 'Scoring matches and preparing emails for the best ones',
     },

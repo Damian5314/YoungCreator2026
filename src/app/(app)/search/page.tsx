@@ -8,7 +8,6 @@ import { PreferencesSummary } from '@/components/search/PreferencesSummary';
 import { RecentRuns } from '@/components/search/RecentRuns';
 import { SearchEngine } from '@/components/search/SearchEngine';
 import { getT } from '@/i18n/server';
-import { features } from '@/lib/env';
 import { getCreditBalance, getRecentRuns, getSearchProfile } from '@/lib/data/queries';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -41,7 +40,6 @@ export default async function SearchPage() {
             credits={credits}
             defaultIncludeRadar={searchProfile.includeRadar}
             defaultIncludeCompanyHunter={searchProfile.includeCompanyHunter}
-            demoMode={features.demoMode}
           />
         </div>
         <aside className="space-y-6">

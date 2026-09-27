@@ -16,12 +16,11 @@ const LEVELS: AutomationLevel[] = [1, 2, 3];
 
 interface AgentSettingsCardProps {
   profile: ProfileData | null;
-  canSendEmail: boolean;
   automationsUnlocked: boolean; // niveau 2 en 3 vragen een betaald account
 }
 
 // Hoe zelfstandig de agent mag werken + links onder de e-mails
-export function AgentSettingsCard({ profile, canSendEmail, automationsUnlocked }: AgentSettingsCardProps) {
+export function AgentSettingsCard({ profile, automationsUnlocked }: AgentSettingsCardProps) {
   const t = useT();
   const a = t.settings.agent;
   const { state, pending, submit } = useFormAction(saveAgentSettings);
@@ -76,9 +75,6 @@ export function AgentSettingsCard({ profile, canSendEmail, automationsUnlocked }
                 {a.lockedHint.link}
               </Link>
             </p>
-          )}
-          {level >= 2 && !canSendEmail && (
-            <p className="mt-2 rounded-lg bg-warning-soft p-3 text-sm text-warning">{a.notConnected}</p>
           )}
         </fieldset>
 

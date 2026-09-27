@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, Coins, FlaskConical, LoaderCircle, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Check, Coins, LoaderCircle, TriangleAlert } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { FormMessage } from '@/components/ui/FormMessage';
@@ -44,11 +44,10 @@ interface SearchEngineProps {
   credits: number;
   defaultIncludeRadar: boolean;
   defaultIncludeCompanyHunter: boolean;
-  demoMode: boolean;
 }
 
 // Stap 2 van de search flow: de agent aan het werk zetten en de voortgang volgen
-export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompanyHunter, demoMode }: SearchEngineProps) {
+export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompanyHunter }: SearchEngineProps) {
   const router = useRouter();
   const t = useT();
   const e = t.search.engine;
@@ -104,7 +103,8 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
           router.refresh();
         } else if (data.run.status === 'failed') {
           clearInterval(timer);
-          setError(data.run.errorMessage ?? FAILED_REFUNDED);
+          // De technische reden (n8n/Apify) staat in de database; de gebruiker krijgt een nette melding
+          setError(FAILED_REFUNDED);
           setPhase('failed');
           router.refresh();
         }
@@ -122,9 +122,7 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
   const steps = [
     { label: e.steps.started, state: phase === 'starting' ? 'active' : 'done' },
     {
-      label: demoMode
-        ? e.steps.demoLoading
-        : e.steps.agentSearching,
+      label: e.steps.agentSearching,
       state: phase === 'starting' ? 'pending' : phase === 'running' ? 'active' : phase === 'failed' ? 'failed' : 'done',
     },
     {
@@ -140,12 +138,6 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
     <div className="space-y-6">
       <Card>
         <CardHeader title={e.title} description={e.description} />
-        {demoMode && (
-          <p className="mb-5 flex items-start gap-2 rounded-lg bg-warning-soft p-3 text-sm text-warning">
-            <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
-            {e.demoNotice}
-          </p>
-        )}
         <div className="space-y-4">
           <Switch
             id="include-hidden"

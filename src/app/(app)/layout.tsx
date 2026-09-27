@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { WelcomeIntro } from '@/components/onboarding/WelcomeIntro';
-import { features } from '@/lib/env';
 import { getCreditBalance, getCurrentUser, getProfile } from '@/lib/data/queries';
 
 // Gedeelde layout voor alle pagina's na het inloggen (toegang wordt al in src/proxy.ts gecheckt).
@@ -22,7 +21,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <WelcomeIntro
           firstName={profile.fullName?.split(' ')[0] || null}
           credits={credits}
-          demoMode={features.demoMode}
         />
       )}
     </div>

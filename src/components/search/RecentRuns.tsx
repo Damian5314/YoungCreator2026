@@ -23,7 +23,7 @@ export async function RecentRuns({ runs }: { runs: SearchRunData[] }) {
               </span>
               <span className="block text-muted-foreground">
                 {run.status === 'completed' && r.resultSummary(run.newResults, run.resultsFound)}
-                {run.status === 'failed' && (run.errorMessage ?? r.failedFallback)}
+                {run.status === 'failed' && t.search.engine.failedRefunded}
                 {(run.status === 'queued' || run.status === 'running') && r.working}
               </span>
             </span>

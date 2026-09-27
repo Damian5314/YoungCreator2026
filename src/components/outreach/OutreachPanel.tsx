@@ -20,9 +20,8 @@ interface OutreachPanelProps {
   contact?: OpportunityContact;
   outreach: OutreachMessageData | null;
   automationLevel: AutomationLevel;
-  canSend: boolean; // n8n send-webhook is gekoppeld
+  canSend: boolean; // n8n send-webhook is gekoppeld; zo niet, dan alleen mailapp en kopiëren
   sendLocked?: boolean; // versturen via Unlisted is een automation: nog geen creditpakket gekocht
-  aiEnabled: boolean;
 }
 
 // Action engine: de agent schrijft een persoonlijke mail, de student controleert en verstuurt
@@ -34,7 +33,6 @@ export function OutreachPanel({
   automationLevel,
   canSend,
   sendLocked = false,
-  aiEnabled,
 }: OutreachPanelProps) {
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<'draft' | 'save' | 'send' | 'manual' | null>(null);
@@ -123,7 +121,6 @@ export function OutreachPanel({
           {busy === 'draft' ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Sparkles className="size-4" aria-hidden />}
           {busy === 'draft' ? p.writing : p.write}
         </Button>
-        {!aiEnabled && <p className="text-xs text-muted-foreground">{p.noAi}</p>}
         <FormMessage state={state} />
       </div>
     );
@@ -147,11 +144,11 @@ export function OutreachPanel({
     );
   }
 
-  const sendDisabledReason = !canSend
-    ? p.sendDisabled.notConnected
-    : sendLocked
-      ? p.sendDisabled.locked
-      : automationLevel < 2
+  // Versturen via Unlisted (n8n) alleen tonen als het kan; anders blijven mailapp en kopiëren over
+  const showSend = canSend && automationLevel >= 2;
+  const sendDisabledReason = sendLocked
+    ? p.sendDisabled.locked
+    : automationLevel < 2
       ? p.sendDisabled.level1
       : !toEmail
         ? p.sendDisabled.noRecipient
@@ -165,7 +162,7 @@ export function OutreachPanel({
           {p.agentPrepared}
         </p>
       )}
-      {outreach.status === 'failed' && outreach.errorMessage && <FormMessage state={{ error: outreach.errorMessage }} />}
+      {outreach.status === 'failed' && <FormMessage state={{ error: t.outreach.errors.sendFailed }} />}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label={p.fields.to} htmlFor="outreach-to">
@@ -186,7 +183,7 @@ export function OutreachPanel({
 
       {/* Mobiel: hoofdactie over de volle breedte, de rest in twee even brede kolommen */}
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-        {automationLevel >= 2 && (
+        {showSend && (
           <Button
             onClick={() => run('send', () => saveThen(() => sendOutreachNow(outreach.id, matchId)))}
             disabled={working || Boolean(sendDisabledReason)}
@@ -201,7 +198,7 @@ export function OutreachPanel({
           href={mailto}
           onClick={() => void saveOutreachDraft(undefined, formData())}
           className={`col-span-2 inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
-            automationLevel >= 2 ? 'border border-border bg-card hover:bg-muted' : 'bg-action text-action-foreground hover:bg-action-hover'
+            showSend ? 'border border-border bg-card hover:bg-muted' : 'bg-action text-action-foreground hover:bg-action-hover'
           }`}
         >
           <Mail className="size-4" aria-hidden />
@@ -221,7 +218,7 @@ export function OutreachPanel({
         </Button>
         {state?.message && busy === null && <SavedNote>{state.message}</SavedNote>}
       </div>
-      {automationLevel >= 2 && sendDisabledReason && <p className="text-xs text-muted-foreground">{sendDisabledReason}</p>}
+      {showSend && sendDisabledReason && <p className="text-xs text-muted-foreground">{sendDisabledReason}</p>}
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-sm">
         <button

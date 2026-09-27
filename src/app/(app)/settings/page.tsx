@@ -6,7 +6,6 @@ import { SettingsPanel } from '@/components/settings/SettingsPanel';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { getT } from '@/i18n/server';
-import { features } from '@/lib/env';
 import { replayIntro } from '@/lib/actions/onboarding';
 import { getBillingStatus, getCurrentUser, getProfile } from '@/lib/data/queries';
 
@@ -24,7 +23,6 @@ export default async function SettingsPage() {
       <PageHeader title={t.settings.page.title} description={t.settings.page.description} />
       <AgentSettingsCard
         profile={profile}
-        canSendEmail={features.canSendEmail}
         automationsUnlocked={billing.automationsUnlocked}
       />
       <Card>

@@ -40,7 +40,6 @@ export const onboarding = {
       title: 'Let Unlisted find the signals',
       body: 'Unlisted looks beyond job boards. It searches jobs, internships, events and company news for signals that could lead to your next opportunity.',
       highlight: 'Sometimes the opportunity exists before a vacancy does.',
-      demoNote: 'Demo mode: see how Unlisted finds and matches opportunities using your profile.',
       where: 'Search → Dashboard',
       opportunityDetected: 'Potential opportunity detected',
     },

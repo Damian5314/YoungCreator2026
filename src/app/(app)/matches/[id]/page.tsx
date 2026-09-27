@@ -222,7 +222,6 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             automationLevel={profile?.automationLevel ?? 1}
             canSend={features.canSendEmail}
             sendLocked={!billing.automationsUnlocked}
-            aiEnabled={features.ai}
           />
         </Card>
       </div>

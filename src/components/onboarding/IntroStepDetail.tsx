@@ -1,14 +1,13 @@
 'use client';
 
 import type { Ref } from 'react';
-import { FlaskConical, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { useT } from '@/i18n/I18nProvider';
-import { introFlow, NoteBanner, Spark, StepNumber } from './IntroParts';
+import { introFlow, Spark, StepNumber } from './IntroParts';
 
 interface IntroStepDetailProps {
   /** Positie in introFlow (0 = Know me). */
   index: number;
-  demoMode: boolean;
   headingRef: Ref<HTMLHeadingElement>;
 }
 
@@ -43,13 +42,12 @@ function StepTracker({ active }: { active: number }) {
  * Slide per stap: links de uitleg (titel, tekst, waar je het vindt), rechts een groter
  * voorbeeld van de product-UI op een warm vlak.
  */
-export function IntroStepDetail({ index, demoMode, headingRef }: IntroStepDetailProps) {
+export function IntroStepDetail({ index, headingRef }: IntroStepDetailProps) {
   const t = useT().onboarding;
   const { key, icon: Icon, Visual } = introFlow[index];
   const step = t.steps[key];
   // Stap 2: het verschil met vacaturesites, als losse zin met nadruk
   const highlight = key === 'hunt' ? t.steps.hunt.highlight : undefined;
-  const note = key === 'hunt' && demoMode ? t.steps.hunt.demoNote : undefined;
 
   return (
     <>
@@ -73,12 +71,6 @@ export function IntroStepDetail({ index, demoMode, headingRef }: IntroStepDetail
             <p className="mt-2 text-pretty text-[16px] font-semibold leading-snug text-[#101820] sm:text-[17px]">
               {highlight}
             </p>
-          )}
-
-          {note && (
-            <NoteBanner icon={FlaskConical} className="mt-5 text-[14px]">
-              {note}
-            </NoteBanner>
           )}
 
           <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#F7F6F1] px-3 py-1.5 text-[13px] font-medium text-[#66736E] ring-1 ring-[rgb(16_24_32/0.06)]">

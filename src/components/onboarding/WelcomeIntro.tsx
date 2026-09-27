@@ -12,7 +12,6 @@ import { IntroWelcome } from './IntroWelcome';
 interface WelcomeIntroProps {
   firstName: string | null;
   credits: number;
-  demoMode: boolean;
 }
 
 // Hier vult een nieuwe gebruiker zijn profiel in; de laatste knop stuurt ernaartoe
@@ -33,7 +32,7 @@ const arrow = 'size-[18px] transition-transform duration-200 group-hover:transla
  * telt als "gezien", zodat de introductie niet blijft terugkomen.
  * Altijd licht (vaste kleuren), in dezelfde stijl als de landingspagina en de auth-pagina's.
  */
-export function WelcomeIntro({ firstName, credits, demoMode }: WelcomeIntroProps) {
+export function WelcomeIntro({ firstName, credits }: WelcomeIntroProps) {
   const t = useT().onboarding;
   const dialogRef = useRef<HTMLDialogElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -99,7 +98,7 @@ export function WelcomeIntro({ firstName, credits, demoMode }: WelcomeIntroProps
           {step === 0 ? (
             <IntroWelcome firstName={firstName} note={creditsNote} headingRef={headingRef} />
           ) : (
-            <IntroStepDetail index={step - 1} demoMode={demoMode} headingRef={headingRef} />
+            <IntroStepDetail index={step - 1} headingRef={headingRef} />
           )}
         </div>
 
