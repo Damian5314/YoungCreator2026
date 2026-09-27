@@ -1,7 +1,7 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
-import { ArrowRight, Building2, Send, UserRound, type LucideIcon } from 'lucide-react';
+import type { ComponentType, CSSProperties, ReactNode } from 'react';
+import { ArrowDown, ArrowRight, Building2, Check, Send, Sparkles, UserRound, type LucideIcon } from 'lucide-react';
 import { CompanyLogo } from '@/app/(marketing)/_components/CompanyLogo';
 import { buildLanding } from '@/app/(marketing)/_content/landing';
 import { useT } from '@/i18n/I18nProvider';
@@ -17,9 +17,41 @@ const chipBase = 'rounded-full px-2.5 py-1 text-[11px] font-medium';
 const chipActive = 'bg-[#087F63]/10 text-[#0B6B55]';
 const chipIdle = 'bg-white text-[#66736E] ring-1 ring-[rgb(16_24_32/0.08)]';
 
-/** Mini-profiel: wie je bent en wat je zoekt. */
-function ProfilePreview() {
-  const { previewTitle, chips } = useT().onboarding.overview.profile;
+function Chips({ items, small = false }: { items: readonly string[]; small?: boolean }) {
+  return (
+    <ul className={`flex flex-wrap ${small ? 'gap-1' : 'gap-1.5'}`}>
+      {items.map((item, index) => (
+        <li
+          key={item}
+          className={`${chipBase} ${small ? 'px-2 py-0.5 text-[10.5px]' : ''} ${index === 0 ? chipActive : chipIdle}`}
+        >
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function CompanyHeader({ company, sub }: { company: string; sub: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <CompanyLogo text={company} tone="bg-[#10238A] text-[8px] text-white" className="size-8" />
+      <div className="min-w-0 leading-tight">
+        <p className="text-[12.5px] font-semibold text-[#101820]">{company}</p>
+        <p className="mt-0.5 truncate text-[11px] text-[#66736E]">{sub}</p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Mini-voorbeelden van de product-UI (inhoud, zonder eigen kaart eromheen)
+// ---------------------------------------------------------------------------
+
+/** Profiel: wie je bent en wat je zoekt; op de stap-slide ook dat je cv binnen is. */
+function ProfilePreview({ withCv = false }: { withCv?: boolean }) {
+  const t = useT().onboarding;
+  const { previewTitle, chips } = t.overview.profile;
 
   return (
     <div aria-hidden>
@@ -32,45 +64,67 @@ function ProfilePreview() {
           <span className="mt-1.5 block h-1.5 w-2/3 rounded-full bg-[rgb(16_24_32/0.08)]" />
         </div>
       </div>
-      <ul className="mt-3 flex flex-wrap gap-1.5">
-        {chips.map((chip, index) => (
-          <li key={chip} className={`${chipBase} ${index === 0 ? chipActive : chipIdle}`}>
-            {chip}
-          </li>
-        ))}
-      </ul>
+      <div className="mt-3">
+        <Chips items={chips} />
+      </div>
+      {withCv && (
+        <p className="mt-3 flex items-center gap-1.5 border-t border-[rgb(16_24_32/0.06)] pt-2.5 text-[11.5px] font-medium text-[#0B6B55]">
+          <Check className="size-3.5" />
+          {t.steps.profile.cvUploaded}
+        </p>
+      )}
     </div>
   );
 }
 
-/** Mini-bedrijfssignaal: dezelfde ASML-melding als op de landingspagina en de auth-pagina's. */
+/** Bedrijfssignaal: dezelfde ASML-melding als op de landingspagina en de auth-pagina's. */
 function SignalPreview() {
   const { company, time, title, tags } = buildLanding(useT().landing).heroCards.signal;
 
   return (
     <div aria-hidden>
-      <div className="flex items-center gap-2.5">
-        <CompanyLogo text={company} tone="bg-[#10238A] text-[8px] text-white" className="size-8" />
-        <div className="min-w-0 leading-tight">
-          <p className="text-[12.5px] font-semibold text-[#101820]">{company}</p>
-          <p className="mt-0.5 text-[11px] text-[#66736E]">{time}</p>
-        </div>
-      </div>
+      <CompanyHeader company={company} sub={time} />
       <p className="mt-2 line-clamp-2 text-[12.5px] font-semibold leading-snug text-[#101820]">{title}</p>
-      <ul className="mt-2 flex flex-wrap gap-1">
-        {tags.map((tag, index) => (
-          <li key={tag} className={`${chipBase} px-2 py-0.5 text-[10.5px] ${index === 0 ? chipActive : chipIdle}`}>
-            {tag}
-          </li>
-        ))}
-      </ul>
+      <div className="mt-2">
+        <Chips items={tags} small />
+      </div>
     </div>
   );
 }
 
-/** Mini-outreach: een voorgesteld bericht met één actie. */
-function OutreachPreview() {
-  const { label, greeting, preview, cta } = useT().landing.heroCards.outreach;
+/** Match: score, bedrijf, rol en waarom het past. */
+function MatchPreview() {
+  const t = useT();
+  const { signal, match } = buildLanding(t.landing).heroCards;
+  const { matchScore, role, chips } = t.onboarding.steps.outreach;
+
+  return (
+    <div aria-hidden>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <CompanyLogo text={signal.company} tone="bg-[#10238A] text-[8px] text-white" className="size-8" />
+          <p className="text-[12.5px] font-semibold text-[#101820]">{signal.company}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-[#087F63] px-2.5 py-1 text-[11px] font-bold text-white">
+          {matchScore(match.score)}
+        </span>
+      </div>
+      {/* De rol op een eigen regel, zodat hij nooit wordt afgekapt */}
+      <p className="mt-2 text-[13px] font-semibold leading-snug text-[#101820]">{role}</p>
+      <div className="mt-2">
+        <Chips items={chips} small />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Voorgesteld bericht. Op de welkomstkaart compact met "Send message"; op de stap-slide
+ * volledig met "Review message": Unlisted bereidt voor, jij bekijkt en verstuurt.
+ */
+function OutreachPreview({ detailed = false }: { detailed?: boolean }) {
+  const t = useT();
+  const { label, greeting, preview, cta } = t.landing.heroCards.outreach;
 
   return (
     <div aria-hidden>
@@ -80,22 +134,106 @@ function OutreachPreview() {
         </span>
         {label}
       </p>
-      <p className="mt-2 truncate text-[12px] text-[#66736E]">
-        <span className="font-medium text-[#101820]">{greeting}</span> {preview}
-      </p>
+      {detailed ? (
+        <p className="mt-2 text-[12px] leading-snug text-[#66736E]">
+          <span className="block font-medium text-[#101820]">{greeting}</span>
+          <span className="line-clamp-2">{preview}</span>
+        </p>
+      ) : (
+        <p className="mt-2 truncate text-[12px] text-[#66736E]">
+          <span className="font-medium text-[#101820]">{greeting}</span> {preview}
+        </p>
+      )}
       <span className="mt-2.5 inline-flex h-7 items-center gap-1 rounded-full bg-[#087F63] px-3 text-[11.5px] font-semibold text-white">
-        {cta}
+        {detailed ? t.onboarding.steps.outreach.reviewMessage : cta}
         <ArrowRight className="size-3" />
       </span>
     </div>
   );
 }
 
-/** De drie stappen van Unlisted in volgorde; welkomstkaarten, stappenbalk en detailslides delen deze lijst. */
-export const introFlow: { key: FlowKey; icon: LucideIcon; Preview: () => ReactNode }[] = [
-  { key: 'profile', icon: UserRound, Preview: ProfilePreview },
-  { key: 'hunt', icon: Building2, Preview: SignalPreview },
-  { key: 'outreach', icon: Send, Preview: OutreachPreview },
+// ---------------------------------------------------------------------------
+// Grotere voorbeelden op de stap-slides: witte kaartjes, eventueel verbonden
+// ---------------------------------------------------------------------------
+
+function Surface({ delay, children }: { delay: number; children: ReactNode }) {
+  return (
+    <div
+      className="w-full rounded-[18px] border border-[rgb(16_24_32/0.06)] bg-white p-4 shadow-[0_18px_50px_rgb(16_24_32/0.1)] motion-safe:animate-fade-up"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Van het ene kaartje naar het volgende: stippellijn met een klein pijltje. */
+function FlowArrow({ delay }: { delay: number }) {
+  return (
+    <span
+      aria-hidden
+      className="flex flex-col items-center text-[#45C89C] motion-safe:animate-fade"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <span className="h-3.5 border-l-2 border-dotted border-[#CBEEDD]" />
+      <ArrowDown className="size-3.5" />
+    </span>
+  );
+}
+
+function ProfileVisual() {
+  return (
+    <Surface delay={150}>
+      <ProfilePreview withCv />
+    </Surface>
+  );
+}
+
+/** Bedrijfssignaal → mogelijke kans. */
+function SignalVisual() {
+  const { opportunityDetected } = useT().onboarding.steps.hunt;
+
+  return (
+    <>
+      <Surface delay={150}>
+        <SignalPreview />
+      </Surface>
+      <FlowArrow delay={300} />
+      <p
+        aria-hidden
+        className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[12px] font-semibold text-[#087F63] ring-1 ring-[#CBEEDD] motion-safe:animate-fade-up"
+        style={{ animationDelay: '400ms' }}
+      >
+        <Sparkles className="size-3.5" />
+        {opportunityDetected}
+      </p>
+    </>
+  );
+}
+
+/** Match → bericht. */
+function OutreachVisual() {
+  return (
+    <>
+      <Surface delay={150}>
+        <MatchPreview />
+      </Surface>
+      <FlowArrow delay={300} />
+      <Surface delay={400}>
+        <OutreachPreview detailed />
+      </Surface>
+    </>
+  );
+}
+
+/**
+ * De drie stappen van Unlisted in volgorde. `Preview` staat op de welkomstkaarten,
+ * `Visual` rechts op de stap-slide.
+ */
+export const introFlow: { key: FlowKey; icon: LucideIcon; Preview: ComponentType; Visual: ComponentType }[] = [
+  { key: 'profile', icon: UserRound, Preview: ProfilePreview, Visual: ProfileVisual },
+  { key: 'hunt', icon: Building2, Preview: SignalPreview, Visual: SignalVisual },
+  { key: 'outreach', icon: Send, Preview: OutreachPreview, Visual: OutreachVisual },
 ];
 
 /** Stapnummer als zacht mint pilletje: 01, 02, 03. */

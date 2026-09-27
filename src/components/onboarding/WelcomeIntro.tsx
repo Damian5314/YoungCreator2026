@@ -107,19 +107,24 @@ export function WelcomeIntro({ firstName, credits, demoMode }: WelcomeIntroProps
           className="mt-[clamp(16px,2.8svh,36px)] flex flex-col gap-5 motion-safe:animate-fade sm:flex-row sm:items-center sm:justify-between"
           style={{ animationDelay: '550ms' }}
         >
-          <div className="flex items-center gap-2">
-            {Array.from({ length: STEP_COUNT }, (_, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => setStep(index)}
-                aria-label={index === 0 ? t.dialog.goToWelcome : t.dialog.goToStep(index)}
-                aria-current={index === step ? 'step' : undefined}
-                className={`h-2.5 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087F63] ${
-                  index === step ? 'w-7 bg-[#45C89C]' : 'w-2.5 bg-[#D7E1DC] hover:bg-[#B7CBC1]'
-                }`}
-              />
-            ))}
+          {/* Eén puntje per stap (3). Het welkomstscherm heeft er geen: daar staan de drie stappen al als kaarten. */}
+          <div className="flex items-center gap-2 max-sm:empty:hidden">
+            {step > 0 &&
+              introFlow.map(({ key }, index) => {
+                const target = index + 1;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setStep(target)}
+                    aria-label={t.dialog.goToStep(target)}
+                    aria-current={target === step ? 'step' : undefined}
+                    className={`h-2.5 rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#087F63] ${
+                      target === step ? 'w-7 bg-[#45C89C]' : 'w-2.5 bg-[#D7E1DC] hover:bg-[#B7CBC1]'
+                    }`}
+                  />
+                );
+              })}
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -135,7 +140,7 @@ export function WelcomeIntro({ firstName, credits, demoMode }: WelcomeIntroProps
             )}
             {isLast ? (
               <button type="button" onClick={finish} className={primaryButton}>
-                {pathname === PROFILE_PATH ? t.dialog.letsGo : t.dialog.setUpProfile}
+                {t.dialog.startFinding}
                 <ArrowRight className={arrow} aria-hidden />
               </button>
             ) : (

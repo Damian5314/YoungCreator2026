@@ -17,15 +17,15 @@ function StepTracker({ active }: { active: number }) {
   const t = useT().onboarding.overview;
 
   return (
-    <ol aria-label={t.label} className="mt-5 flex flex-wrap items-center gap-2">
+    <ol aria-label={t.label} className="mt-5 flex flex-wrap items-center gap-1.5 sm:gap-2">
       {introFlow.map(({ key }, index) => {
         const isActive = index === active;
         return (
-          <li key={key} aria-current={isActive ? 'step' : undefined} className="flex items-center gap-2">
-            {index > 0 && <span aria-hidden className="w-5 border-t-2 border-dotted border-[#CBEEDD] sm:w-8" />}
+          <li key={key} aria-current={isActive ? 'step' : undefined} className="flex items-center gap-1.5 sm:gap-2">
+            {index > 0 && <span aria-hidden className="w-3 border-t-2 border-dotted border-[#CBEEDD] sm:w-8" />}
             <span
-              className={`inline-flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-[13px] font-semibold ${
-                isActive ? 'bg-[#EAF7EF] text-[#087F63]' : 'text-[#66736E]'
+              className={`inline-flex items-center gap-2 rounded-full py-1 pl-1 text-[13px] font-semibold ${
+                isActive ? 'bg-[#EAF7EF] pr-3 text-[#087F63]' : 'pr-1 text-[#66736E] sm:pr-3'
               }`}
             >
               <StepNumber index={index} muted={!isActive} />
@@ -45,8 +45,10 @@ function StepTracker({ active }: { active: number }) {
  */
 export function IntroStepDetail({ index, demoMode, headingRef }: IntroStepDetailProps) {
   const t = useT().onboarding;
-  const { key, icon: Icon, Preview } = introFlow[index];
+  const { key, icon: Icon, Visual } = introFlow[index];
   const step = t.steps[key];
+  // Stap 2: het verschil met vacaturesites, als losse zin met nadruk
+  const highlight = key === 'hunt' ? t.steps.hunt.highlight : undefined;
   const note = key === 'hunt' && demoMode ? t.steps.hunt.demoNote : undefined;
 
   return (
@@ -67,6 +69,11 @@ export function IntroStepDetail({ index, demoMode, headingRef }: IntroStepDetail
             {step.title}
           </h2>
           <p className="mt-3 text-pretty text-[16px] leading-[1.6] text-[#66736E] sm:text-[17px]">{step.body}</p>
+          {highlight && (
+            <p className="mt-2 text-pretty text-[16px] font-semibold leading-snug text-[#101820] sm:text-[17px]">
+              {highlight}
+            </p>
+          )}
 
           {note && (
             <NoteBanner icon={FlaskConical} className="mt-5 text-[14px]">
@@ -90,11 +97,8 @@ export function IntroStepDetail({ index, demoMode, headingRef }: IntroStepDetail
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgb(203_238_221/0.55),transparent_65%)]" />
           <Spark className="absolute right-5 top-4 size-8" delay={0.5} />
-          <div
-            className="relative w-full max-w-[300px] rounded-[18px] border border-[rgb(16_24_32/0.06)] bg-white p-4 shadow-[0_18px_50px_rgb(16_24_32/0.1)] motion-safe:animate-fade-up"
-            style={{ animationDelay: '150ms' }}
-          >
-            <Preview />
+          <div className="relative flex w-full max-w-[300px] flex-col items-center gap-1.5">
+            <Visual />
           </div>
         </div>
       </div>
