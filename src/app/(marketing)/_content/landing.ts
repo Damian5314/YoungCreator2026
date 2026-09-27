@@ -25,8 +25,8 @@ export interface LandingMedia {
   alt: string;
 }
 
-// Video achter "Watch our story". Zolang `src` leeg is toont de dialog een nette "binnenkort"-melding.
-const storyVideo = { src: null as string | null, duration: '1:26' };
+// Video achter "Watch our story" (1920×1080, H.264/AAC, 2:00). Zolang `src` leeg is toont de dialog een nette "binnenkort"-melding.
+const storyVideo = { src: '/videos/unlisted-story.mp4' as string | null, duration: '2:00' };
 
 // ---------------------------------------------------------------------------
 // University trust: bewust alleen het label en de namen, geen aantallen of beoordelingen

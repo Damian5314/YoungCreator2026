@@ -2,6 +2,7 @@ import { ArrowRight, GraduationCap, Play } from 'lucide-react';
 import { ButtonLink } from '@/components/ui/Button';
 import { getT } from '@/i18n/server';
 import { buildLanding } from '../../_content/landing';
+import { WatchStoryLink } from '../story/WatchStoryLink';
 
 /** Rustige entree: elk blok komt iets later op dan het vorige. */
 const RISE = 'motion-safe:animate-rise';
@@ -78,18 +79,15 @@ export async function HeroCopy() {
           {hero.primaryCta.label}
           <ArrowRight className="size-4" aria-hidden />
         </ButtonLink>
-        <ButtonLink
+        <WatchStoryLink
           href={hero.secondaryCta.href}
-          variant="secondary"
-          shape="pill"
-          size="lg"
           className="h-13 w-full border-foreground/12 bg-white/80 pl-2 pr-6 text-[15px] font-semibold hover:-translate-y-px hover:bg-white sm:w-auto"
         >
           <span className="grid size-9 place-items-center rounded-full bg-primary-soft text-primary">
             <Play className="size-3.5 fill-current" aria-hidden />
           </span>
           {hero.secondaryCta.label}
-        </ButtonLink>
+        </WatchStoryLink>
       </div>
 
       <p style={after(330)} className={`${RISE} mt-4 text-[13px] text-muted-foreground`}>

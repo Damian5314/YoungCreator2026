@@ -2,6 +2,7 @@ import { ArrowRight, Play } from 'lucide-react';
 import { ButtonLink } from '@/components/ui/Button';
 import { getT } from '@/i18n/server';
 import { buildLanding } from '../../_content/landing';
+import { WatchStoryLink } from '../story/WatchStoryLink';
 
 /** Dezelfde knoppen als in de hero: groen en dominant, daarnaast een rustige witte met play-icoon. */
 export async function CTAButtons() {
@@ -18,18 +19,15 @@ export async function CTAButtons() {
         {finalCta.primary.label}
         <ArrowRight className="size-4" aria-hidden />
       </ButtonLink>
-      <ButtonLink
+      <WatchStoryLink
         href={finalCta.secondary.href}
-        variant="secondary"
-        shape="pill"
-        size="lg"
         className="h-13 w-full border-white/50 bg-white/94 pl-2 pr-6 text-[15px] font-semibold text-[#101820] hover:-translate-y-0.5 hover:bg-white sm:w-auto"
       >
         <span className="grid size-9 place-items-center rounded-full bg-primary-soft text-primary">
           <Play className="size-3.5 fill-current" aria-hidden />
         </span>
         {finalCta.secondary.label}
-      </ButtonLink>
+      </WatchStoryLink>
     </div>
   );
 }

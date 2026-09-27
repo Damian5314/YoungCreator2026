@@ -3,6 +3,7 @@ import { ButtonLink } from '@/components/ui/Button';
 import { revealItem } from '../../_components/revealItem';
 import { getT } from '@/i18n/server';
 import { buildLanding } from '../../_content/landing';
+import { WatchStoryLink } from '../story/WatchStoryLink';
 
 /** Dezelfde knoppen als in de hero, zodat de pagina één geheel blijft. */
 export async function SectionActions() {
@@ -20,18 +21,15 @@ export async function SectionActions() {
           {signals.primaryCta.label}
           <ArrowRight className="size-4" aria-hidden />
         </ButtonLink>
-        <ButtonLink
+        <WatchStoryLink
           href={signals.secondaryCta.href}
-          variant="secondary"
-          shape="pill"
-          size="lg"
           className="h-13 w-full border-foreground/12 bg-white/80 pl-2 pr-6 text-[15px] font-semibold hover:-translate-y-px hover:bg-white sm:w-auto"
         >
           <span className="grid size-9 place-items-center rounded-full bg-primary-soft text-primary">
             <Play className="size-3.5 fill-current" aria-hidden />
           </span>
           {signals.secondaryCta.label}
-        </ButtonLink>
+        </WatchStoryLink>
       </div>
 
       <p {...revealItem(620)} className="mt-4 text-[13px] text-muted-foreground">
