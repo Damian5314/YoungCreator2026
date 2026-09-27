@@ -1,0 +1,11 @@
+# Normaliseer line endings naar LF in de repo (Windows/WSL werken anders met CRLF)
+* text=auto eol=lf
+
+# Binaire bestanden nooit aanpassen
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
