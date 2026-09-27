@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowRight, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ButtonLink } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
@@ -7,12 +8,18 @@ import { StatsRow } from '@/components/dashboard/StatsRow';
 import { ResultsList } from '@/components/dashboard/ResultsList';
 import { ScheduleCard } from '@/components/dashboard/ScheduleCard';
 import { PreferencesSummary } from '@/components/search/PreferencesSummary';
-import { getMatches, getProfile, getSearchProfile } from '@/lib/data/queries';
+import { getMatches, getOutreachList, getProfile, getSearchProfile } from '@/lib/data/queries';
 
 export const metadata: Metadata = { title: 'Dashboard' };
 
 export default async function DashboardPage() {
-  const [profile, searchProfile, matches] = await Promise.all([getProfile(), getSearchProfile(), getMatches()]);
+  const [profile, searchProfile, matches, outreach] = await Promise.all([
+    getProfile(),
+    getSearchProfile(),
+    getMatches(),
+    getOutreachList(),
+  ]);
+  const draftsToReview = outreach.filter((message) => message.status === 'draft' || message.status === 'failed').length;
   const firstName = profile?.fullName?.split(' ')[0];
 
   return (
@@ -29,6 +36,22 @@ export default async function DashboardPage() {
       />
 
       <StatsRow opportunities={matches} searchYearEndsOn={profile?.searchYearEndsOn ?? null} />
+
+      {draftsToReview > 0 && (
+        <Link
+          href="/outreach"
+          className="mt-6 flex items-center gap-3 rounded-xl border border-primary/30 bg-primary-soft p-4 text-sm text-primary-soft-foreground transition-colors hover:border-primary"
+        >
+          <Sparkles className="size-5 shrink-0" aria-hidden />
+          <span className="flex-1">
+            <span className="font-semibold">
+              Your agent prepared {draftsToReview} {draftsToReview === 1 ? 'email' : 'emails'} for you.
+            </span>{' '}
+            Review and send them to take the first step.
+          </span>
+          <ArrowRight className="size-4 shrink-0" aria-hidden />
+        </Link>
+      )}
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">

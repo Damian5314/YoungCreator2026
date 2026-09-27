@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Coins, LayoutDashboard, Search, Settings } from 'lucide-react';
+import { Coins, LayoutDashboard, Mail, Search, Settings } from 'lucide-react';
 import { Logo } from './Logo';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/search', label: 'Search', icon: Search },
+  { href: '/outreach', label: 'Outreach', icon: Mail },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

@@ -5,13 +5,15 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { ButtonLink } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { PreferencesSummary } from '@/components/search/PreferencesSummary';
+import { RecentRuns } from '@/components/search/RecentRuns';
 import { SearchEngine } from '@/components/search/SearchEngine';
-import { getCreditBalance, getSearchProfile } from '@/lib/data/queries';
+import { features } from '@/lib/env';
+import { getCreditBalance, getRecentRuns, getSearchProfile } from '@/lib/data/queries';
 
 export const metadata: Metadata = { title: 'Search' };
 
 export default async function SearchPage() {
-  const [searchProfile, credits] = await Promise.all([getSearchProfile(), getCreditBalance()]);
+  const [searchProfile, credits, runs] = await Promise.all([getSearchProfile(), getCreditBalance(), getRecentRuns()]);
 
   // Eerst situatie en voorkeuren invullen, daarna pas de search engine
   if (!searchProfile) redirect('/search/preferences');
@@ -20,7 +22,7 @@ export default async function SearchPage() {
     <>
       <PageHeader
         title="Search"
-        description="One click searches LinkedIn, Indeed, company career pages and our radar."
+        description="One click sends your agent out: job boards, career pages, events, startups and company news."
         action={
           <ButtonLink href="/search/preferences" variant="secondary" size="sm">
             <SlidersHorizontal className="size-4" aria-hidden />
@@ -34,12 +36,16 @@ export default async function SearchPage() {
             credits={credits}
             defaultIncludeRadar={searchProfile.includeRadar}
             defaultIncludeCompanyHunter={searchProfile.includeCompanyHunter}
+            demoMode={features.demoMode}
           />
         </div>
-        <Card>
-          <CardHeader title="Your search profile" description="We search with these preferences." />
-          <PreferencesSummary preferences={searchProfile.preferences} />
-        </Card>
+        <aside className="space-y-6">
+          <Card>
+            <CardHeader title="Your search profile" description="We search with these preferences." />
+            <PreferencesSummary preferences={searchProfile.preferences} />
+          </Card>
+          <RecentRuns runs={runs} />
+        </aside>
       </div>
     </>
   );

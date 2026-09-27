@@ -9,12 +9,12 @@ import type { Opportunity } from '@/shared/types/Opportunity';
 import type { OpportunityStatus, OpportunityType } from '@/shared/types/OpportunityType';
 
 type TypeFilter = OpportunityType | 'all';
-type StatusFilter = OpportunityStatus | 'all';
+type StatusFilter = OpportunityStatus | 'all' | 'active';
 
 // Overzicht van alle resultaten uit de searches, filterbaar op type en status
 export function ResultsList({ opportunities }: { opportunities: Opportunity[] }) {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
 
   // Alleen types tonen die ook echt in de resultaten voorkomen
   const availableTypes = (Object.keys(OPPORTUNITY_TYPE_LABELS) as OpportunityType[]).filter((type) =>
@@ -23,7 +23,7 @@ export function ResultsList({ opportunities }: { opportunities: Opportunity[] })
 
   const visible = opportunities
     .filter((o) => typeFilter === 'all' || o.type === typeFilter)
-    .filter((o) => statusFilter === 'all' || o.status === statusFilter)
+    .filter((o) => statusFilter === 'all' || (statusFilter === 'active' ? o.status !== 'rejected' : o.status === statusFilter))
     .sort((a, b) => b.matchScore - a.matchScore);
 
   return (
@@ -36,8 +36,9 @@ export function ResultsList({ opportunities }: { opportunities: Opportunity[] })
           aria-label="Filter by status"
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-          className="h-9 rounded-lg border border-input bg-card px-2 text-sm focus-visible:outline-2 focus-visible:outline-primary"
+          className="h-9 rounded-lg border border-input bg-card px-2 text-base focus-visible:outline-2 focus-visible:outline-primary sm:text-sm"
         >
+          <option value="active">All except not interested</option>
           <option value="all">All statuses</option>
           {(Object.keys(OPPORTUNITY_STATUS_LABELS) as OpportunityStatus[]).map((status) => (
             <option key={status} value={status}>
@@ -47,12 +48,13 @@ export function ResultsList({ opportunities }: { opportunities: Opportunity[] })
         </select>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
-        <Chip selected={typeFilter === 'all'} onClick={() => setTypeFilter('all')}>
+      {/* Mobiel: één rij die horizontaal scrollt tot de schermrand, in plaats van meerdere regels */}
+      <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
+        <Chip selected={typeFilter === 'all'} onClick={() => setTypeFilter('all')} className="shrink-0">
           All types
         </Chip>
         {availableTypes.map((type) => (
-          <Chip key={type} selected={typeFilter === type} onClick={() => setTypeFilter(type)}>
+          <Chip key={type} selected={typeFilter === type} onClick={() => setTypeFilter(type)} className="shrink-0">
             {OPPORTUNITY_TYPE_LABELS[type]}
           </Chip>
         ))}

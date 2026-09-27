@@ -1,27 +1,27 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { Check, Upload } from 'lucide-react';
+import { Check, FileText, Upload } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { Field, Input, Select } from '@/components/ui/Field';
+import { Field, Input, Select, Textarea } from '@/components/ui/Field';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { Switch } from '@/components/ui/Switch';
 import { savePreferences } from '@/lib/actions/search';
 import type { ProfileData, SearchProfileData } from '@/lib/data/queries';
 import { useFormAction } from '@/lib/hooks/useFormAction';
-import { OPPORTUNITY_TYPE_LABELS } from '@/shared/constants/opportunityTypes';
+import { OPPORTUNITY_TYPE_GROUPS, OPPORTUNITY_TYPE_LABELS } from '@/shared/constants/opportunityTypes';
 import type { OpportunityType } from '@/shared/types/OpportunityType';
 
-const ALL_TYPES = Object.keys(OPPORTUNITY_TYPE_LABELS) as OpportunityType[];
+const MAX_CV_MB = 5;
 
 interface PreferencesFormProps {
   profile: ProfileData | null;
   searchProfile: SearchProfileData | null;
 }
 
-// Stap 1 van de search flow: situatie (profiles) + voorkeuren (search_profiles)
+// Stap 1 van de search flow: situatie, "know me" (profiles) + voorkeuren (search_profiles)
 export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps) {
   const preferences = searchProfile?.preferences;
   const { state, pending, submit } = useFormAction(savePreferences);
@@ -29,6 +29,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
   const [types, setTypes] = useState<OpportunityType[]>(preferences?.opportunityTypes ?? []);
   const [remoteOnly, setRemoteOnly] = useState(preferences?.remoteOnly ?? false);
   const [cvFileName, setCvFileName] = useState<string | null>(null);
+  const [cvError, setCvError] = useState<string | null>(null);
 
   function toggleType(type: OpportunityType) {
     setTypes((current) => (current.includes(type) ? current.filter((t) => t !== type) : [...current, type]));
@@ -36,8 +37,12 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (cvError) return;
     submit(new FormData(event.currentTarget));
   }
+
+  let cvHint = profile?.hasCv ? 'Your CV is saved. Upload a new one to replace it.' : 'PDF, max 5 MB. We pull out your skills, languages and interests.';
+  if (cvFileName) cvHint = 'Will be read and saved when you press save.';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -82,35 +87,79 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
               defaultValue={profile?.graduationYear ?? ''}
             />
           </Field>
-          <Field label="Languages" htmlFor="languages" hint="Separate with commas.">
+          <Field label="Languages" htmlFor="languages" hint="Separate with commas, e.g. English (C2), Dutch (A2).">
             <Input id="languages" name="languages" defaultValue={profile?.languages.join(', ') ?? ''} />
           </Field>
-          <Field label="Skills" htmlFor="skills" hint="Separate with commas.">
+          <Field label="Skills" htmlFor="skills" hint="Separate with commas. Your CV adds to this list.">
             <Input id="skills" name="skills" defaultValue={profile?.skills.join(', ') ?? ''} />
           </Field>
         </div>
 
-        {/* TODO: upload naar Supabase Storage + parsen met CVParser. Nu wordt het bestand nog niet opgeslagen. */}
         <div className="mt-4">
           <p className="text-sm font-medium">CV</p>
           <label className="mt-1.5 flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input p-4 transition-colors hover:bg-muted focus-within:outline-2 focus-within:outline-primary">
             <input
               type="file"
-              accept=".pdf"
+              name="cv"
+              accept="application/pdf,.pdf"
               className="sr-only"
               onChange={(event) => {
                 const file = event.target.files?.[0];
-                if (file) setCvFileName(file.name);
+                setCvFileName(file?.name ?? null);
+                setCvError(file && file.size > MAX_CV_MB * 1024 * 1024 ? `Your CV must be under ${MAX_CV_MB} MB.` : null);
               }}
             />
             <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-              <Upload className="size-5" aria-hidden />
+              {profile?.hasCv && !cvFileName ? <FileText className="size-5" aria-hidden /> : <Upload className="size-5" aria-hidden />}
             </span>
             <span className="min-w-0 text-sm">
-              <span className="block truncate font-medium">{cvFileName ?? 'Choose your CV (PDF)'}</span>
-              <span className="block text-muted-foreground">CV upload isn&apos;t saved yet — coming soon</span>
+              <span className="block truncate font-medium">
+                {cvFileName ?? (profile?.hasCv ? 'cv.pdf' : 'Choose your CV (PDF)')}
+              </span>
+              <span className="block text-muted-foreground">{cvHint}</span>
             </span>
           </label>
+          {cvError && <p role="alert" className="mt-1.5 text-sm text-danger">{cvError}</p>}
+          {profile?.cvSummary && !cvFileName && (
+            <p className="mt-2 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">What we read from your CV: </span>
+              {profile.cvSummary}
+            </p>
+          )}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Get to know you"
+          description="Your agent looks beyond your CV: what excites you decides which companies, events and people it finds."
+        />
+        <div className="space-y-4">
+          <Field label="Interests & topics" htmlFor="interests" hint="Separate with commas, e.g. robotics, climate tech, AI, fintech.">
+            <Input id="interests" name="interests" defaultValue={profile?.interests.join(', ') ?? ''} />
+          </Field>
+          <Field label="What do you want to achieve?" htmlFor="ambitions" hint="Your ambitions for the next year or two, in your own words.">
+            <Textarea
+              id="ambitions"
+              name="ambitions"
+              maxLength={1500}
+              placeholder="I want to work on robots that are used in the real world, ideally in a small team where I can learn fast."
+              defaultValue={profile?.ambitions ?? ''}
+            />
+          </Field>
+          <Field
+            label="What caught your attention lately?"
+            htmlFor="recentCuriosity"
+            hint="A news story, technology or company you keep reading about. This helps the agent find hidden opportunities."
+          >
+            <Textarea
+              id="recentCuriosity"
+              name="recentCuriosity"
+              maxLength={1500}
+              placeholder="The warehouse robots in Rotterdam, and how startups use AI to plan routes."
+              defaultValue={profile?.recentCuriosity ?? ''}
+            />
+          </Field>
         </div>
       </Card>
 
@@ -123,16 +172,24 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
 
           <fieldset>
             <legend className="text-sm font-medium">Opportunity types</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {ALL_TYPES.map((type) => {
-                const selected = types.includes(type);
-                return (
-                  <Chip key={type} selected={selected} onClick={() => toggleType(type)}>
-                    {selected && <Check className="size-3.5" aria-hidden />}
-                    {OPPORTUNITY_TYPE_LABELS[type]}
-                  </Chip>
-                );
-              })}
+            <p className="mt-0.5 text-sm text-muted-foreground">Leave empty to get a bit of everything.</p>
+            <div className="mt-3 space-y-3">
+              {OPPORTUNITY_TYPE_GROUPS.map((group) => (
+                <div key={group.label}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{group.label}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-2">
+                    {group.types.map((type) => {
+                      const selected = types.includes(type);
+                      return (
+                        <Chip key={type} selected={selected} onClick={() => toggleType(type)}>
+                          {selected && <Check className="size-3.5" aria-hidden />}
+                          {OPPORTUNITY_TYPE_LABELS[type]}
+                        </Chip>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </fieldset>
 
@@ -151,7 +208,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
           <Switch
             id="remoteOnly"
             label="Remote only"
-            description="Only show opportunities you can do fully remote."
+            description="Only show work you can do fully remote. Events are still shown."
             checked={remoteOnly}
             onChange={setRemoteOnly}
           />
@@ -164,8 +221,8 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
         <ButtonLink href={searchProfile ? '/search' : '/dashboard'} variant="ghost">
           Cancel
         </ButtonLink>
-        <Button type="submit" disabled={pending}>
-          {pending ? 'Saving…' : 'Save & continue to search'}
+        <Button type="submit" disabled={pending || Boolean(cvError)}>
+          {pending ? (cvFileName ? 'Reading your CV…' : 'Saving…') : 'Save & continue to search'}
         </Button>
       </div>
     </form>

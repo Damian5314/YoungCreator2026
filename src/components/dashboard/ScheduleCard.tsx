@@ -75,9 +75,6 @@ export function ScheduleCard({ searchProfileId, initialSchedule }: ScheduleCardP
     formData.set('dayOfWeek', String(schedule.dayOfWeek));
     formData.set('time', schedule.time);
     formData.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
-    if (schedule.enabled && schedule.time) {
-      formData.set('nextRunAt', getNextRun(schedule, new Date()).toISOString());
-    }
     setDirty(false);
     submit(formData);
   }
@@ -147,7 +144,7 @@ export function ScheduleCard({ searchProfileId, initialSchedule }: ScheduleCardP
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-xs text-muted-foreground">
-          Each run uses {CREDIT_COST_PER_SEARCH} credit.
+          Each run uses {CREDIT_COST_PER_SEARCH} credit. Your agent also prepares emails for the best matches.
         </p>
         <div className="flex items-center gap-3">
           {state?.message && !dirty && !pending && <SavedNote>{state.message}</SavedNote>}
