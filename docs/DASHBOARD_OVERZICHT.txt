@@ -1,0 +1,608 @@
+UNLISTED – VOLLEDIG OVERZICHT VAN HET DASHBOARD (INGELOGDE APP)
+=================================================================
+
+Doel van dit bestand
+--------------------
+Precieze beschrijving van hoe het ingelogde deel van Unlisted werkt: alle tabs,
+pagina's, kaarten, knoppen, statussen, lege toestanden en regels. Bedoeld als
+input om een nieuw dashboard-ontwerp te genereren.
+Alle teksten tussen "aanhalingstekens" zijn de exacte Engelse labels uit de app
+(de app heeft ook een Nederlandse versie via de EN | NL-schakelaar).
+
+Stand: 27 september 2026, gebaseerd op de code in src/app/(app) en src/components.
+
+
+0. IN ÉÉN OOGOPSLAG
+===================
+Wat is Unlisted?
+  Een "opportunity agent" voor internationale studenten in Nederland. De agent
+  zoekt banen, stages, events, hackathons, startups en verborgen kansen (bedrijven
+  die groeien maar nog geen vacature hebben), geeft elke kans een matchscore
+  (0–100) met redenen, en schrijft persoonlijke outreach-mails die de student
+  bekijkt en verstuurt.
+
+Kernverhaal van de app:
+  1. Know me      → profiel en voorkeuren invullen (Search preferences)
+  2. Find signals → zoekopdracht draaien (Search), resultaten verschijnen op Dashboard
+  3. Take action  → kans openen, e-mail laten schrijven, bekijken en versturen (Outreach)
+
+Aantallen:
+  - 4 hoofdtabs in het menu: Dashboard, Search, Outreach, Settings
+  - 4 extra pagina's (niet in het menu, wel bereikbaar via links):
+      Search preferences, Opportunity detail, Credits & billing, Payment return
+  - 1 onboarding-modal ("Getting started") bij de eerste keer inloggen
+  - Totaal: 8 schermen + 1 modal
+
+Routes:
+  /dashboard              Dashboard (hoofdtab 1)
+  /search                 Search (hoofdtab 2)
+  /search/preferences     Search preferences (profiel + voorkeuren)
+  /matches/[id]           Opportunity detail (één kans + e-mailpaneel)
+  /outreach               Outreach (hoofdtab 3)
+  /settings               Settings (hoofdtab 4)
+  /billing                Credits & billing
+  /billing/return         Terugkeerpagina na betalen (Mollie)
+
+
+1. APP-SHELL: LAYOUT EN NAVIGATIE (OP ELKE PAGINA)
+==================================================
+
+1.1 Navigatie – 4 hoofdtabs (zelfde volgorde overal)
+  1. "Dashboard"  – icoon: layout-dashboard (4 vlakjes)   → /dashboard
+  2. "Search"     – icoon: vergrootglas                   → /search
+  3. "Outreach"   – icoon: envelop                        → /outreach
+  4. "Settings"   – icoon: tandwiel                       → /settings
+  Een tab is actief als de URL ermee begint (bv. /search/preferences → "Search" actief).
+  Let op: /matches/[id] en /billing hebben geen eigen tab.
+
+1.2 Hoe de navigatie per schermbreedte werkt
+  - Breed scherm (≥1280px): vaste ZIJBALK links, 240px breed, volle hoogte.
+      Bovenin het logo (Unlisted-merkteken + woordmerk "Unlisted"), daaronder de
+      4 tabs als verticale lijst (icoon + label). Actieve tab: lichte lime
+      achtergrond (#EDF6D3) met donkere tekst.
+  - Tablet/laptop (640–1279px): menu in de BOVENBALK, naast het logo.
+      Vanaf 768px icoon + label, daaronder alleen iconen.
+  - Telefoon (<640px): vaste TABBALK ONDERIN met 4 tabs (icoon + klein label),
+      actieve tab krijgt een pilvormige highlight achter het icoon.
+
+1.3 Bovenbalk (sticky, 64px hoog, licht doorschijnend met blur)
+  Links: logo (alleen als er geen zijbalk is).
+  Rechts, van links naar rechts:
+    a. Taalschakelaar "EN | NL"
+    b. Credits-pil: munt-icoon + saldo + "credits" (label vanaf 1024px),
+       zacht groene pil; klik → /billing. Tooltip: "25 credits: buy more".
+    c. Avatar: rond, donker, met initialen van de naam (bv. "DE").
+
+1.4 Contentgebied
+  Gecentreerde kolom, max. ~1150px breed. Elke pagina begint met een PageHeader:
+    - optionele eyebrow (klein, boven de titel)
+    - titel (groot)
+    - beschrijving (grijs)
+    - optioneel rechts een actieknop
+
+1.5 Onboarding-modal "Getting started" (alleen bij eerste login, of na
+    Settings → "Show introduction")
+  Witte modal over het dashboard, 4 slides:
+    Slide 0 – Welkom: logo + "Welcome, {naam}! / Meet your opportunity agent.",
+      introtekst, groene banner "You have 25 credits to get started.",
+      3 verbonden kaarten: 01 Know me · 02 Find signals · 03 Take action,
+      knoppen "Skip" en "Show me how →".
+    Slide 1 – "Tell your agent who you are" (pill: Search → Preferences)
+    Slide 2 – "Let Unlisted find the signals" (pill: Search → Dashboard)
+    Slide 3 – "Turn matches into action" (pill: Dashboard → Outreach),
+      eindknop "Start finding opportunities →" (gaat naar /search/preferences).
+  Stapschermen hebben 3 stippen, "← Back" en "Next →". Sluiten = gezien.
+
+
+2. TAB 1 – DASHBOARD (/dashboard)
+=================================
+Doel: overzicht van alles wat de zoekopdrachten hebben gevonden + snelle acties.
+
+Opbouw van boven naar beneden:
+
+2.1 PageHeader
+  Eyebrow:      "Dashboard"
+  Titel:        "Welcome back, {voornaam}"  (zonder naam: "Welcome back")
+  Beschrijving: "Everything your searches have found so far."
+  Actieknop:    "New search" (vergrootglas) → /search
+
+2.2 Statistiekenrij – 4 tegels
+  (2 kolommen op mobiel, 4 naast elkaar vanaf 1024px)
+  Elke tegel: label linksboven, klein icoon rechtsboven, groot getal eronder.
+    1. "Opportunities found"       – icoon koffertje – totaal aantal kansen
+    2. "New since last search"     – icoon sparkles  – kansen met status New
+    3. "Hidden opportunities"      – icoon radar     – kansen gevonden via de radar
+                                                       (bedrijf zonder vacature)
+    4. "Days left in search year"  – icoon zandloper – dagen tot het zoekjaar
+                                                       (verblijfsvergunning) afloopt;
+                                                       "—" als nog niet ingevuld.
+       Deze tegel is uitgelicht (zacht groene achtergrond).
+
+2.3 Meldingsbalken (alleen als van toepassing, volle breedte)
+  a) Credits op (saldo < 1):
+     munt-icoon + vetgedrukt "You've used your free search." (nog nooit betaald)
+     of "You're out of credits." (wel eens betaald), gevolgd door
+     "Buy a credit pack to keep searching and unlock automatic searches and sending."
+     (of zonder het unlock-deel als automations al aan staan).
+     Knop rechts: "See credit packs" → /billing
+  b) Concept-mails klaar (aantal drafts + mislukte mails > 0), hele balk klikbaar
+     → /outreach:
+     sparkles-icoon + "Your agent prepared 3 emails for you. Review and send them
+     to take the first step." + pijl →
+
+2.4 Hoofdgedeelte – 2 kolommen (vanaf 1024px: 2/3 links, 1/3 rechts)
+
+  LINKS: "Results (N)"
+    - Kop "Results" + aantal zichtbare resultaten tussen haakjes.
+    - Rechts naast de kop een dropdown "Filter by status":
+        "All except not interested" (standaard)
+        "All statuses"
+        "New" · "Reviewed" · "Saved" · "Contacted" · "Not interested"
+    - Daaronder een rij filterchips op type (op mobiel horizontaal scrollbaar):
+        "All types" + alleen de types die echt in de resultaten voorkomen
+        (bv. "Job", "Internship", "Hackathon", "Networking", ...).
+    - Lijst van kanskaarten (zie 2.5), gesorteerd op matchscore (hoogste eerst).
+    - Geen resultaten binnen filter: kaart "No results match these filters."
+    - Helemaal nog geen resultaten (lege toestand): gecentreerde kaart
+        "No results yet"
+        "Run your first search and your matches will show up here."
+        knop "Go to search" → /search
+
+  RECHTS (zijkolom), 2 kaarten onder elkaar:
+    Kaart A – "Search profile" / "What we're hunting for."
+      Samenvatting van de voorkeuren (label grijs, waarde vet):
+        "Roles"             bv. Frontend Developer, Data Analyst
+        "Opportunity types" bv. Job, Internship, Hackathon
+        "Locations"         bv. Amsterdam, Rotterdam (+ " (remote only)")
+        "Industries"        bv. Software, Energy
+        "Minimum salary"    bv. "€2,500 / month" of "No minimum"
+      Nog niet ingevuld: "You haven't set up your search yet."
+      Knop (volle breedte, secundair): "Edit search profile" / "Set up your search"
+        → /search/preferences
+
+    Kaart B – "Automatic search" / "Let Unlisted search for you on a schedule."
+      (alleen zichtbaar als er een zoekprofiel is)
+      - Vergrendeld (nog nooit een creditpakket gekocht): grijze klikbare notitie
+        met slot-icoon "Automatic search comes with any credit pack. See credit packs →"
+      - Schakelaar "Run automatically" (aan/uit)
+      - "Frequency": 2 chips "Daily" / "Weekly"
+      - "Day": dropdown Sunday…Saturday (alleen bij Weekly)
+      - "Time": tijdveld (bv. 09:00)
+      - Infoblok met kalender-klok-icoon:
+          "Automatic search is paused." / "Pick a time to schedule your search." /
+          "Next run: Mon 29 Sep, 09:00"
+      - Kleine tekst: "Each run uses 1 credit. Your agent also prepares emails for
+        the best matches."
+      - Knop "Save" (+ "Saved"-bevestiging)
+
+2.5 KANSKAART (Opportunity card) – het belangrijkste element van het dashboard
+  Witte kaart met rand en lichte schaduw. Kaarten met status "Not interested"
+  staan op 60% transparantie.
+
+  Links (op mobiel rechtsboven): MATCHSCORE-TEGEL, 56×56px, afgeronde hoeken:
+    groot getal (bv. 92) + klein "MATCH" eronder.
+    Kleur: ≥80 groen · 65–79 oranje/amber · <65 grijs.
+
+  Rechts, van boven naar beneden:
+    1. Badges op één rij:
+         statusbadge: "New" (groen), "Reviewed" (neutraal), "Saved" (amber),
+                      "Contacted" (merkkleur), "Not interested" (neutraal)
+         typebadge:   bv. "Internship" (neutraal)
+         optioneel:   "Hidden opportunity" met radar-icoon (merkkleur) –
+                      kans gevonden via de radar, er is (nog) geen vacature
+    2. Titel (vet, link naar detailpagina), bv. "Graduate Data Analyst Traineeship"
+    3. Metaregel met kleine iconen (grijs):
+         gebouw  bedrijf      bv. Polderdata
+         pin     locatie      bv. Utrecht / "Remote" / "Amsterdam · remote"
+         agenda  datum+tijd   (alleen bij events)
+         persoon contactpersoon + rol, bv. "Sanne de Vries, Head of Data"
+    4. Tot 3 matchredenen, elk met sparkles-icoon, bv.
+         "Your React and TypeScript skills match the stack"
+    5. "Why now:" + signalen gescheiden door " · " (trending-icoon), bv.
+         "Why now: Raised €4M Series A · Opened Rotterdam office"
+    6. (Alleen als er geen redenen zijn: korte beschrijving, max 3 regels)
+    7. Skill-chips (klein, grijs), bv. SQL · Python · Power BI
+
+  Voettekst (scheidingslijn erboven):
+    Links – 3 snelle acties:
+      a. Hoofdknop (donker): envelop + "Reach out"  → detailpagina
+         Als er al een mail is, toont de knop de mailstatus:
+         "Email ready to review" · "Sending…" · "Email sent" · "Email failed, retry"
+      b. "Save" / "Saved" (bladwijzer-icoon, schakelt status Saved aan/uit)
+      c. "Not for me" / "Undo" (duim-omlaag, schakelt Not interested aan/uit)
+    Rechts: "Found via LinkedIn · 12 Sep" + link "View ↗" (originele bron, nieuw tabblad)
+
+
+3. OPPORTUNITY DETAIL (/matches/[id]) – geen eigen tab
+======================================================
+Bereikbaar via de titel of "Reach out" op een kanskaart, of via Outreach.
+
+Bovenaan: terug-link "← All results" → /dashboard
+PageHeader: titel = titel van de kans, beschrijving = bedrijf,
+            rechts de matchscore-tegel.
+
+Layout vanaf 1024px: 5 kolommen → links 3/5, rechts 2/5.
+
+LINKS
+  Kaart 1 – Details
+    - Badges (status, type, eventueel "Hidden opportunity")
+    - Gegevens in 2 kolommen met iconen: bedrijf · locatie (+ "remote possible")
+      · datum · contactpersoon (link naar profiel) · website (domeinnaam als link)
+    - Volledige beschrijving
+    - Skill-chips
+    - Voettekst: dezelfde 3 acties als op de kaart + "View original ↗"
+  Kaart 2 – "Why this fits you" / "How your agent matched this to your profile."
+    - Lijst matchredenen met sparkles (of "No specific reasons were recorded for
+      this match.")
+    - Subkop "Why now" met opsomming van signalen
+    - Kleine tekst "Found via {bron} on {datum}"
+
+RECHTS
+  Kaart 3 – "Reach out" / "Take the first step. A personal email, ready in seconds."
+  Het e-mailpaneel heeft 3 toestanden:
+
+  A. Nog geen mail
+     - Tekst: "Let your agent write a short, personal email to {contact of bedrijf},
+       based on this opportunity and your profile. You check it before anything
+       is sent."
+     - Als er geen e-mailadres bekend is: grijze notitie "We don't have an email
+       address for this contact yet. You can add one after the draft is written
+       (try their profile)."
+     - Knop volle breedte: sparkles + "Write email" (tijdens schrijven: "Writing
+       your email…")
+     - Zonder AI: "AI isn't connected, so we start from a personal template."
+
+  B. Concept (bewerkbaar)
+     - Als de agent hem zelf maakte: groene notitie "Your agent prepared this email
+       because this is one of your strongest matches."
+     - Velden: "To (email)" (placeholder name@company.com) | "Name" (naast elkaar),
+       "Subject", "Message" (groot tekstvak, 12 regels)
+     - Knoppen:
+         niveau 2: "Approve & send" (hoofdknop)   | niveau 3: "Send now"
+         "Open in mail app" (opent mailprogramma; hoofdknop bij niveau 1)
+         "Copy" → "Copied"
+         "Save"
+     - Als versturen niet kan, een uitleg eronder, bv. "You send emails yourself
+       (automation level 1)." of "Add the recipient's email address first."
+     - Onderste rij: link "I sent it myself" (markeert als verstuurd) en
+       "Rewrite" (herschrijven, ververs-icoon)
+     - Bij niveau 1: "Want Unlisted to send approved emails for you? Change your
+       automation level." (link → Settings)
+
+  C. Verstuurd / bezig
+     - Groene balk met vinkje: "Sent 27 Sep, 14:05 by Unlisted" of
+       "… from your own mailbox", of "Sending…"
+     - Alleen-lezen: "To: Naam <adres>", onderwerp (vet), berichttekst
+
+
+4. TAB 2 – SEARCH (/search)
+===========================
+Doel: de agent handmatig laten zoeken en de voortgang volgen.
+Zonder ingevuld profiel stuurt deze pagina automatisch door naar /search/preferences.
+
+PageHeader
+  Titel: "Search"
+  Beschrijving: "One click sends your agent out: job boards, career pages, events,
+                 startups and company news."
+  Actieknop (secundair): schuifregelaar-icoon + "Change preferences" → /search/preferences
+
+Layout vanaf 1024px: links 2/3, rechts 1/3.
+
+LINKS – Zoekmachine
+  Kaart "Run a search" / "Your agent looks for jobs, events, hackathons, startups
+  and projects that fit you."
+    - Demo-modus: gele/amber notitie met kolf-icoon ("Demo mode: … sample
+      opportunities scored against your real profile.")
+    - 2 schakelaars met uitleg:
+        "Hidden opportunity radar" – "Find companies that probably need you before
+                                      they post a vacancy."
+        "Company hunter"           – "Check the career pages of companies you saved
+                                      or contacted."
+    - Voettekst: "Costs 1 credit · You have 25 credits" + grote knop:
+        "Search" → tijdens zoeken spinner + "Searching…" → daarna "Search again"
+      Geen credits: knop wordt "Buy credits" (→ /billing) met uitleg
+      "You're out of credits. Buy a credit pack to keep searching; any pack also
+       unlocks automations."
+
+  Voortgangskaart (verschijnt na klikken) – 3 stappen als checklist:
+    1. "Search started"
+    2. "Your agent is searching job boards, career pages, events and company news"
+    3. "Scoring matches and preparing emails for the best ones"
+    Per stap een rondje: leeg (nog niet) · draaiende spinner (bezig) ·
+    groen vinkje (klaar) · rood waarschuwing (mislukt).
+    Duurt het >10 min: "This is taking longer than usual. You can leave this page;
+    new results will show up on your dashboard."
+    Mislukt: "The search failed. Your credit was refunded."
+
+  Resultaten (na afloop)
+    - Kop "5 new opportunities" + link "View all in dashboard →"
+    - Lijst kanskaarten (zelfde kaart als op het dashboard)
+    - Niets nieuws: "Nothing new this time. 3 results were already on your dashboard."
+
+RECHTS
+  Kaart "Your search profile" / "We search with these preferences." (zelfde
+  samenvatting als op het dashboard)
+  Kaart "Recent searches" / "Manual and scheduled runs of your agent." (alleen als
+  er runs zijn). Per regel:
+    "27 Sep, 09:00 · scheduled" (of "manual")
+    daaronder "3 new of 8 found" / foutmelding / "Your agent is working on it…"
+    rechts statusbadge: "Queued" (neutraal) · "Running" (merkkleur) ·
+                        "Done" (groen) · "Failed" (amber)
+
+
+5. SEARCH PREFERENCES (/search/preferences) – onder de tab Search
+==================================================================
+Doel: eenmalig profiel en voorkeuren invullen; elke zoekopdracht gebruikt dit.
+Smalle pagina (max ~770px).
+
+PageHeader
+  Eyebrow: "Profile setup"
+  Titel:   "Your situation & preferences"
+  Beschrijving: nieuw → "Fill this in once and we can start hunting for you."
+                bestaand → "Every search — manual or scheduled — uses this profile."
+
+Formulier in 3 genummerde kaarten:
+
+  Stap 1 – "Your situation"
+    "Helps us understand your deadline and what you bring to the table."
+    Velden: "Nationality" · "Search year ends on" (datum; "When your orientation
+    year (zoekjaar) permit expires.") · "Degree" (dropdown: BSc, MSc, MBA, PhD) ·
+    "Field of study" · "University" · "Graduation year" · "Languages" (komma's,
+    bv. English (C2), Dutch (A2)) · "Skills" (komma's) ·
+    "CV": uploadknop "Choose your CV (PDF)", "PDF, max 5 MB. We pull out your
+    skills, languages and interests." Na upload: "Your CV is saved. Upload a new
+    one to replace it." en "What we read from your CV: …"
+
+  Stap 2 – "Get to know you"
+    "Your agent looks beyond your CV: what excites you decides which companies,
+     events and people it finds."
+    Velden: "Interests & topics" (bv. robotics, climate tech, AI, fintech) ·
+    "What do you want to achieve?" (tekstvak) ·
+    "What caught your attention lately?" (tekstvak; helpt verborgen kansen te vinden)
+
+  Stap 3 – "Your preferences"
+    "What kind of opportunities should we hunt for?"
+    Velden: "Desired roles" · "Opportunity types" (chips in 3 groepen, zie 10.1;
+    "Leave empty to get a bit of everything.") · "Locations" · "Industries" ·
+    "Minimum salary (€ gross / month)" (optioneel) ·
+    schakelaar "Remote only" – "Only show work you can do fully remote. Events are
+    still shown."
+
+  Knop onderaan: "Save & continue to search" (tijdens CV lezen: "Reading your CV…")
+
+
+6. TAB 3 – OUTREACH (/outreach)
+===============================
+Doel: alle e-mails die de agent klaarzette en die al verstuurd zijn.
+Smalle pagina (max ~770px).
+
+PageHeader
+  Titel: "Outreach"
+  Beschrijving: "Emails your agent prepared for you, and the ones you already sent."
+
+Twee secties:
+  "Ready to review (N)" – concepten + mislukte mails
+      leeg: kaart "Nothing waiting for you. Nice work."
+  "Sent (N)"            – verstuurde en bezig-met-versturen mails (alleen als > 0)
+
+Elke rij is een klikbare kaart → detailpagina van de kans:
+  - Links een vierkant icoonvak: sparkles (door agent geschreven) of envelop (zelf)
+  - Statusbadge: "Ready to review" (amber) · "Failed" (amber) · "Sending"
+    (merkkleur) · "Sent" (groen) + datum/tijd
+  - Onderwerp (vet, max 1–2 regels)
+  - Grijze regel: "{titel kans} · {bedrijf} · to {naam}" (of "no recipient yet")
+  - Pijltje › rechts
+
+Lege toestand (nog nooit een mail):
+  "No emails yet"
+  "After a search, your agent prepares emails for your strongest matches. You can
+   also open any result and press "Reach out"."
+  knop "Go to your results" → /dashboard
+
+
+7. TAB 4 – SETTINGS (/settings)
+===============================
+Smalle pagina (max ~670px). Titel "Settings", beschrijving "Manage your agent,
+your account and how Unlisted looks." 7 kaarten onder elkaar:
+
+  1. "Your agent" – "Decide how much your agent may do on its own."
+     Keuze "Automation level" (3 radio-kaarten; gekozen kaart lime gemarkeerd):
+       "1. Assistant"        – "Your agent finds opportunities and writes the
+                                emails. You review them and send them yourself."
+       "2. Semi-automatic"   – "Your agent prepares everything. You approve with one
+                                click and Unlisted sends it."
+       "3. Fully automatic"  – "Your agent searches, writes and sends emails for
+                                your strongest matches on its own, within a daily limit."
+     Niveau 2 en 3 zijn vergrendeld (slot-icoon, 60% zichtbaar) tot het eerste
+     creditpakket: "Levels 2 and 3 come with any credit pack. See credit packs".
+     Bij niveau 3 extra blok: toestemmingsvinkje ("I allow Unlisted to send emails
+     on my behalf … Replies go to my own email address.") + "Maximum emails per day"
+     (0–20, standaard 3).
+     Altijd: "LinkedIn" (URL, "Added below your emails.") en "Portfolio or GitHub"
+     (optioneel). Knop "Save agent settings".
+  2. "Credits & billing" – "You have 25 credits. Buy more or see your payments."
+     knop "Credits & billing" → /billing
+  3. "Introduction" – "See the short tour of how your agent works again."
+     knop "Show introduction" (toont de onboarding-modal opnieuw)
+  4. "Account" – e-mailadres + knop "Update email"
+  5. "Password" – "New password" (min. 6 tekens) + knop "Update password"
+  6. "Appearance" – schakelaar "Dark mode"
+  7. "Session" – "Logged in as {naam}." + knop "Log out"
+
+
+8. CREDITS & BILLING (/billing) – via de credits-pil in de bovenbalk
+====================================================================
+PageHeader: "Credits & billing" – "Pay only for what you use. No subscription."
+
+Optionele banner bovenaan: betalen nog niet beschikbaar, of testmodus
+("Test mode: you'll see Mollie's test checkout … No real money is charged.")
+
+Rij (vanaf 1024px: 1/3 + 2/3):
+  Kaart "Your balance": munt-icoon + groot getal (bv. 25) + "credits".
+    Statusnotitie: groen met open slot "Automations are unlocked." of grijs met
+    slot "Automations unlock with your first credit pack."
+    Knop "Start a search" (als saldo ≥ 1).
+  Kaart "How credits work" – genummerde lijst (1–4):
+    1. "Your first search is free."
+    2. "Every search costs 1 credit, whether you start it or it runs on a schedule."
+    3. "Any credit pack unlocks automations: automatic searches and sending emails
+        through Unlisted."
+    4. "Credits never expire. If a search fails, you get the credit back."
+
+Sectie "Buy credits" – 3 pakketkaarten naast elkaar:
+  | Starter | €4.99  | 10 credits | "10 searches · €0.50 per search" | "Try it for a few weeks of searching."
+  | Plus    | €11.99 | 30 credits | "30 searches · €0.40 per search" | "A daily search for a month, with automations."
+  |         |        |            | badge "Most popular", gekleurde rand, groene hoofdknop
+  | Pro     | €24.99 | 75 credits | "75 searches · €0.33 per search" | "For your whole search year, with room to spare."
+  Elke kaart: vinkjeslijst "Manual and automatic searches" · "Automations unlocked"
+  · "Credits never expire", knop "Buy 30 credits" (tijdens laden "Opening checkout…").
+  Onder de kaarten: "Pay with iDEAL, card or another method via Mollie. You'll come
+  straight back here afterwards."
+
+Kaart "Payment history" – "Your credit purchases. Payments are handled securely by Mollie."
+  Per regel: "Plus · 30 credits", datum, badges ("Test", status), bedrag rechts.
+  Statussen: "Paid" (groen) · "Not completed" · "Processing" · "Failed" ·
+  "Canceled" · "Expired". Leeg: "No purchases yet."
+
+Terugkeerpagina (/billing/return), 3 toestanden:
+  - Betaald: "Payment received" – "30 credits were added to your account.
+    Automations are unlocked." – "Balance: 31 credits" – knoppen "Start a search"
+    en "Go to dashboard"
+  - Wachten: "Waiting for your payment" (ververst zichzelf) – knop "Back to credits"
+  - Mislukt/geannuleerd/verlopen: "Payment failed/canceled/expired" – "Nothing was
+    charged. You can try again whenever you like." – knop "Try again"
+
+
+9. REGELS DIE HET ONTWERP BEÏNVLOEDEN
+=====================================
+Credits
+  - Nieuw account krijgt 1 gratis credit (eerste zoekopdracht gratis).
+  - Elke zoekopdracht (handmatig of automatisch) kost 1 credit.
+  - Mislukte zoekopdracht → credit terug. Credits verlopen nooit.
+  - Geen abonnement: eenmalige pakketten (Starter / Plus / Pro).
+Automations (vergrendeld tot het eerste betaalde pakket)
+  - Automatisch zoeken (Automatic search-kaart)
+  - Mails laten versturen door Unlisted (automation level 2 en 3)
+Automation levels
+  - 1 Assistant: agent schrijft, student verstuurt zelf (mail-app / kopiëren)
+  - 2 Semi-automatic: "Approve & send" – één klik en Unlisted verstuurt
+  - 3 Fully automatic: agent verstuurt zelf voor de sterkste matches, met
+    daglimiet (0–20) en expliciete toestemming
+Matchscore-kleuren: ≥80 groen, 65–79 amber, <65 grijs.
+Hidden opportunity = gevonden via de radar: bedrijf toont groeisignalen (funding,
+  nieuw kantoor, expansie) maar heeft (nog) geen vacature.
+Demo-modus: zoekopdrachten geven voorbeeldkansen, gescoord op het echte profiel;
+  wordt met een amber notitie gemeld.
+Na elke zoekopdracht schrijft de agent automatisch concept-mails voor de beste
+  matches → die verschijnen onder Outreach "Ready to review" en in de
+  dashboardbalk "Your agent prepared N emails for you."
+
+
+10. VASTE LIJSTEN (LABELS)
+==========================
+10.1 Kanstypes (15) in 3 groepen
+  "Work":                 Job · Internship · Traineeship · Working student ·
+                          Part-time work · Freelance · Thesis project
+  "Events & network":     Event · Hackathon · Conference · Networking
+  "Companies & projects": Open application · Startup · Project · Research project
+
+10.2 Statussen van een kans (5)
+  New (groen) · Reviewed (neutraal) · Saved (amber) · Contacted (merkkleur) ·
+  Not interested (neutraal, kaart 60% zichtbaar)
+
+10.3 Bronnen ("Found via …") (10)
+  LinkedIn · Indeed · Glassdoor · Career page · Radar · News · Event platform ·
+  Startup database · Web · Demo data
+
+10.4 Mailstatussen (4)
+  Ready to review (draft) · Sending · Sent · Failed
+
+10.5 Status van een zoekopdracht (4)
+  Queued · Running · Done · Failed   (trigger: manual of scheduled)
+
+
+11. HUIDIGE VISUELE STIJL (ter referentie)
+==========================================
+  Achtergrond:        warm off-white #F7F6F1
+  Kaarten:            wit #FFFFFF, rand rgba(16,24,32,0.08), radius 12–16px,
+                      zachte schaduw
+  Tekst:              donker navy #101820, grijs #5F6B66 / #66736E
+  Merkgroen:          #087F63 (hover #0B6B55), zacht groen #EAF5EE / #EAF7EF,
+                      mint #CBEEDD
+  Lime-accent:        #C7F000 (spaarzaam)
+  In de ingelogde app ("app-theme"):
+                      hoofdknoppen ZWART (#101820, hover #2B353F) met witte tekst;
+                      actief/geselecteerd = lichte lime (#EDF6D3) met lime rand
+                      (#CFE58A)
+  Status:             succes groen #1E7A45, waarschuwing amber #A15C07,
+                      fout rood #B91C1C (elk met zachte achtergrond)
+  Lettertype:         Inter (koppen strak, bold); handgeschreven accenten in Caveat
+  Iconen:             Lucide (dunne lijniconen)
+  Dark mode:          aanwezig (schakelaar in Settings)
+  Responsief:         zijbalk ≥1280px · bovenmenu 640–1279px · tabbalk onderin <640px
+
+
+12. VOORBEELDDATA VOOR EEN MOCKUP
+=================================
+Gebruiker: "Demo" (initialen DE), 25 credits, automations ontgrendeld,
+zoekjaar loopt nog 214 dagen.
+
+Statistieken: 12 found · 5 new since last search · 3 hidden opportunities · 214 days left
+
+Voorbeeldkansen (titel – bedrijf – plaats – type – score):
+  - Graduate Data Analyst Traineeship – Polderdata – Utrecht – Traineeship – 92
+  - Frontend Developer – Grachtwerk Digital – Amsterdam – Job – 88
+  - Open application: Frontend Engineer – Stroopwafel Labs – Utrecht –
+    Open application – 81 – Hidden opportunity
+  - Warehouse Robotics Hackathon – Nordwind Robotics – Rotterdam – Hackathon – 79
+  - Working Student Software Engineering – Nordwind Robotics – Rotterdam –
+    Working student – 74
+  - Research project: ML for grid forecasting – Windkracht Systems – Delft –
+    Research project – 71
+  - Junior React Developer – Tulpstack – Remote (NL) – Job – 68
+  - Applied AI Meetup: LLMs in production – Grachtwerk Digital – Amsterdam –
+    Networking – 63
+  - Energy Transition Tech Days – Havenlicht Energy – Rotterdam – Conference – 60
+  - Freelance: data dashboard for a bike-sharing pilot – Fietsroute Mobility –
+    Eindhoven – Freelance – 58
+
+Voorbeeld "Why now"-signalen: "Raised €4M Series A" · "Opened a Rotterdam office"
+  · "Hiring 3 engineers this quarter" · "Announced new R&D center"
+Voorbeeld matchredenen: "Your SQL and Python skills match the role" ·
+  "Based in Utrecht, where you want to work" · "Graduate programme fits your
+  MSc timing"
+Voorbeeld outreach: onderwerp "Data Analyst traineeship – MSc graduate from
+  Groningen", status "Ready to review", aan "Sanne de Vries".
+
+
+13. KORTE PROMPT (ENGELS) VOOR EEN ONTWERPGENERATOR
+===================================================
+Design the logged-in dashboard of "Unlisted", an AI opportunity agent for
+international students in the Netherlands. Light, premium SaaS style: warm
+off-white background (#F7F6F1), white rounded cards with soft shadows, dark navy
+text (#101820), emerald brand green (#087F63), soft mint accents, black primary
+buttons and a light lime highlight (#EDF6D3) for the active menu item. Font: Inter.
+
+Layout: left sidebar (logo "Unlisted" + 4 nav items: Dashboard, Search, Outreach,
+Settings), top bar with EN|NL language switch, a green pill "25 credits" and an
+avatar "DE". Page header: eyebrow "Dashboard", title "Welcome back, Demo",
+subtitle "Everything your searches have found so far.", black button "New search".
+
+Below: 4 stat tiles – "Opportunities found 12", "New since last search 5",
+"Hidden opportunities 3", "Days left in search year 214" (highlighted mint).
+A mint banner: "Your agent prepared 3 emails for you. Review and send them to
+take the first step. →".
+
+Main area (2/3): "Results (12)" with a status dropdown "All except not interested"
+and filter chips "All types, Job, Traineeship, Hackathon, Networking". A list of
+opportunity cards: square match-score tile (92 MATCH, green), badges (New,
+Traineeship, Hidden opportunity), title, company/location row with icons, three
+match reasons with sparkle icons, a "Why now: Raised €4M Series A" line, skill
+chips, and a footer with a black "Reach out" button, "Save", "Not for me",
+"Found via LinkedIn · 12 Sep" and "View ↗".
+
+Sidebar (1/3): card "Search profile" (Roles, Opportunity types, Locations,
+Industries, Minimum salary + "Edit search profile" button) and card "Automatic
+search" (toggle "Run automatically", chips Daily/Weekly, day and time fields,
+"Next run: Mon 29 Sep, 09:00", note "Each run uses 1 credit.", Save button).
+Responsive: on mobile the sidebar becomes a bottom tab bar with 4 tabs.

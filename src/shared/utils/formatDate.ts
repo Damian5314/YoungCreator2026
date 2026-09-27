@@ -21,6 +21,14 @@ export function formatShortDate(date: Date, locale: Locale = defaultLocale): str
   return formatter(shortDate, locale, { day: 'numeric', month: 'short' }).format(date);
 }
 
+// "today", "yesterday", "3 days ago" / "vandaag", "gisteren", "3 dagen geleden".
+// Bewust per dag (niet per minuut): server en client geven zo dezelfde tekst.
+export function formatRelativeDay(date: Date, locale: Locale = defaultLocale, now: Date = new Date()): string {
+  const day = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  const days = Math.round((day(date) - day(now)) / 86_400_000);
+  return new Intl.RelativeTimeFormat(intlLocale[locale], { numeric: 'auto' }).format(days, 'day');
+}
+
 // "Tue 6 Oct, 18:00" / "di 6 okt, 18:00": voor events en tijdstippen van runs/berichten
 export function formatDateTime(date: Date, locale: Locale = defaultLocale): string {
   return formatter(dateTime, locale, {

@@ -8,10 +8,11 @@ import { Chip } from '@/components/ui/Chip';
 import { Field, Input, Select, Textarea } from '@/components/ui/Field';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { Switch } from '@/components/ui/Switch';
+import { useT } from '@/i18n/I18nProvider';
 import { savePreferences } from '@/lib/actions/search';
 import type { ProfileData, SearchProfileData } from '@/lib/data/queries';
 import { useFormAction } from '@/lib/hooks/useFormAction';
-import { OPPORTUNITY_TYPE_GROUPS, OPPORTUNITY_TYPE_LABELS } from '@/shared/constants/opportunityTypes';
+import { OPPORTUNITY_TYPE_GROUPS } from '@/shared/constants/opportunityTypes';
 import type { OpportunityType } from '@/shared/types/OpportunityType';
 
 const MAX_CV_MB = 5;
@@ -23,6 +24,8 @@ interface PreferencesFormProps {
 
 // Stap 1 van de search flow: situatie, "know me" (profiles) + voorkeuren (search_profiles)
 export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps) {
+  const t = useT();
+  const f = t.search.form;
   const preferences = searchProfile?.preferences;
   const { state, pending, submit } = useFormAction(savePreferences);
 
@@ -32,7 +35,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
   const [cvError, setCvError] = useState<string | null>(null);
 
   function toggleType(type: OpportunityType) {
-    setTypes((current) => (current.includes(type) ? current.filter((t) => t !== type) : [...current, type]));
+    setTypes((current) => (current.includes(type) ? current.filter((item) => item !== type) : [...current, type]));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -41,8 +44,8 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
     submit(new FormData(event.currentTarget));
   }
 
-  let cvHint = profile?.hasCv ? 'Your CV is saved. Upload a new one to replace it.' : 'PDF, max 5 MB. We pull out your skills, languages and interests.';
-  if (cvFileName) cvHint = 'Will be read and saved when you press save.';
+  let cvHint = profile?.hasCv ? f.cvSaved : f.cvHint(MAX_CV_MB);
+  if (cvFileName) cvHint = f.cvPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -51,34 +54,30 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
       <input type="hidden" name="remoteOnly" value={String(remoteOnly)} />
 
       <Card>
-        <CardHeader
-          step={1}
-          title="Your situation"
-          description="Helps us understand your deadline and what you bring to the table."
-        />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Nationality" htmlFor="nationality">
+        <CardHeader step={1} title={f.situationTitle} description={f.situationDescription} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label={f.nationality} htmlFor="nationality">
             <Input id="nationality" name="nationality" defaultValue={profile?.nationality ?? ''} />
           </Field>
-          <Field label="Search year ends on" htmlFor="searchYearEndsOn" hint="When your orientation year (zoekjaar) permit expires.">
+          <Field label={f.searchYearEndsOn} htmlFor="searchYearEndsOn" hint={f.searchYearHint}>
             <Input id="searchYearEndsOn" name="searchYearEndsOn" type="date" defaultValue={profile?.searchYearEndsOn ?? ''} />
           </Field>
-          <Field label="Degree" htmlFor="degree">
+          <Field label={f.degree} htmlFor="degree">
             <Select id="degree" name="degree" defaultValue={profile?.degree ?? ''}>
-              <option value="">Select…</option>
+              <option value="">{f.selectPlaceholder}</option>
               <option>BSc</option>
               <option>MSc</option>
               <option>MBA</option>
               <option>PhD</option>
             </Select>
           </Field>
-          <Field label="Field of study" htmlFor="fieldOfStudy">
+          <Field label={f.fieldOfStudy} htmlFor="fieldOfStudy">
             <Input id="fieldOfStudy" name="fieldOfStudy" defaultValue={profile?.fieldOfStudy ?? ''} />
           </Field>
-          <Field label="University" htmlFor="university">
+          <Field label={f.university} htmlFor="university">
             <Input id="university" name="university" defaultValue={profile?.university ?? ''} />
           </Field>
-          <Field label="Graduation year" htmlFor="graduationYear">
+          <Field label={f.graduationYear} htmlFor="graduationYear">
             <Input
               id="graduationYear"
               name="graduationYear"
@@ -88,16 +87,16 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
               defaultValue={profile?.graduationYear ?? ''}
             />
           </Field>
-          <Field label="Languages" htmlFor="languages" hint="Separate with commas, e.g. English (C2), Dutch (A2).">
+          <Field label={f.languages} htmlFor="languages" hint={f.languagesHint}>
             <Input id="languages" name="languages" defaultValue={profile?.languages.join(', ') ?? ''} />
           </Field>
-          <Field label="Skills" htmlFor="skills" hint="Separate with commas. Your CV adds to this list.">
+          <Field label={f.skills} htmlFor="skills" hint={f.skillsHint}>
             <Input id="skills" name="skills" defaultValue={profile?.skills.join(', ') ?? ''} />
           </Field>
         </div>
 
         <div className="mt-4">
-          <p className="text-sm font-medium">CV</p>
+          <p className="text-sm font-medium">{f.cv}</p>
           <label className="mt-1.5 flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input p-4 transition-colors hover:bg-muted focus-within:outline-2 focus-within:outline-primary">
             <input
               type="file"
@@ -107,7 +106,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
               onChange={(event) => {
                 const file = event.target.files?.[0];
                 setCvFileName(file?.name ?? null);
-                setCvError(file && file.size > MAX_CV_MB * 1024 * 1024 ? `Your CV must be under ${MAX_CV_MB} MB.` : null);
+                setCvError(file && file.size > MAX_CV_MB * 1024 * 1024 ? f.cvTooLarge(MAX_CV_MB) : null);
               }}
             />
             <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
@@ -115,7 +114,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
             </span>
             <span className="min-w-0 text-sm">
               <span className="block truncate font-medium">
-                {cvFileName ?? (profile?.hasCv ? 'cv.pdf' : 'Choose your CV (PDF)')}
+                {cvFileName ?? (profile?.hasCv ? 'cv.pdf' : f.chooseCv)}
               </span>
               <span className="block text-muted-foreground">{cvHint}</span>
             </span>
@@ -123,7 +122,7 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
           {cvError && <p role="alert" className="mt-1.5 text-sm text-danger">{cvError}</p>}
           {profile?.cvSummary && !cvFileName && (
             <p className="mt-2 rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">What we read from your CV: </span>
+              <span className="font-medium text-foreground">{f.cvReadLabel}</span>
               {profile.cvSummary}
             </p>
           )}
@@ -131,34 +130,26 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
       </Card>
 
       <Card>
-        <CardHeader
-          step={2}
-          title="Get to know you"
-          description="Your agent looks beyond your CV: what excites you decides which companies, events and people it finds."
-        />
+        <CardHeader step={2} title={f.knowYouTitle} description={f.knowYouDescription} />
         <div className="space-y-4">
-          <Field label="Interests & topics" htmlFor="interests" hint="Separate with commas, e.g. robotics, climate tech, AI, fintech.">
+          <Field label={f.interests} htmlFor="interests" hint={f.interestsHint}>
             <Input id="interests" name="interests" defaultValue={profile?.interests.join(', ') ?? ''} />
           </Field>
-          <Field label="What do you want to achieve?" htmlFor="ambitions" hint="Your ambitions for the next year or two, in your own words.">
+          <Field label={f.ambitions} htmlFor="ambitions" hint={f.ambitionsHint}>
             <Textarea
               id="ambitions"
               name="ambitions"
               maxLength={1500}
-              placeholder="I want to work on robots that are used in the real world, ideally in a small team where I can learn fast."
+              placeholder={f.ambitionsPlaceholder}
               defaultValue={profile?.ambitions ?? ''}
             />
           </Field>
-          <Field
-            label="What caught your attention lately?"
-            htmlFor="recentCuriosity"
-            hint="A news story, technology or company you keep reading about. This helps the agent find hidden opportunities."
-          >
+          <Field label={f.recentCuriosity} htmlFor="recentCuriosity" hint={f.recentCuriosityHint}>
             <Textarea
               id="recentCuriosity"
               name="recentCuriosity"
               maxLength={1500}
-              placeholder="The warehouse robots in Rotterdam, and how startups use AI to plan routes."
+              placeholder={f.recentCuriosityPlaceholder}
               defaultValue={profile?.recentCuriosity ?? ''}
             />
           </Field>
@@ -166,26 +157,28 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
       </Card>
 
       <Card>
-        <CardHeader step={3} title="Your preferences" description="What kind of opportunities should we hunt for?" />
+        <CardHeader step={3} title={f.preferencesTitle} description={f.preferencesDescription} />
         <div className="space-y-5">
-          <Field label="Desired roles" htmlFor="desiredRoles" hint="Separate with commas.">
+          <Field label={f.desiredRoles} htmlFor="desiredRoles" hint={f.separateWithCommas}>
             <Input id="desiredRoles" name="desiredRoles" defaultValue={preferences?.desiredRoles.join(', ') ?? ''} />
           </Field>
 
           <fieldset>
-            <legend className="text-sm font-medium">Opportunity types</legend>
-            <p className="mt-0.5 text-sm text-muted-foreground">Leave empty to get a bit of everything.</p>
+            <legend className="text-sm font-medium">{f.opportunityTypes}</legend>
+            <p className="mt-0.5 text-sm text-muted-foreground">{f.opportunityTypesHint}</p>
             <div className="mt-3 space-y-3">
               {OPPORTUNITY_TYPE_GROUPS.map((group) => (
-                <div key={group.label}>
-                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{group.label}</p>
+                <div key={group.id}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {t.common.opportunityTypeGroups[group.id]}
+                  </p>
                   <div className="mt-1.5 flex flex-wrap gap-2">
                     {group.types.map((type) => {
                       const selected = types.includes(type);
                       return (
                         <Chip key={type} selected={selected} onClick={() => toggleType(type)}>
                           {selected && <Check className="size-3.5" aria-hidden />}
-                          {OPPORTUNITY_TYPE_LABELS[type]}
+                          {t.common.opportunityTypes[type]}
                         </Chip>
                       );
                     })}
@@ -195,22 +188,22 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
             </div>
           </fieldset>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Locations" htmlFor="locations" hint="Separate with commas.">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label={f.locations} htmlFor="locations" hint={f.separateWithCommas}>
               <Input id="locations" name="locations" defaultValue={preferences?.locations.join(', ') ?? ''} />
             </Field>
-            <Field label="Industries" htmlFor="industries" hint="Separate with commas.">
+            <Field label={f.industries} htmlFor="industries" hint={f.separateWithCommas}>
               <Input id="industries" name="industries" defaultValue={preferences?.industries.join(', ') ?? ''} />
             </Field>
-            <Field label="Minimum salary (€ gross / month)" htmlFor="minSalary" hint="Optional.">
+            <Field label={f.minSalary} htmlFor="minSalary" hint={f.optional}>
               <Input id="minSalary" name="minSalary" type="number" min={0} step={100} defaultValue={preferences?.minSalary ?? ''} />
             </Field>
           </div>
 
           <Switch
             id="remoteOnly"
-            label="Remote only"
-            description="Only show work you can do fully remote. Events are still shown."
+            label={f.remoteOnly}
+            description={f.remoteOnlyDescription}
             checked={remoteOnly}
             onChange={setRemoteOnly}
           />
@@ -221,10 +214,10 @@ export function PreferencesForm({ profile, searchProfile }: PreferencesFormProps
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <ButtonLink href={searchProfile ? '/search' : '/dashboard'} variant="ghost">
-          Cancel
+          {t.common.actions.cancel}
         </ButtonLink>
         <Button type="submit" disabled={pending || Boolean(cvError)}>
-          {pending ? (cvFileName ? 'Reading your CV…' : 'Saving…') : 'Save & continue to search'}
+          {pending ? (cvFileName ? f.readingCv : t.common.actions.saving) : f.submit}
         </Button>
       </div>
     </form>

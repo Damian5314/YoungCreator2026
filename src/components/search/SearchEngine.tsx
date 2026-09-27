@@ -3,18 +3,23 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, Coins, FlaskConical, LoaderCircle, Search, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Check, Coins, FlaskConical, LoaderCircle, TriangleAlert } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { Switch } from '@/components/ui/Switch';
 import { OpportunityCard } from '@/components/opportunities/OpportunityCard';
+import { useT } from '@/i18n/I18nProvider';
 import { startSearch } from '@/lib/actions/search';
 import type { SearchRunData } from '@/lib/data/queries';
 import { CREDIT_COST_PER_SEARCH } from '@/shared/constants/opportunityTypes';
 import type { Opportunity } from '@/shared/types/Opportunity';
 
 type Phase = 'idle' | 'starting' | 'running' | 'done' | 'failed';
+
+// Foutcodes zonder eigen tekst van de server; de tekst komt pas bij het renderen uit het woordenboek
+const SOMETHING_WRONG = 'engine:something-wrong';
+const FAILED_REFUNDED = 'engine:failed-refunded';
 
 const POLL_MS = 2000;
 const GIVE_UP_MS = 10 * 60 * 1000; // daarna verschijnen resultaten gewoon later op het dashboard
@@ -45,6 +50,8 @@ interface SearchEngineProps {
 // Stap 2 van de search flow: de agent aan het werk zetten en de voortgang volgen
 export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompanyHunter, demoMode }: SearchEngineProps) {
   const router = useRouter();
+  const t = useT();
+  const e = t.search.engine;
   const [includeHidden, setIncludeHidden] = useState(defaultIncludeRadar);
   const [includeHunting, setIncludeHunting] = useState(defaultIncludeCompanyHunter);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -65,7 +72,7 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
 
     const response = await startSearch({ includeHidden, includeHunting });
     if (!response.runId) {
-      setError(response.error ?? 'Something went wrong.');
+      setError(response.error ?? SOMETHING_WRONG);
       setPhase('idle');
       return;
     }
@@ -97,7 +104,7 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
           router.refresh();
         } else if (data.run.status === 'failed') {
           clearInterval(timer);
-          setError(data.run.errorMessage ?? 'The search failed. Your credit was refunded.');
+          setError(data.run.errorMessage ?? FAILED_REFUNDED);
           setPhase('failed');
           router.refresh();
         }
@@ -113,47 +120,45 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
   }, [phase, runId, router]);
 
   const steps = [
-    { label: 'Search started', state: phase === 'starting' ? 'active' : 'done' },
+    { label: e.steps.started, state: phase === 'starting' ? 'active' : 'done' },
     {
       label: demoMode
-        ? 'Loading demo opportunities (n8n isn’t connected yet)'
-        : 'Your agent is searching job boards, career pages, events and company news',
+        ? e.steps.demoLoading
+        : e.steps.agentSearching,
       state: phase === 'starting' ? 'pending' : phase === 'running' ? 'active' : phase === 'failed' ? 'failed' : 'done',
     },
     {
-      label: 'Scoring matches and preparing emails for the best ones',
+      label: e.steps.scoring,
       state: phase === 'done' ? 'done' : phase === 'failed' ? 'pending' : phase === 'running' ? 'active' : 'pending',
     },
   ] as const;
 
   const alreadyKnown = run ? Math.max(0, run.resultsFound - run.newResults) : 0;
+  const errorText = error === SOMETHING_WRONG ? e.somethingWrong : error === FAILED_REFUNDED ? e.failedRefunded : error;
 
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader
-          title="Run a search"
-          description="Your agent looks for jobs, events, hackathons, startups and projects that fit you."
-        />
+        <CardHeader title={e.title} description={e.description} />
         {demoMode && (
           <p className="mb-5 flex items-start gap-2 rounded-lg bg-warning-soft p-3 text-sm text-warning">
             <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
-            Demo mode: n8n isn&apos;t connected yet, so searches return sample opportunities scored against your real profile.
+            {e.demoNotice}
           </p>
         )}
         <div className="space-y-4">
           <Switch
             id="include-hidden"
-            label="Hidden opportunity radar"
-            description="Find companies that probably need you before they post a vacancy."
+            label={e.radarLabel}
+            description={e.radarDescription}
             checked={includeHidden}
             onChange={setIncludeHidden}
             disabled={busy}
           />
           <Switch
             id="include-hunting"
-            label="Company hunter"
-            description="Check the career pages of companies you saved or contacted."
+            label={e.hunterLabel}
+            description={e.hunterDescription}
             checked={includeHunting}
             onChange={setIncludeHunting}
             disabled={busy}
@@ -161,28 +166,29 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
         </div>
         <div className="mt-6 flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">
-            Costs {CREDIT_COST_PER_SEARCH} credit · You have {credits} {credits === 1 ? 'credit' : 'credits'}
+            {e.cost(CREDIT_COST_PER_SEARCH, credits)}
           </p>
           {credits < CREDIT_COST_PER_SEARCH && !busy ? (
             <ButtonLink href="/billing" size="lg">
               <Coins className="size-4" aria-hidden />
-              Buy credits
+              {e.buyCredits}
             </ButtonLink>
           ) : (
             <Button size="lg" onClick={runSearch} disabled={busy}>
-              {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Search className="size-4" aria-hidden />}
-              {busy ? 'Searching…' : phase === 'done' || phase === 'failed' ? 'Search again' : 'Search'}
+              {busy && <LoaderCircle className="size-4 animate-spin" aria-hidden />}
+              {busy ? e.searching : phase === 'done' || phase === 'failed' ? e.searchAgain : e.search}
+              {!busy && <ArrowRight className="size-4" aria-hidden />}
             </Button>
           )}
         </div>
         {credits < CREDIT_COST_PER_SEARCH && !busy && (
           <p className="mt-3 text-sm text-muted-foreground">
-            You&apos;re out of credits. Buy a credit pack to keep searching; any pack also unlocks automations.
+            {e.outOfCredits}
           </p>
         )}
-        {error && phase === 'idle' && (
+        {errorText && phase === 'idle' && (
           <div className="mt-4">
-            <FormMessage state={{ error }} />
+            <FormMessage state={{ error: errorText }} />
           </div>
         )}
       </Card>
@@ -212,14 +218,14 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
               </li>
             ))}
           </ol>
-          {phase === 'failed' && error && (
+          {phase === 'failed' && errorText && (
             <div className="mt-4">
-              <FormMessage state={{ error }} />
+              <FormMessage state={{ error: errorText }} />
             </div>
           )}
           {tookTooLong && phase === 'running' && (
             <p className="mt-4 text-sm text-muted-foreground">
-              This is taking longer than usual. You can leave this page; new results will show up on your dashboard.
+              {e.tookTooLong}
             </p>
           )}
         </Card>
@@ -229,17 +235,17 @@ export function SearchEngine({ credits, defaultIncludeRadar, defaultIncludeCompa
         <section>
           <div className="mb-4 flex items-center justify-between gap-4">
             <h2 className="font-semibold">
-              {results.length} new {results.length === 1 ? 'opportunity' : 'opportunities'}
+              {e.newResults(results.length)}
             </h2>
             <Link href="/dashboard" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-              View all in dashboard
+              {e.viewAll}
               <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
           {results.length === 0 ? (
             <Card className="text-center text-sm text-muted-foreground">
-              Nothing new this time.
-              {alreadyKnown > 0 && ` ${alreadyKnown} ${alreadyKnown === 1 ? 'result was' : 'results were'} already on your dashboard.`}
+              {e.nothingNew}
+              {alreadyKnown > 0 && ` ${e.alreadyKnown(alreadyKnown)}`}
             </Card>
           ) : (
             <div className="space-y-3">

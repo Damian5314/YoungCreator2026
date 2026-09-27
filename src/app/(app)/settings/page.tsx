@@ -5,18 +5,23 @@ import { AgentSettingsCard } from '@/components/settings/AgentSettingsCard';
 import { SettingsPanel } from '@/components/settings/SettingsPanel';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Card, CardHeader } from '@/components/ui/Card';
+import { getT } from '@/i18n/server';
 import { features } from '@/lib/env';
 import { replayIntro } from '@/lib/actions/onboarding';
 import { getBillingStatus, getCurrentUser, getProfile } from '@/lib/data/queries';
 
-export const metadata: Metadata = { title: 'Settings' };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t.settings.meta.title };
+}
 
 export default async function SettingsPage() {
+  const t = await getT();
   const [user, profile, billing] = await Promise.all([getCurrentUser(), getProfile(), getBillingStatus()]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title="Settings" description="Manage your agent, your account and how Unlisted looks." />
+      <PageHeader title={t.settings.page.title} description={t.settings.page.description} />
       <AgentSettingsCard
         profile={profile}
         canSendEmail={features.canSendEmail}
@@ -24,22 +29,22 @@ export default async function SettingsPage() {
       />
       <Card>
         <CardHeader
-          title="Credits & billing"
-          description={`You have ${billing.credits} ${billing.credits === 1 ? 'credit' : 'credits'}. Buy more or see your payments.`}
+          title={t.settings.billingCard.title}
+          description={t.settings.billingCard.description(billing.credits)}
         />
         <div className="flex justify-end">
           <ButtonLink href="/billing" variant="secondary" size="sm">
             <Coins className="size-4" aria-hidden />
-            Credits & billing
+            {t.settings.billingCard.button}
           </ButtonLink>
         </div>
       </Card>
       <Card>
-        <CardHeader title="Introduction" description="See the short tour of how your agent works again." />
+        <CardHeader title={t.settings.intro.title} description={t.settings.intro.description} />
         <form action={replayIntro} className="flex justify-end">
           <Button type="submit" variant="secondary" size="sm">
             <PlayCircle className="size-4" aria-hidden />
-            Show introduction
+            {t.settings.intro.button}
           </Button>
         </form>
       </Card>

@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useTheme } from 'next-themes';
+import { useEffect, useRef, type FormEvent } from 'react';
 import { LogOut } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Field';
 import { FormMessage } from '@/components/ui/FormMessage';
-import { Switch } from '@/components/ui/Switch';
+import { useT } from '@/i18n/I18nProvider';
 import { logout, updateEmail, updatePassword } from '@/lib/actions/auth';
 import { useFormAction } from '@/lib/hooks/useFormAction';
 
@@ -17,16 +16,11 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ email, fullName }: SettingsPanelProps) {
-  const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const t = useT();
+  const s = t.settings;
   const emailAction = useFormAction(updateEmail);
   const passwordAction = useFormAction(updatePassword);
   const passwordForm = useRef<HTMLFormElement>(null);
-
-  // Het thema is pas op de client bekend (localStorage / systeemvoorkeur)
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Wachtwoordveld leegmaken zodra het opslaan gelukt is
   useEffect(() => {
@@ -43,24 +37,24 @@ export function SettingsPanel({ email, fullName }: SettingsPanelProps) {
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title="Account" description="The email address you log in with." />
+        <CardHeader title={s.account.title} description={s.account.description} />
         <form onSubmit={submitWith(emailAction)} className="space-y-4">
-          <Field label="Email address" htmlFor="settings-email">
+          <Field label={s.account.emailLabel} htmlFor="settings-email">
             <Input id="settings-email" name="email" type="email" autoComplete="email" defaultValue={email} required />
           </Field>
           <FormMessage state={emailAction.state} />
           <div className="flex justify-end">
             <Button type="submit" size="sm" disabled={emailAction.pending}>
-              {emailAction.pending ? 'Saving…' : 'Update email'}
+              {emailAction.pending ? t.common.actions.saving : s.account.updateEmail}
             </Button>
           </div>
         </form>
       </Card>
 
       <Card>
-        <CardHeader title="Password" description="Choose a new password for your account." />
+        <CardHeader title={s.password.title} description={s.password.description} />
         <form ref={passwordForm} onSubmit={submitWith(passwordAction)} className="space-y-4">
-          <Field label="New password" htmlFor="settings-password" hint="At least 6 characters.">
+          <Field label={s.password.label} htmlFor="settings-password" hint={s.password.hint}>
             <Input
               id="settings-password"
               name="password"
@@ -73,30 +67,18 @@ export function SettingsPanel({ email, fullName }: SettingsPanelProps) {
           <FormMessage state={passwordAction.state} />
           <div className="flex justify-end">
             <Button type="submit" variant="secondary" size="sm" disabled={passwordAction.pending}>
-              {passwordAction.pending ? 'Saving…' : 'Update password'}
+              {passwordAction.pending ? t.common.actions.saving : s.password.update}
             </Button>
           </div>
         </form>
       </Card>
 
       <Card>
-        <CardHeader title="Appearance" />
-        <Switch
-          id="dark-mode"
-          label="Dark mode"
-          description="Switch between a light and a dark interface."
-          checked={mounted && resolvedTheme === 'dark'}
-          disabled={!mounted}
-          onChange={(dark) => setTheme(dark ? 'dark' : 'light')}
-        />
-      </Card>
-
-      <Card>
-        <CardHeader title="Session" description={`Logged in as ${fullName || email}.`} />
+        <CardHeader title={s.session.title} description={s.session.loggedInAs(fullName || email)} />
         <form action={logout} className="flex justify-end">
           <Button type="submit" variant="secondary" size="sm">
             <LogOut className="size-4" aria-hidden />
-            Log out
+            {s.session.logout}
           </Button>
         </form>
       </Card>

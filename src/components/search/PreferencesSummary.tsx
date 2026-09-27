@@ -1,31 +1,46 @@
-import { OPPORTUNITY_TYPE_LABELS } from '@/shared/constants/opportunityTypes';
+import { Briefcase, Building2, Euro, LayoutGrid, MapPin } from 'lucide-react';
+import { intlLocale } from '@/i18n/config';
+import { getLocale, getT } from '@/i18n/server';
 import type { SearchPreferences } from '@/shared/types/UserProfile';
 
-// Leesbare samenvatting van de zoekvoorkeuren (search page + dashboard)
-export function PreferencesSummary({ preferences }: { preferences: SearchPreferences }) {
+// Leesbare samenvatting van de zoekvoorkeuren, als icoon + label + waarde (dashboard en zoekpagina)
+export async function PreferencesSummary({ preferences }: { preferences: SearchPreferences }) {
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
+  const s = t.search.summary;
+
   const rows = [
-    { label: 'Roles', value: preferences.desiredRoles.join(', ') },
+    { icon: Briefcase, label: s.roles, value: preferences.desiredRoles.join(', ') },
     {
-      label: 'Opportunity types',
-      value: preferences.opportunityTypes.map((type) => OPPORTUNITY_TYPE_LABELS[type]).join(', '),
+      icon: LayoutGrid,
+      label: s.opportunityTypes,
+      value: preferences.opportunityTypes.map((type) => t.common.opportunityTypes[type]).join(', '),
     },
     {
-      label: 'Locations',
-      value: `${preferences.locations.join(', ')}${preferences.remoteOnly ? ' (remote only)' : ''}`,
+      icon: MapPin,
+      label: s.locations,
+      value: `${preferences.locations.join(', ')}${preferences.remoteOnly ? s.remoteOnly : ''}`,
     },
-    { label: 'Industries', value: preferences.industries.join(', ') },
+    { icon: Building2, label: s.industries, value: preferences.industries.join(', ') },
     {
-      label: 'Minimum salary',
-      value: preferences.minSalary ? `€${preferences.minSalary.toLocaleString('en-GB')} / month` : 'No minimum',
+      icon: Euro,
+      label: s.minSalary,
+      value: preferences.minSalary
+        ? s.salaryPerMonth(preferences.minSalary.toLocaleString(intlLocale[locale]))
+        : s.noMinimum,
     },
   ];
 
   return (
     <dl className="space-y-3 text-sm">
-      {rows.map((row) => (
-        <div key={row.label}>
-          <dt className="text-muted-foreground">{row.label}</dt>
-          <dd className="mt-0.5 font-medium">{row.value}</dd>
+      {rows.map(({ icon: Icon, label, value }) => (
+        <div key={label} className="flex items-start gap-3">
+          <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-lg bg-[#F5F6F4] text-[#52615C]">
+            <Icon className="size-3.5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <dt className="text-xs text-muted-foreground">{label}</dt>
+            <dd className="font-medium">{value || '—'}</dd>
+          </div>
         </div>
       ))}
     </dl>

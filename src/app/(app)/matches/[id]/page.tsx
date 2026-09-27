@@ -1,16 +1,32 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Building, CalendarDays, ExternalLink, Globe, MapPin, Radar, Sparkles, TrendingUp, UserRound } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building,
+  CalendarDays,
+  ExternalLink,
+  Globe,
+  MapPin,
+  Radar,
+  Sparkles,
+  TrendingUp,
+  UserRound,
+} from 'lucide-react';
 import { z } from 'zod';
+import { CompanyMark } from '@/components/companies/CompanyMark';
+import { SignalTag } from '@/components/companies/SignalTag';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Badge } from '@/components/ui/Badge';
 import { Card, CardHeader } from '@/components/ui/Card';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { MatchActions } from '@/components/opportunities/MatchActions';
-import { MatchScore, STATUS_TONES } from '@/components/opportunities/OpportunityCard';
+import { MatchScore } from '@/components/opportunities/OpportunityCard';
 import { OutreachPanel } from '@/components/outreach/OutreachPanel';
 import { features } from '@/lib/env';
 import { getBillingStatus, getMatch, getOutreachForMatch, getProfile } from '@/lib/data/queries';
+import { classifySignal } from '@/modules/signals/signals';
 import { getLocale, getT } from '@/i18n/server';
 import { formatDateTime, formatShortDate } from '@/shared/utils/formatDate';
 
@@ -36,7 +52,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
 
   return (
     <>
-      <Link href="/dashboard" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+      <Link href="/opportunities" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" aria-hidden />
         {d.allResults}
       </Link>
@@ -46,11 +62,13 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         action={<MatchScore score={match.matchScore} label={t.matches.score.label} />}
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-5">
-        <div className="space-y-6 lg:col-span-3">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-5">
+        <div className="min-w-0 space-y-6 lg:col-span-3">
           <Card>
             <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={STATUS_TONES[match.status]}>{t.common.opportunityStatuses[match.status]}</Badge>
+              <StatusBadge kind="opportunity" status={match.status}>
+                {t.common.opportunityStatuses[match.status]}
+              </StatusBadge>
               <Badge>{t.common.opportunityTypes[match.type]}</Badge>
               {match.isHidden && (
                 <Badge tone="primary">
@@ -60,7 +78,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
 
-            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+            <dl className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div className="flex items-center gap-2">
                 <Building className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                 <dt className="sr-only">{d.company}</dt>
@@ -122,7 +140,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             )}
 
             <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-              <MatchActions matchId={match.id} status={match.status} outreachStatus={match.outreachStatus} />
+              <MatchActions matchId={match.id} status={match.status} outreachStatus={match.outreachStatus} layout="inline" />
               <a
                 href={match.sourceUrl}
                 target="_blank"
@@ -155,9 +173,12 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                   <TrendingUp className="size-4 text-muted-foreground" aria-hidden />
                   {d.whyNow}
                 </p>
-                <ul className="mt-2 list-disc space-y-1 pl-6 text-sm text-muted-foreground">
+                <ul className="mt-2 space-y-2 text-sm">
                   {match.signals.map((signal) => (
-                    <li key={signal}>{signal}</li>
+                    <li key={signal} className="flex flex-wrap items-center gap-2">
+                      <SignalTag kind={classifySignal(signal)} />
+                      <span className="text-muted-foreground">{signal}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -166,9 +187,31 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
               {d.foundVia(t.common.opportunitySources[match.source], formatShortDate(match.discoveredAt, locale))}
             </p>
           </Card>
+
+          {/* Van de kans naar het bedrijf: wie zit erachter en wat gebeurt er nog meer */}
+          {match.companyId && (
+            <Card>
+              <div className="flex items-start gap-3">
+                <CompanyMark name={match.company} />
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-semibold">{d.aboutCompany(match.company)}</h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {[match.companyLocation, match.companyIndustry].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+                <Link
+                  href={`/companies/${match.companyId}`}
+                  className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  {t.companies.card.viewCompany}
+                  <ArrowRight className="size-4" aria-hidden />
+                </Link>
+              </div>
+            </Card>
+          )}
         </div>
 
-        <Card className="lg:col-span-2">
+        <Card id="reach-out" className="scroll-mt-24 lg:col-span-2">
           <CardHeader title={d.reachOut.title} description={d.reachOut.description} />
           <OutreachPanel
             key={`${outreach?.id ?? 'none'}-${outreach?.updatedAt ?? ''}-${outreach?.status ?? ''}`}

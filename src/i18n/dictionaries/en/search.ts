@@ -12,6 +12,7 @@ export const search = {
     profileDescription: 'We search with these preferences.',
   },
   preferencesPage: {
+    eyebrow: 'Profile setup',
     title: 'Your situation & preferences',
     descriptionExisting: 'Every search — manual or scheduled — uses this profile.',
     descriptionNew: 'Fill this in once and we can start hunting for you.',

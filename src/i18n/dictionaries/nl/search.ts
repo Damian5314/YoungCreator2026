@@ -13,6 +13,7 @@ export const search: typeof en = {
     profileDescription: 'We zoeken met deze voorkeuren.',
   },
   preferencesPage: {
+    eyebrow: 'Profiel instellen',
     title: 'Je situatie & voorkeuren',
     descriptionExisting: 'Elke zoekopdracht — handmatig of gepland — gebruikt dit profiel.',
     descriptionNew: 'Vul dit één keer in en we gaan voor je op zoek.',

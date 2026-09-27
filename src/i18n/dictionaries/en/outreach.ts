@@ -20,8 +20,10 @@ export const outreach = {
       cta: 'Go to your results',
     },
     readyToReview: 'Ready to review',
+    sending: 'Sending',
     sent: 'Sent',
     nothingWaiting: 'Nothing waiting for you. Nice work.',
+    byAgent: 'Prepared by your agent',
   },
   panel: {
     intro: (recipient: string) =>

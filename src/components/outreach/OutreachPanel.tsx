@@ -167,7 +167,7 @@ export function OutreachPanel({
       )}
       {outreach.status === 'failed' && outreach.errorMessage && <FormMessage state={{ error: outreach.errorMessage }} />}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field label={p.fields.to} htmlFor="outreach-to">
           <Input id="outreach-to" type="email" value={toEmail} onChange={(event) => setToEmail(event.target.value)} placeholder={p.fields.toPlaceholder} />
         </Field>
@@ -230,7 +230,7 @@ export function OutreachPanel({
           disabled={working}
           className="font-medium text-primary hover:underline disabled:opacity-50"
         >
-          I sent it myself
+          {p.sentMyself}
         </button>
         <button
           type="button"
@@ -239,16 +239,16 @@ export function OutreachPanel({
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground disabled:opacity-50"
         >
           <RefreshCw className={`size-3.5 ${busy === 'draft' ? 'animate-spin' : ''}`} aria-hidden />
-          Rewrite
+          {p.rewrite}
         </button>
       </div>
       {automationLevel === 1 && (
         <p className="text-xs text-muted-foreground">
-          Want Unlisted to send approved emails for you?{' '}
+          {p.automationHint.before}{' '}
           <Link href="/settings" className="font-medium text-primary hover:underline">
-            Change your automation level
+            {p.automationHint.link}
           </Link>
-          .
+          {p.automationHint.after}
         </p>
       )}
     </div>

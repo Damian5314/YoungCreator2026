@@ -21,8 +21,10 @@ export const outreach: typeof en = {
       cta: 'Naar je resultaten',
     },
     readyToReview: 'Klaar om te checken',
+    sending: 'Wordt verstuurd',
     sent: 'Verstuurd',
     nothingWaiting: 'Niets dat op je wacht. Goed bezig.',
+    byAgent: 'Voorbereid door je agent',
   },
   panel: {
     intro: (recipient: string) =>

@@ -5,7 +5,8 @@ export const matches: typeof en = {
     title: 'Kans',
   },
   detail: {
-    allResults: 'Alle resultaten',
+    allResults: 'Alle kansen',
+    aboutCompany: (company: string) => `Over ${company}`,
     hiddenOpportunity: 'Verborgen kans',
     company: 'Bedrijf',
     location: 'Locatie',

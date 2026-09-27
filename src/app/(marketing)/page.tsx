@@ -1,4 +1,7 @@
+import { cookies } from 'next/headers';
 import { MarketingHeader } from '@/components/layout/MarketingHeader';
+import { SplashGate } from '@/components/splash/SplashGate';
+import { SPLASH_COOKIE } from '@/components/splash/splashCookie';
 import { getT } from '@/i18n/server';
 import { buildLanding } from './_content/landing';
 import { Footer } from './_sections/footer/Footer';
@@ -9,9 +12,11 @@ import { FinalCTASection } from './_sections/FinalCTASection';
 
 export default async function LandingPage() {
   const { nav } = buildLanding((await getT()).landing);
+  // Openingsanimatie alleen bij de eerste binnenkomst in deze browsersessie
+  const showSplash = !(await cookies()).has(SPLASH_COOKIE);
 
   return (
-    <>
+    <SplashGate show={showSplash}>
       <MarketingHeader nav={nav} />
       <main>
         <HeroSection />
@@ -20,6 +25,6 @@ export default async function LandingPage() {
         <FinalCTASection />
       </main>
       <Footer />
-    </>
+    </SplashGate>
   );
 }

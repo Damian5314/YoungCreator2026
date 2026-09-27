@@ -14,7 +14,11 @@ export interface Opportunity {
   id: string;
   title: string;
   company: string;
+  // Het bedrijf achter de kans (tabel companies): hiermee linkt een kans naar de bedrijfspagina
+  companyId?: string;
   companyWebsite?: string;
+  companyIndustry?: string;
+  companyLocation?: string;
   location: string;
   remote: boolean;
   type: OpportunityType;

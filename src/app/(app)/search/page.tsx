@@ -35,7 +35,7 @@ export default async function SearchPage() {
           </ButtonLink>
         }
       />
-      <div className="grid items-start gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <SearchEngine
             credits={credits}
@@ -46,7 +46,7 @@ export default async function SearchPage() {
         </div>
         <aside className="space-y-6">
           <Card>
-            <CardHeader title="Your search profile" description="We search with these preferences." />
+            <CardHeader title={t.search.page.profileTitle} description={t.search.page.profileDescription} />
             <PreferencesSummary preferences={searchProfile.preferences} />
           </Card>
           <RecentRuns runs={runs} />

@@ -1,19 +1,15 @@
+'use client';
+
 import Link from 'next/link';
-import { Building, CalendarDays, ExternalLink, MapPin, Radar, Sparkles, TrendingUp, UserRound } from 'lucide-react';
-import { Badge, type BadgeTone } from '@/components/ui/Badge';
+import { ExternalLink, Radar, Sparkles, TrendingUp } from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useLocale, useT } from '@/i18n/I18nProvider';
 import type { Opportunity } from '@/shared/types/Opportunity';
-import type { OpportunityStatus } from '@/shared/types/OpportunityType';
-import { formatDateTime, formatShortDate } from '@/shared/utils/formatDate';
+import { formatDateTime, formatRelativeDay } from '@/shared/utils/formatDate';
 import { MatchActions } from './MatchActions';
 
-export const STATUS_TONES: Record<OpportunityStatus, BadgeTone> = {
-  new: 'success',
-  reviewed: 'neutral',
-  saved: 'warning',
-  applied: 'primary',
-  rejected: 'neutral',
-};
+const MAX_SKILLS = 3;
 
 // Geen hooks: wordt ook door de (server) detailpagina gerenderd, die het vertaalde label meegeeft
 export function MatchScore({ score, label }: { score: number; label: string }) {
@@ -21,124 +17,119 @@ export function MatchScore({ score, label }: { score: number; label: string }) {
     score >= 80 ? 'bg-success-soft text-success' : score >= 65 ? 'bg-warning-soft text-warning' : 'bg-muted text-muted-foreground';
 
   return (
-    <div className={`flex size-14 shrink-0 flex-col items-center justify-center rounded-xl ${tone}`}>
-      <span className="text-lg font-bold leading-none">{score}</span>
-      <span className="mt-1 text-[10px] font-medium uppercase tracking-wide">{label}</span>
+    <div className={`flex size-14 shrink-0 flex-col items-center justify-center rounded-xl sm:size-[60px] ${tone}`}>
+      <span className="text-xl font-bold leading-none tabular-nums">{score}</span>
+      <span className="mt-1 text-[10px] font-semibold uppercase tracking-wide">{label}</span>
     </div>
   );
 }
 
-// Draait op de client (ResultsList en SearchEngine zijn Client Components)
+/**
+ * Compacte, horizontale kanskaart (overal dezelfde): links de matchscore, in het midden wat het is,
+ * waarom het past en waarom nu, rechts de acties. Op telefoons komen de acties eronder.
+ */
 export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
   const t = useT();
   const locale = useLocale();
-  const c = t.matches.card;
-  const location = opportunity.remote
-    ? `${opportunity.location || c.remote}${opportunity.location ? ` · ${c.remoteSuffix}` : ''}`
-    : opportunity.location;
+  const c = t.opportunities.card;
+  const skills = opportunity.requiredSkills;
+  const meta = [
+    opportunity.location,
+    opportunity.remote ? c.remotePossible : null,
+    opportunity.startsAt ? formatDateTime(opportunity.startsAt, locale) : null,
+  ].filter(Boolean);
 
   return (
     <article
-      className={`rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5 ${
+      className={`grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-4 rounded-card border border-[rgb(16_24_32/0.08)] bg-card p-4 shadow-[0_1px_2px_rgb(16_24_32/0.04)] transition-[box-shadow,transform] duration-200 hover:-translate-y-px hover:shadow-soft sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:p-5 ${
         opportunity.status === 'rejected' ? 'opacity-60' : ''
       }`}
     >
-      {/* Mobiel: score zweeft rechtsboven zodat de inhoud de volle breedte krijgt; vanaf sm een eigen kolom */}
-      <div className="flow-root sm:flex sm:items-start sm:gap-4">
-        <div className="float-right mb-2 ml-3 sm:float-none sm:m-0">
-          <MatchScore score={opportunity.matchScore} label={t.matches.score.label} />
+      <MatchScore score={opportunity.matchScore} label={t.matches.score.label} />
+
+      <div className="min-w-0">
+        {/* Maximaal drie labels: status, soort en eventueel verborgen kans */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <StatusBadge kind="opportunity" status={opportunity.status}>
+            {t.common.opportunityStatuses[opportunity.status]}
+          </StatusBadge>
+          <Badge>{t.common.opportunityTypes[opportunity.type]}</Badge>
+          {opportunity.isHidden && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-selected-border bg-selected px-2.5 py-0.5 text-xs font-medium text-selected-foreground">
+              <Radar className="size-3 text-primary" aria-hidden />
+              {t.matches.card.hiddenOpportunity}
+            </span>
+          )}
         </div>
-        <div className="min-w-0 sm:flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={STATUS_TONES[opportunity.status]}>{t.common.opportunityStatuses[opportunity.status]}</Badge>
-            <Badge>{t.common.opportunityTypes[opportunity.type]}</Badge>
-            {opportunity.isHidden && (
-              <Badge tone="primary">
-                <Radar className="size-3" aria-hidden />
-                {c.hiddenOpportunity}
-              </Badge>
+
+        <h3 className="mt-2 text-[16.5px] font-semibold leading-snug tracking-[-0.01em]">
+          <Link href={`/matches/${opportunity.id}`} className="hover:underline">
+            {opportunity.title}
+          </Link>
+        </h3>
+        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+          {opportunity.companyId ? (
+            <Link href={`/companies/${opportunity.companyId}`} className="font-medium text-foreground hover:underline">
+              {opportunity.company}
+            </Link>
+          ) : (
+            <span className="font-medium text-foreground">{opportunity.company}</span>
+          )}
+          {meta.map((item) => (
+            <span key={item}> · {item}</span>
+          ))}
+        </p>
+
+        {opportunity.matchReasons[0] ? (
+          <p className="mt-2 flex items-start gap-1.5 text-sm">
+            <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
+            <span className="line-clamp-2 sm:line-clamp-1">{opportunity.matchReasons[0]}</span>
+          </p>
+        ) : (
+          opportunity.description && <p className="mt-2 line-clamp-2 text-sm">{opportunity.description}</p>
+        )}
+        {opportunity.signals[0] && (
+          <p className="mt-1 flex items-start gap-1.5 text-sm text-muted-foreground">
+            <TrendingUp className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+            <span className="line-clamp-1">
+              <span className="font-medium text-foreground">{c.whyNow}</span> {opportunity.signals[0]}
+            </span>
+          </p>
+        )}
+
+        {skills.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {skills.slice(0, MAX_SKILLS).map((skill) => (
+              <span key={skill} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                {skill}
+              </span>
+            ))}
+            {skills.length > MAX_SKILLS && (
+              <span className="rounded-md px-1 py-0.5 text-xs font-medium text-muted-foreground">
+                {c.moreSkills(skills.length - MAX_SKILLS)}
+              </span>
             )}
           </div>
-          <h3 className="mt-2 font-semibold leading-snug">
-            <Link href={`/matches/${opportunity.id}`} className="hover:underline">
-              {opportunity.title}
-            </Link>
-          </h3>
-          <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Building className="size-3.5" aria-hidden />
-              {opportunity.company}
-            </span>
-            {location && (
-              <span className="flex items-center gap-1.5">
-                <MapPin className="size-3.5" aria-hidden />
-                {location}
-              </span>
-            )}
-            {opportunity.startsAt && (
-              <span className="flex items-center gap-1.5">
-                <CalendarDays className="size-3.5" aria-hidden />
-                {formatDateTime(opportunity.startsAt, locale)}
-              </span>
-            )}
-            {opportunity.contact?.name && (
-              <span className="flex items-center gap-1.5">
-                <UserRound className="size-3.5" aria-hidden />
-                {opportunity.contact.name}
-                {opportunity.contact.role ? `, ${opportunity.contact.role}` : ''}
-              </span>
-            )}
-          </p>
-
-          {opportunity.matchReasons.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm">
-              {opportunity.matchReasons.slice(0, 3).map((reason) => (
-                <li key={reason} className="flex items-start gap-2">
-                  <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
-                  {reason}
-                </li>
-              ))}
-            </ul>
-          )}
-          {opportunity.signals.length > 0 && (
-            <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              <span>
-                <span className="font-medium text-foreground">{c.whyNow}</span> {opportunity.signals.join(' · ')}
-              </span>
-            </p>
-          )}
-          {opportunity.matchReasons.length === 0 && opportunity.description && (
-            <p className="mt-3 line-clamp-3 text-sm">{opportunity.description}</p>
-          )}
-
-          {opportunity.requiredSkills.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {opportunity.requiredSkills.map((skill) => (
-                <span key={skill} className="rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+        )}
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+
+      <div className="col-span-2 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 sm:col-span-1 sm:flex-col sm:items-end sm:justify-between sm:border-0 sm:pt-0">
         <MatchActions matchId={opportunity.id} status={opportunity.status} outreachStatus={opportunity.outreachStatus} />
-        <span className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span>
-            {c.foundVia(t.common.opportunitySources[opportunity.source], formatShortDate(opportunity.discoveredAt, locale))}
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span suppressHydrationWarning>
+            {formatRelativeDay(opportunity.discoveredAt, locale)} · {t.common.opportunitySources[opportunity.source]}
           </span>
           <a
             href={opportunity.sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="flex shrink-0 items-center gap-1 font-medium text-primary hover:underline"
+            aria-label={c.viewSource}
+            title={c.viewSource}
+            className="rounded p-0.5 text-primary hover:text-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            {c.view}
             <ExternalLink className="size-3.5" aria-hidden />
           </a>
-        </span>
+        </p>
       </div>
     </article>
   );

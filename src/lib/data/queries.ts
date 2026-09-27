@@ -1,6 +1,8 @@
 import { cache } from 'react';
 import { features } from '@/lib/env';
 import { createClient } from '@/lib/supabase/server';
+import { buildActivity, type ActivityItem } from '@/modules/activity/activity';
+import { buildCompanies, type CompanySummary } from '@/modules/companies/companies';
 import type { Opportunity, OutreachStatus } from '@/shared/types/Opportunity';
 import type { OpportunitySource, OpportunityStatus, OpportunityType } from '@/shared/types/OpportunityType';
 import type { ScheduleFrequency, SearchSchedule } from '@/shared/types/SearchSchedule';
@@ -256,7 +258,7 @@ interface MatchRow {
     contact_email: string | null;
     contact_role: string | null;
     contact_url: string | null;
-    company: { name: string; website: string | null };
+    company: { id: string; name: string; website: string | null; industry: string | null; location: string | null };
   } | null;
   // 1-op-1 relatie: PostgREST geeft een object, maar zonder types kan het ook een lijst lijken
   outreach: { status: OutreachStatus } | { status: OutreachStatus }[] | null;
@@ -266,7 +268,7 @@ const MATCH_SELECT = `id, match_score, match_reasons, status, created_at,
   opportunity:opportunities (
     title, type, source, url, location, remote, description, required_skills, is_hidden, posted_at,
     starts_at, signals, contact_name, contact_email, contact_role, contact_url,
-    company:companies ( name, website )
+    company:companies ( id, name, website, industry, location )
   ),
   outreach:outreach_messages ( status )`;
 
@@ -278,7 +280,10 @@ function toOpportunity(row: MatchRow, userId: string): Opportunity {
     id: row.id,
     title: o.title,
     company: o.company.name,
+    companyId: o.company.id,
     companyWebsite: o.company.website ?? undefined,
+    companyIndustry: o.company.industry ?? undefined,
+    companyLocation: o.company.location ?? undefined,
     location: o.location ?? '',
     remote: o.remote,
     type: o.type,
@@ -307,8 +312,15 @@ function toOpportunity(row: MatchRow, userId: string): Opportunity {
   };
 }
 
-// Alle matches van de gebruiker (of alleen de nieuwe uit één run), omgezet naar het Opportunity-type van de UI
+// Alle matches van de gebruiker (of alleen de nieuwe uit één run), omgezet naar het Opportunity-type van de UI.
+// Zonder run-id per request gecachet: dashboard, bedrijven en activiteit delen dezelfde lijst.
 export async function getMatches({ searchRunId }: { searchRunId?: string } = {}): Promise<Opportunity[]> {
+  return searchRunId ? fetchMatches(searchRunId) : getAllMatches();
+}
+
+const getAllMatches = cache(() => fetchMatches());
+
+async function fetchMatches(searchRunId?: string): Promise<Opportunity[]> {
   const user = await getCurrentUser();
   if (!user) return [];
 
@@ -425,23 +437,47 @@ export async function getOutreachForMatch(matchId: string): Promise<OutreachMess
 export interface OutreachListItem extends OutreachMessageData {
   opportunityTitle: string;
   company: string;
+  companyId?: string;
 }
 
-export async function getOutreachList(): Promise<OutreachListItem[]> {
+export const getOutreachList = cache(async (): Promise<OutreachListItem[]> => {
   const user = await getCurrentUser();
   if (!user) return [];
 
   const supabase = await createClient();
   const { data } = await supabase
     .from('outreach_messages')
-    .select('*, match:matches ( opportunity:opportunities ( title, company:companies ( name ) ) )')
+    .select('*, match:matches ( opportunity:opportunities ( title, company:companies ( id, name ) ) )')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 
-  type Row = OutreachRow & { match: { opportunity: { title: string; company: { name: string } } | null } | null };
+  type Row = OutreachRow & {
+    match: { opportunity: { title: string; company: { id: string; name: string } } | null } | null;
+  };
   return ((data ?? []) as unknown as Row[]).map((row) => ({
     ...toOutreach(row),
     opportunityTitle: row.match?.opportunity?.title ?? 'Opportunity',
     company: row.match?.opportunity?.company?.name ?? '',
+    companyId: row.match?.opportunity?.company?.id,
   }));
+});
+
+// ---------------------------------------------------------------------------
+// Bedrijven en activiteit: afgeleid uit je kansen, zoekopdrachten en berichten
+// ---------------------------------------------------------------------------
+
+// Alle bedrijven achter je kansen, met fitscore, signalen en relatie (beste fit eerst)
+export const getCompanies = cache(async (): Promise<CompanySummary[]> => {
+  const [matches, outreach] = await Promise.all([getAllMatches(), getOutreachList()]);
+  return buildCompanies(matches, outreach);
+});
+
+export async function getCompany(companyId: string): Promise<CompanySummary | null> {
+  return (await getCompanies()).find((company) => company.id === companyId) ?? null;
 }
+
+// Tijdlijn van wat je agent deed: zoekopdrachten, gevonden kansen, signalen en e-mails (nieuwste eerst)
+export const getActivity = cache(async (): Promise<ActivityItem[]> => {
+  const [matches, outreach, runs] = await Promise.all([getAllMatches(), getOutreachList(), getRecentRuns(10)]);
+  return buildActivity({ matches, outreach, runs });
+});

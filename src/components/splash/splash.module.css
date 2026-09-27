@@ -1,0 +1,633 @@
+/*
+ * Openingsanimatie (splash) bij het eerste bezoek aan de site.
+ * De hele tijdlijn staat hier, als vertraging per laag: zo speelt hij vanaf de eerste paint,
+ * ook als React nog niet gehydrateerd is. JavaScript luistert alleen naar het einde en kan de
+ * uitgang naar voren halen (overslaan).
+ *
+ *  0.00s achtergrond 0.82 → 1              1.55s tagline
+ *  0.20s zacht licht achter het logo       1.75s signaallijnen tekenen zich naar het logo
+ *  0.40s banen en signalen gaan bewegen    1.85s voortgangsbalk (vol op 3.5s), daarna de status
+ *  0.55s logo-icoon (staat stil op 1.3s)   3.80s uitgang (0.6s): de site komt eronder op
+ *  1.25s woordmerk
+ *
+ * Elke laag staat in zijn eindtoestand; de animaties vullen 'backwards' of 'both'. Zonder
+ * animaties (reduced motion) is alles dus meteen in rust zichtbaar.
+ */
+
+.root,
+.site {
+  --splash-exit-at: 3.8s;
+  --splash-exit-duration: 0.6s;
+  --splash-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --splash-ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.root {
+  position: fixed;
+  inset-block: 0;
+  left: 0;
+  /* 100vw telt de scrollbalk mee: de splash verspringt niet als die bij de uitgang terugkomt */
+  width: 100vw;
+  z-index: 100;
+  overflow: hidden;
+  container-type: size;
+  background: #f7f6f1;
+  animation: splash-fade-out 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: var(--splash-exit-at);
+  animation-duration: var(--splash-exit-duration);
+}
+
+/* Niet scrollen zolang de splash het beeld vult */
+:global(html):has(.root[data-lock]) {
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------------------
+   Achtergrond: de afbeelding, zachte lichtvlekken en de banen met signalen
+--------------------------------------------------------------------------- */
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  animation: splash-backdrop-out 0.6s var(--splash-ease) forwards;
+  animation-delay: var(--splash-exit-at);
+  animation-duration: var(--splash-exit-duration);
+}
+
+.zoom {
+  position: absolute;
+  inset: 0;
+  animation:
+    splash-bg-in 0.8s ease-out both,
+    splash-bg-drift 4.4s cubic-bezier(0.33, 0, 0.4, 1) both;
+}
+
+/* Vult het scherm met de verhouding van de afbeelding (zoals object-fit: cover), zodat de SVG-banen
+   precies over de lijnen in de afbeelding vallen. Staand scherm: de staande compositie. De vervaagde
+   mini-versie eronder is meteen zichtbaar, tot de echte afbeelding binnen is. */
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 100cqh * 1672 / 941);
+  aspect-ratio: 1672 / 941;
+  translate: -50% -50%;
+  background: var(--blur-landscape) center / cover no-repeat;
+}
+
+.stageImage {
+  object-fit: cover;
+}
+
+.orbitsPortrait {
+  display: none;
+}
+
+@media (orientation: portrait) {
+  .stage {
+    width: max(100cqw, 100cqh * 941 / 1672);
+    aspect-ratio: 941 / 1672;
+    background-image: var(--blur-portrait);
+  }
+
+  .orbitsLandscape {
+    display: none;
+  }
+
+  .orbitsPortrait {
+    display: block;
+  }
+}
+
+/* Licht dat traag over de groene vlekken drijft */
+.atmo {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation:
+    splash-fade-in 1.4s ease-out 0.1s both,
+    splash-drift 6s var(--splash-ease-in-out) infinite alternate both;
+}
+
+.atmoLight {
+  --drift-x: 16px;
+  --drift-y: 10px;
+  left: 2%;
+  top: -24%;
+  width: 40%;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.42), rgb(234 247 239 / 0.18) 55%, transparent);
+}
+
+.atmoMint {
+  --drift-x: -14px;
+  --drift-y: 12px;
+  left: 72%;
+  top: 20%;
+  width: 34%;
+  background: radial-gradient(closest-side, rgb(203 238 221 / 0.5), transparent);
+}
+
+/* Staande compositie: de groene vlekken zitten linksboven en rechts in het midden */
+@media (orientation: portrait) {
+  .atmoLight {
+    left: -15%;
+    top: -11%;
+    width: 72%;
+  }
+
+  .atmoMint {
+    left: 58%;
+    top: 15%;
+    width: 64%;
+  }
+}
+
+.orbits {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Een baan draait een fractie om zijn eigen middelpunt: hij glijdt over de lijn in de afbeelding */
+.orbit {
+  transform-box: view-box;
+  animation: splash-orbit-turn 2.6s var(--splash-ease-in-out) 0.4s both;
+}
+
+.orbitLine {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.35;
+  animation: splash-orbit-glow 2.6s var(--splash-ease-in-out) 0.4s both;
+}
+
+/* ---------------------------------------------------------------------------
+   Signalen: een streepje van lengte ~0 met ronde uiteinden is een stip; stroke-dashoffset
+   schuift die over het pad (pathLength = 1, dus 0..1 is begin..eind van de lijn)
+--------------------------------------------------------------------------- */
+
+.signal {
+  color: #087f63;
+}
+
+.signal path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-dasharray: 0.0001 2;
+  stroke-dashoffset: var(--signal-to);
+}
+
+.signal path:nth-child(1) {
+  stroke-width: 20;
+  opacity: 0.07;
+}
+
+.signal path:nth-child(2) {
+  stroke-width: 12;
+  opacity: 0.14;
+}
+
+.signal path:nth-child(3) {
+  stroke-width: 6;
+}
+
+.lime {
+  color: #c7f000;
+}
+
+/* Signaal op een baan: komt op en glijdt ~30px heen en weer */
+.orbitSignal {
+  opacity: 0.85;
+  animation: splash-fade-in 0.9s ease-out both;
+  animation-delay: var(--signal-delay);
+}
+
+.orbitSignal path {
+  animation: splash-signal-travel 3.2s var(--splash-ease-in-out) infinite alternate both;
+  animation-delay: var(--signal-delay);
+}
+
+/* Rond het logo: dunne lijnen die zich naar het logo tekenen, met een signaal dat erover binnenkomt.
+   Het assenstelsel van de SVG schaalt mee met het logo (--mark-w). */
+.connection {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--mark-w) * 640 / 124);
+  translate: -50% -50%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.connectionLine {
+  fill: none;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  opacity: 0.38;
+  animation: splash-draw 0.7s var(--splash-ease) both;
+  animation-delay: var(--line-delay);
+}
+
+.convergeSignal {
+  --signal-to: -0.97;
+  opacity: 0.3;
+  animation: splash-converge-glow 1.6s var(--splash-ease-in-out) both;
+  animation-delay: var(--signal-delay);
+}
+
+.convergeSignal path {
+  animation: splash-converge 1.6s var(--splash-ease-in-out) both;
+  animation-delay: var(--signal-delay);
+}
+
+/* ---------------------------------------------------------------------------
+   Merk: logo, woordmerk, tagline, voortgang en status in één gecentreerde kolom
+--------------------------------------------------------------------------- */
+
+.contentWrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  animation: splash-content-out 0.6s var(--splash-ease) forwards;
+  animation-delay: var(--splash-exit-at);
+  animation-duration: var(--splash-exit-duration);
+}
+
+.content {
+  --mark-w: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .content {
+    --mark-w: 108px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content {
+    --mark-w: 128px;
+  }
+}
+
+/* Verhouding van het logo zonder de transparante rand boven en onder */
+.mark {
+  position: relative;
+  width: var(--mark-w);
+  aspect-ratio: 256 / 210;
+}
+
+.light {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--mark-w) * 3.8);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    #ffffff,
+    rgb(234 247 239 / 0.75) 42%,
+    rgb(203 238 221 / 0.28) 68%,
+    transparent
+  );
+  animation: splash-light-in 0.6s var(--splash-ease) 0.2s both;
+}
+
+.glow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--mark-w) * 1.5);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(203 238 221 / 0.9), transparent);
+  opacity: 0;
+  animation: splash-glow 0.5s ease-out 0.7s both;
+}
+
+.logo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: splash-logo-in 0.75s 0.55s both;
+}
+
+/* Gepositioneerd, zodat de tekst altijd boven het licht en de signaallijnen van het logo ligt
+   (ook zonder animatie, bij reduced motion) */
+.wordmark,
+.tagline,
+.status {
+  position: relative;
+}
+
+.wordmark {
+  margin-top: calc(var(--mark-w) * 0.2);
+  font-size: calc(var(--mark-w) * 0.47);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: #101820;
+  animation: splash-rise 0.55s var(--splash-ease) 1.25s both;
+}
+
+.tagline {
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: rgb(16 24 32 / 0.6);
+  animation: splash-rise 0.5s var(--splash-ease) 1.55s both;
+}
+
+@media (min-width: 1024px) {
+  .tagline {
+    margin-top: 16px;
+    font-size: 18px;
+  }
+}
+
+.progress {
+  position: relative;
+  margin-top: 34px;
+  width: 164px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e1eae4;
+  animation: splash-fade-in 0.4s ease-out 1.85s both;
+}
+
+.progressFill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #087f63;
+  transform-origin: left;
+  animation: splash-progress 1.6s var(--splash-ease-in-out) 1.9s both;
+}
+
+/* Statusregels liggen op elkaar en wisselen met een korte crossfade */
+.status {
+  display: grid;
+  justify-items: center;
+  margin-top: 14px;
+  /* Compenseert de letterspatiëring achter de laatste letter, zodat de regel optisch centreert */
+  padding-inline-start: 0.2em;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #66736e;
+}
+
+.status > span {
+  grid-area: 1 / 1;
+}
+
+.status > span:nth-child(1) {
+  animation:
+    splash-status-in 0.35s ease-out 2s backwards,
+    splash-status-out 0.3s ease-in 2.75s forwards;
+}
+
+.status > span:nth-child(2) {
+  animation: splash-status-in 0.35s ease-out 2.85s backwards;
+}
+
+/* ---------------------------------------------------------------------------
+   De site onder de splash: komt op terwijl de splash oplost
+--------------------------------------------------------------------------- */
+
+.site[data-splash-site] {
+  animation: splash-site-in 0.6s var(--splash-ease) backwards;
+  animation-delay: var(--splash-exit-at);
+  animation-duration: var(--splash-exit-duration);
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion: geen zoom, banen, signalen of getrapt binnenkomen. De inhoud komt in één keer
+   rustig op, de splash vervaagt aan het eind; de voortgangsbalk loopt wel gewoon vol.
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .zoom,
+  .backdrop,
+  .contentWrap,
+  .light,
+  .logo,
+  .wordmark,
+  .tagline,
+  .progress,
+  .status > span:nth-child(n) {
+    animation: none;
+  }
+
+  .atmo,
+  .orbits,
+  .connection,
+  .glow,
+  .status > span:not(:last-child) {
+    display: none;
+  }
+
+  .content {
+    animation: splash-fade-in 0.5s ease-out 0.1s both;
+  }
+
+  .site[data-splash-site] {
+    animation-name: splash-site-fade;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Keyframes
+--------------------------------------------------------------------------- */
+
+@keyframes splash-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes splash-fade-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes splash-bg-in {
+  from {
+    opacity: 0.82;
+  }
+}
+
+@keyframes splash-bg-drift {
+  from {
+    scale: 1;
+  }
+  to {
+    scale: 1.03;
+  }
+}
+
+@keyframes splash-backdrop-out {
+  to {
+    scale: 1.02;
+  }
+}
+
+@keyframes splash-content-out {
+  to {
+    scale: 1.04;
+  }
+}
+
+@keyframes splash-drift {
+  to {
+    translate: var(--drift-x) var(--drift-y);
+    scale: 1.04;
+  }
+}
+
+@keyframes splash-orbit-turn {
+  from {
+    rotate: -1.5deg;
+  }
+}
+
+@keyframes splash-orbit-glow {
+  from {
+    opacity: 0.15;
+  }
+}
+
+@keyframes splash-signal-travel {
+  from {
+    stroke-dashoffset: var(--signal-from);
+  }
+}
+
+@keyframes splash-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes splash-converge {
+  from {
+    stroke-dashoffset: -0.04;
+  }
+}
+
+@keyframes splash-converge-glow {
+  0% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.2;
+  }
+  60% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes splash-light-in {
+  from {
+    opacity: 0;
+    scale: 0.85;
+  }
+}
+
+@keyframes splash-glow {
+  0% {
+    opacity: 0;
+    scale: 0.7;
+  }
+  45% {
+    opacity: 0.6;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.15;
+  }
+}
+
+/* Icoon: kleiner en iets lager → licht doorschieten (1.05) → rustig op 1 */
+@keyframes splash-logo-in {
+  0% {
+    opacity: 0;
+    scale: 0.75;
+    translate: 0 10px;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  60% {
+    opacity: 1;
+    scale: 1.05;
+    translate: 0 0;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes splash-rise {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@keyframes splash-progress {
+  from {
+    scale: 0 1;
+  }
+}
+
+@keyframes splash-status-in {
+  from {
+    opacity: 0;
+    translate: 0 4px;
+  }
+}
+
+@keyframes splash-status-out {
+  to {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
+@keyframes splash-site-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@keyframes splash-site-fade {
+  from {
+    opacity: 0;
+  }
+}

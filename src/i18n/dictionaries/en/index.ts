@@ -10,6 +10,11 @@ import { settings } from './settings';
 import { billing } from './billing';
 import { onboarding } from './onboarding';
 import { authLayout } from './authLayout';
+import { opportunities } from './opportunities';
+import { companies } from './companies';
+import { signals } from './signals';
+import { activity } from './activity';
+import { splash } from './splash';
 
 export const en = {
   common,
@@ -24,4 +29,9 @@ export const en = {
   billing,
   onboarding,
   authLayout,
+  opportunities,
+  companies,
+  signals,
+  activity,
+  splash,
 };

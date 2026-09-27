@@ -4,7 +4,8 @@ export const matches = {
     title: 'Opportunity',
   },
   detail: {
-    allResults: 'All results',
+    allResults: 'All opportunities',
+    aboutCompany: (company: string) => `About ${company}`,
     hiddenOpportunity: 'Hidden opportunity',
     company: 'Company',
     location: 'Location',
