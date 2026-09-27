@@ -140,7 +140,7 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     const message = error instanceof N8nError || error instanceof Error ? error.message : ‘Could not reach n8n’;
     console.error(‘[startRun] n8n webhook call failed for run’, run.id, ‘:’, message, error);
     await failRun(run.id, `Could not start the n8n workflow: ${message}`);
-    return { ok: false, error: ‘The search agent couldn’t be started. Your credit was refunded, please try again later.’ };
+    return { ok: false, error: "The search agent couldn’t be started. Your credit was refunded, please try again later." };
   }
 
   return { ok: true, runId: run.id };
