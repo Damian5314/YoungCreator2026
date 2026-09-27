@@ -18,7 +18,7 @@ import { parseIngestItems } from './schema';
 
 export type StartRunResult = { ok: true; runId: string } | { ok: false; error: string };
 
-export const OUT_OF_CREDITS_MESSAGE = 'You’re out of credits. Buy a credit pack to keep searching.';
+export const OUT_OF_CREDITS_MESSAGE = "You’re out of credits. Buy a credit pack to keep searching.";
 
 interface StartRunInput {
   userId: string;
@@ -128,19 +128,19 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     ...snapshot,
   };
   try {
-    console.log(‘[startRun] calling n8n webhook for run’, run.id);
+    console.log("[startRun] calling n8n webhook for run", run.id);
     const response = (await callN8nWebhook(env.n8nSearchWebhookUrl!, payload)) as { executionId?: unknown } | null;
-    const executionId = response && typeof response.executionId !== ‘undefined’ ? String(response.executionId) : null;
-    console.log(‘[startRun] n8n responded, executionId:’, executionId);
+    const executionId = response && typeof response.executionId !== "undefined" ? String(response.executionId) : null;
+    console.log("[startRun] n8n responded, executionId:", executionId);
     await admin
-      .from(‘search_runs’)
-      .update({ status: ‘running’, started_at: new Date().toISOString(), n8n_execution_id: executionId })
-      .eq(‘id’, run.id);
+      .from("search_runs")
+      .update({ status: "running", started_at: new Date().toISOString(), n8n_execution_id: executionId })
+      .eq("id", run.id);
   } catch (error) {
-    const message = error instanceof N8nError || error instanceof Error ? error.message : ‘Could not reach n8n’;
-    console.error(‘[startRun] n8n webhook call failed for run’, run.id, ‘:’, message, error);
+    const message = error instanceof N8nError || error instanceof Error ? error.message : "Could not reach n8n";
+    console.error("[startRun] n8n webhook call failed for run", run.id, ":", message, error);
     await failRun(run.id, `Could not start the n8n workflow: ${message}`);
-    return { ok: false, error: "The search agent couldn’t be started. Your credit was refunded, please try again later." };
+    return { ok: false, error: "The search agent could not be started. Your credit was refunded, please try again later." };
   }
 
   return { ok: true, runId: run.id };
