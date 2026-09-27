@@ -4,16 +4,17 @@ import { Inter, Caveat } from 'next/font/google';
 import { Providers } from './providers';
 import './globals.css';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const caveat = Caveat({ subsets: ['latin'], variable: '--font-hand' });
+// opsz-as: Inter schakelt op grote koppen automatisch naar de strakkere display-variant
+const inter = Inter({ subsets: ['latin'], axes: ['opsz'], variable: '--font-inter' });
+const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' });
 
 export const metadata: Metadata = {
   title: {
-    default: 'JobHunter.nl — Find your job before the clock runs out',
-    template: '%s · JobHunter.nl',
+    default: 'Job Hunter',
+    template: '%s · Job Hunter',
   },
   description:
-    'Upload your CV once. We keep searching for jobs, internships, traineeships and hidden opportunities across every platform.',
+    'Job Hunter helps international students find jobs, internships and hidden opportunities in the Netherlands by analyzing real-time company signals, news and hiring activity.',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

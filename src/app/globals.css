@@ -3,21 +3,22 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Kleur-tokens: light is de basis, .dark (gezet door next-themes) overschrijft alleen de waarden */
-/* Palet: diep bosgroen + warme crème (zie template) */
+/* Palet: warm off-white + diep merkgroen. Lime is een spaarzaam accent, nooit een vlakkleur. */
 :root {
   color-scheme: light;
-  --background: #f8f6f0;
-  --foreground: #17201a;
+  --background: #f7f6f1;
+  --foreground: #101820;
   --card: #ffffff;
-  --muted: #efece3;
-  --muted-foreground: #6b685f;
-  --border: #e5e1d5;
-  --input: #d5d0c1;
-  --primary: #1f5d3b;
-  --primary-hover: #174a2f;
+  --muted: #efeee8;
+  --muted-foreground: #5f6b66;
+  --border: rgb(16 24 32 / 0.08);
+  --input: #d6d8d2;
+  --primary: #087f63;
+  --primary-hover: #0b6b55;
   --primary-foreground: #ffffff;
-  --primary-soft: #e7f2ea;
-  --primary-soft-foreground: #1f5d3b;
+  --primary-soft: #eaf5ee;
+  --primary-soft-foreground: #0b6b55;
+  --lime: #c7f000;
   --success: #1e7a45;
   --success-soft: #ecf7ef;
   --warning: #a15c07;
@@ -35,11 +36,11 @@
   --muted-foreground: #9ba89f;
   --border: #26312a;
   --input: #36453b;
-  --primary: #6cc793;
-  --primary-hover: #8ad6a8;
+  --primary: #45c29c;
+  --primary-hover: #6fd3b3;
   --primary-foreground: #0e1310;
-  --primary-soft: rgb(108 199 147 / 0.14);
-  --primary-soft-foreground: #9adcb5;
+  --primary-soft: rgb(69 194 156 / 0.14);
+  --primary-soft-foreground: #8fdcc3;
   --success: #6dd394;
   --success-soft: rgb(109 211 148 / 0.12);
   --warning: #f5b94a;
@@ -61,6 +62,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
   --color-primary-soft-foreground: var(--primary-soft-foreground);
+  --color-lime: var(--lime);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -68,6 +70,55 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-caveat), 'Segoe Print', 'Bradley Hand', cursive;
+}
+
+/* Vaste design-tokens: radius-schaal, zachte schaduwen en de (subtiele) bewegingen */
+@theme {
+  --radius-card: 16px;
+  --radius-panel: 24px;
+  --radius-block: 32px;
+
+  --shadow-soft: 0 12px 40px rgb(16 24 32 / 0.08);
+  --shadow-float: 0 1px 2px rgb(16 24 32 / 0.04), 0 18px 50px rgb(16 24 32 / 0.1);
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-rise: rise 0.9s var(--ease-soft) both;
+  --animate-bob: bob 7s ease-in-out infinite;
+  --animate-wipe-in: wipe-in 1.6s var(--ease-soft) both;
+  --animate-settle: settle 2.2s var(--ease-soft) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+
+  @keyframes bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  /* Veegt een afbeelding van links naar rechts in beeld: een curve erin lijkt zichzelf te tekenen */
+  @keyframes wipe-in {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+  }
+
+  /* Een foto zakt rustig op zijn plek (1.02 → 1), zonder zichtbare beweging van de rand */
+  @keyframes settle {
+    from {
+      transform: scale(1.02);
+    }
+  }
 }
 
 @layer base {
@@ -83,6 +134,13 @@
     scroll-behavior: smooth;
   }
 
+  /* Ankerlinks springen direct bij 'reduce motion' */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
   body {
     background: var(--background);
     color: var(--foreground);
@@ -95,76 +153,127 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Hero-sectie: glassmorphism-kaarten + subtiele bewegingen.
-   Ink-kleuren staan bewust vast (niet via de theme-tokens) omdat de glaskaarten
-   altijd op een lichte foto zweven — ook in dark mode blijven ze leesbaar.
+   Landingspagina
 --------------------------------------------------------------------------- */
-:root {
-  --hero-ink: #101820;
-  --hero-ink-soft: #5f6b64;
-  --hero-green: #1f5d3b;
-  --hero-lime: #c7f000;
+
+/* Hero-foto laat links, boven en onder zacht los in de pagina: geen harde fotorand.
+   De linkerovergang loopt geleidelijk (ease-in) en is dicht vóór de student begint (~55%). */
+@utility hero-photo-blend {
+  mask-image:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      rgb(0 0 0 / 0.06) 22%,
+      rgb(0 0 0 / 0.3) 34%,
+      rgb(0 0 0 / 0.7) 45%,
+      #000 54%
+    ),
+    linear-gradient(to bottom, transparent 0%, #000 12%, #000 80%, transparent 100%);
+  mask-composite: intersect;
 }
 
-.hero-glass {
-  background: rgba(255, 255, 255, 0.74);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 18px 44px -14px rgba(16, 24, 32, 0.24);
+/* "We look beyond job boards": het dashboard begint in het midden en loopt tot net voorbij de
+   rechterrand van het scherm, ook als het scherm breder is dan de container (1440px).
+   --container-pad = de zijmarge van <Container> op dat breakpoint. */
+@utility beyond-bleed {
+  width: min(calc(100% + max(0px, (100vw - 1440px) / 2) + var(--container-pad, 3rem) + 1rem), 1120px);
+  max-width: none;
 }
 
-.hero-glass-green {
-  background: rgba(224, 240, 229, 0.82);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  box-shadow: 0 20px 46px -14px rgba(31, 93, 59, 0.3);
+/* Handgetekende lijnen tekenen zichzelf in (paden krijgen pathLength="1"). */
+.draw-in path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-in 1.1s var(--ease-soft) forwards;
+  animation-delay: inherit;
 }
 
-.hero-glass-icon {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-@keyframes hero-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-9px);
+@keyframes draw-in {
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
-.hero-float {
-  animation: hero-float 6s ease-in-out infinite;
+/* Secties komen rustig in beeld tijdens het scrollen (alleen waar de browser het ondersteunt). */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
 }
 
-/* Reveal-helper: onzichtbaar tot .is-in wordt gezet (na mount, met stagger). */
-.hero-reveal {
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+}
+
+/* Gestaffeld binnenkomen zodra een RevealGroup in beeld scrolt. Alleen 'pending' verbergt,
+   en dat zet de RevealGroup pas na het laden, voor groepen die buiten beeld staan. */
+[data-reveal-group='pending'] [data-reveal] {
   opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  translate: 0 var(--reveal-distance, 15px);
 }
 
-.hero-reveal.is-in {
-  opacity: 1;
-  transform: translateY(0);
+[data-reveal-group='pending'] [data-reveal='right'] {
+  translate: var(--reveal-distance, 50px) 0;
+}
+
+[data-reveal-group='in'] [data-reveal] {
+  transition:
+    opacity var(--reveal-duration, 0.8s) var(--ease-soft),
+    translate var(--reveal-duration, 0.8s) var(--ease-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* CSS-animaties binnen [data-reveal-play] (zoals een zichzelf tekenende pijl) wachten op hun groep. */
+[data-reveal-group]:not([data-reveal-group='in']) [data-reveal-play] * {
+  animation-play-state: paused;
+}
+
+/* Verhaalsectie: scrim over de foto. Links flink donker voor de kop, rechts blijft de foto rijk. */
+@utility story-scrim {
+  background:
+    linear-gradient(to top, rgb(12 19 22 / 0.5), transparent 38%),
+    linear-gradient(
+      90deg,
+      rgb(12 19 22 / 0.94) 0%,
+      rgb(12 19 22 / 0.82) 30%,
+      rgb(12 19 22 / 0.42) 50%,
+      rgb(12 19 22 / 0.2) 70%,
+      rgb(12 19 22 / 0.14) 100%
+    );
+}
+
+/* Heel subtiele parallax (max 8px) op de verhaalfoto, gekoppeld aan hoe ver de kaart door beeld scrolt. */
+@keyframes story-parallax {
+  from {
+    transform: translateY(-8px);
+  }
+  to {
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .story-frame {
+      view-timeline-name: --story;
+    }
+    .story-parallax {
+      animation: story-parallax linear both;
+      animation-timeline: --story;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-float {
+  .draw-in path {
     animation: none;
-  }
-  .hero-reveal {
-    transition: none;
-    opacity: 1;
-    transform: none;
+    stroke-dashoffset: 0;
   }
 }

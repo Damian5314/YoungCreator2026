@@ -1,30 +1,28 @@
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
+import { FloatCard, glassIcon } from '../../_components/FloatCard';
+import { heroCards } from '../../_content/landing';
 
-/** Card 2 — the pivotal card that connects a company signal to the student. */
+/** Stap 2 — de kernkaart: van bedrijfssignaal naar een persoonlijke kans. */
 export function OpportunityCard() {
+  const { label, title, reason, cta } = heroCards.opportunity;
+
   return (
-    <article className="hero-glass-green w-72 rounded-[22px] p-4 text-[var(--hero-ink)]">
+    <FloatCard tone="tint" className="p-[18px]">
       <div className="flex items-center gap-2.5">
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--hero-lime)]/35 ring-1 ring-white/60">
-          <Sparkles className="size-4 text-[var(--hero-green)]" aria-hidden />
+        <span className={`${glassIcon} size-8 bg-lime/30`}>
+          <Sparkles className="size-3.5 text-primary-hover" aria-hidden />
         </span>
-        <p className="text-sm font-semibold text-[var(--hero-green)]">Opportunity for you</p>
+        <p className="text-[12.5px] font-semibold text-primary-hover">{label}</p>
       </div>
 
-      <p className="mt-3 text-[15px] font-medium leading-snug">
-        This could be a great fit for your skills.
-      </p>
-      <p className="mt-1.5 text-xs text-[var(--hero-ink-soft)]">
-        Based on company expansion and your profile.
-      </p>
+      <p className="mt-3 text-balance text-[15.5px] font-semibold leading-snug tracking-[-0.015em]">{title}</p>
+      <p className="mt-1 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">{reason}</p>
 
-      <button
-        type="button"
-        className="mt-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--hero-green)] transition-transform hover:translate-x-0.5"
-      >
-        Explore opportunity
-        <ArrowRight className="size-4" aria-hidden />
-      </button>
-    </article>
+      {/* Product-UI ter illustratie: bewust geen echte knop */}
+      <span className="mt-3.5 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3.5 text-[12.5px] font-semibold text-primary-foreground">
+        {cta}
+        <ArrowRight className="size-3.5" aria-hidden />
+      </span>
+    </FloatCard>
   );
 }

@@ -1,52 +1,28 @@
 import type { ReactNode } from 'react';
 
 interface FloatingProps {
-  /** Absolute-position utilities that place the card in the composition. */
+  /** Positie + breedte in de desktop-compositie (lg:/xl: utilities); op mobiel staat de kaart in de stapel. */
   className?: string;
-  /** Tailwind rotate utility, e.g. `-rotate-2` or `rotate-[1.5deg]`. */
-  rotate?: string;
-  /** Stagger, in seconds, for both the reveal and the idle float. */
+  /** Start van de entree en van het zweven, in seconden. */
   delay?: number;
-  /** Idle float duration in seconds (varying this keeps cards out of sync). */
+  /** Duur van één zweefbeweging; verschillende duren houden de kaarten uit de maat. */
   duration?: number;
-  /** Depth of the card in the stack. */
-  z?: string;
-  /** Drives the mount reveal — passed down from the hero. */
-  shown: boolean;
   children: ReactNode;
 }
 
 /**
- * Positions a card in the floating composition and layers three independent
- * transforms so they never fight each other:
- *   floatLayer  → keyframe bob (translateY)
- *   revealLayer → rotation + mount reveal (opacity/translateY)
- *   hoverLayer  → quick lift on hover
+ * Plaatst een hero-kaart en stapelt drie losse transforms zodat ze elkaar nooit
+ * bijten: entree (opkomen) → zweven (alleen desktop) → hover-lift.
  */
-export function Floating({
-  className = '',
-  rotate = '',
-  delay = 0,
-  duration = 6,
-  z = 'z-10',
-  shown,
-  children,
-}: FloatingProps) {
+export function Floating({ className = '', delay = 0, duration = 7, children }: FloatingProps) {
   return (
-    <div className={`absolute ${z} ${className}`}>
-      <div
-        className="hero-float"
-        style={{ animationDuration: `${duration}s`, animationDelay: `${delay}s` }}
-      >
+    <div className={`relative lg:pointer-events-auto lg:absolute ${className}`}>
+      <div className="motion-safe:animate-rise" style={{ animationDelay: `${delay}s` }}>
         <div
-          className={`${rotate} transition-[opacity,transform] duration-700 ease-out ${
-            shown ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-          }`}
-          style={{ transitionDelay: `${delay}s` }}
+          className="lg:motion-safe:animate-bob"
+          style={{ animationDuration: `${duration}s`, animationDelay: `${delay + 1}s` }}
         >
-          <div className="transition-transform duration-300 ease-out hover:-translate-y-1">
-            {children}
-          </div>
+          <div className="transition-transform duration-300 ease-soft hover:-translate-y-1">{children}</div>
         </div>
       </div>
     </div>

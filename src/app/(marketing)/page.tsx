@@ -1,19 +1,20 @@
 import { MarketingHeader } from '@/components/layout/MarketingHeader';
-import { Footer } from '@/components/layout/Footer';
+import { nav } from './_content/landing';
+import { Footer } from './_sections/footer/Footer';
 import { HeroSection } from './_sections/HeroSection';
 import { ProblemSection } from './_sections/ProblemSection';
-import { FeaturesSection } from './_sections/FeaturesSection';
-import { PricingSection } from './_sections/PricingSection';
+import { BeyondJobBoardsSection } from './_sections/BeyondJobBoardsSection';
+import { FinalCTASection } from './_sections/FinalCTASection';
 
 export default function LandingPage() {
   return (
     <>
-      <MarketingHeader />
+      <MarketingHeader nav={nav} />
       <main>
         <HeroSection />
         <ProblemSection />
-        <FeaturesSection />
-        <PricingSection />
+        <BeyondJobBoardsSection />
+        <FinalCTASection />
       </main>
       <Footer />
     </>

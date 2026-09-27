@@ -1,33 +1,28 @@
 import { Check } from 'lucide-react';
+import { FloatCard } from '../../_components/FloatCard';
+import { heroCards } from '../../_content/landing';
 
-const reasons = ['Your skills match', 'Relevant location', 'Growing team'];
-
-/** Card 4 — a compact match summary; deliberately not a progress dashboard. */
+/** Stap 3 — een snelle, compacte match-uitkomst; bewust geen dashboard-widget. */
 export function MatchCard() {
+  const { score, label, reasons } = heroCards.match;
+
   return (
-    <article className="hero-glass w-60 rounded-[20px] p-4 text-[var(--hero-ink)]">
+    <FloatCard className="p-3.5">
       <div className="flex items-baseline gap-2">
-        <span className="text-3xl font-bold tracking-tight text-[var(--hero-green)]">92%</span>
-        <span className="text-xs font-medium uppercase tracking-wide text-[var(--hero-ink-soft)]">
-          Match
-        </span>
+        <p className="text-[28px] font-extrabold leading-none tracking-[-0.03em] text-primary">{score}%</p>
+        <p className="text-[12.5px] font-semibold">{label}</p>
       </div>
 
-      <ul className="mt-3 space-y-1.5">
+      <ul className="mt-2.5 space-y-1">
         {reasons.map((reason) => (
-          <li key={reason} className="flex items-center gap-2 text-[13px]">
-            <span className="grid size-4 shrink-0 place-items-center rounded-full bg-[var(--hero-green)]/12 text-[var(--hero-green)]">
-              <Check className="size-3" aria-hidden />
+          <li key={reason} className="flex items-center gap-2 text-[12px] text-foreground/85">
+            <span className="grid size-3.5 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+              <Check className="size-2.5" strokeWidth={3} aria-hidden />
             </span>
             {reason}
           </li>
         ))}
       </ul>
-
-      <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-[var(--hero-green)]/10 px-2.5 py-1.5 text-[11px] font-semibold text-[var(--hero-green)]">
-        <span className="size-1.5 rounded-full bg-[var(--hero-green)]" aria-hidden />
-        High-potential opportunity
-      </div>
-    </article>
+    </FloatCard>
   );
 }

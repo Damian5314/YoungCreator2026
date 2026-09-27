@@ -1,47 +1,40 @@
-import { Hourglass, Layers, Store, Zap } from 'lucide-react';
+import { Container } from '@/components/layout/Container';
+import { revealItem } from '../_components/revealItem';
+import { story } from '../_content/landing';
+import { ProblemSignalCard } from './story/ProblemSignalCard';
+import { StoryAnnotation } from './story/StoryAnnotation';
+import { StoryBackground } from './story/StoryBackground';
+import { StoryContent } from './story/StoryContent';
 
-const painPoints = [
-  { icon: Layers, text: 'Hundreds of websites, all searched by hand' },
-  { icon: Store, text: 'Small companies only post vacancies on their own website' },
-  { icon: Zap, text: 'By the time you spot an opportunity, others are already on it' },
-  { icon: Hourglass, text: 'The clock is ticking. Every day counts.' },
+/* Desktop: de drie "gedachten" rechts van het gezicht, licht verspringend en een fractie gedraaid.
+   Tablet: een rij over de onderkant van de foto. Mobiel: een stapel die alleen de onderrand
+   van de foto overlapt, zodat het gezicht vrij blijft. */
+const cardPlacement = [
+  'lg:absolute lg:right-[6%] lg:top-[11%] lg:w-52 lg:-rotate-1 xl:w-60',
+  'lg:absolute lg:right-[3%] lg:top-[39%] lg:w-52 lg:rotate-1 xl:w-60',
+  'lg:absolute lg:right-[5%] lg:bottom-[9%] lg:w-60 lg:rotate-[-0.5deg] xl:w-[17rem]',
 ];
 
 // S: alleen verantwoordelijk voor het emotionele verhaal op de landingspagina
 export function ProblemSection() {
   return (
-    <section id="problem" className="scroll-mt-16 border-y border-border bg-card">
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-primary">The problem</p>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Twelve months. Then you have to go back.
-          </h2>
-          <p className="mt-6 text-lg text-muted-foreground">
-            After graduating, international students in the Netherlands get exactly one year to find a
-            job through the orientation year (zoekjaar). Not six months. Not two years. Twelve months.
-          </p>
-          <blockquote className="mt-8 border-l-4 border-primary pl-4 text-lg italic">
-            “I applied every single day. LinkedIn, Indeed, company websites — all separately. I missed
-            opportunities simply because I never saw them.”
-          </blockquote>
-        </div>
+    <section id="problem" aria-labelledby="story-title" className="scroll-mt-24 py-20 lg:py-28">
+      <Container>
+        <div className="story-frame relative isolate flex flex-col overflow-hidden rounded-panel bg-[#0c1316] text-white shadow-[0_30px_80px_-30px_rgb(16_24_32/0.45)] lg:block lg:rounded-block dark:ring-1 dark:ring-white/10">
+          <StoryContent />
 
-        <div className="flex flex-col justify-center gap-3">
-          {painPoints.map(({ icon: Icon, text }) => (
-            <div key={text} className="flex items-center gap-4 rounded-xl border border-border bg-background p-4">
-              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary-soft text-primary">
-                <Icon className="size-5" aria-hidden />
-              </span>
-              <p className="font-medium">{text}</p>
-            </div>
-          ))}
-          <p className="mt-4 text-muted-foreground">
-            We understand that pressure. That&apos;s why we built a tool that doesn&apos;t sleep,
-            doesn&apos;t forget and never skips a vacancy.
-          </p>
+          <StoryBackground>
+            <ul className="relative -mt-16 grid gap-2.5 px-4 pb-4 sm:absolute sm:inset-x-6 sm:bottom-6 sm:mt-0 sm:grid-cols-3 sm:p-0 lg:static lg:block">
+              {story.statements.map((statement, index) => (
+                <li key={statement.title} {...revealItem(300 + index * 130)} className={cardPlacement[index]}>
+                  <ProblemSignalCard title={statement.title} detail={statement.detail} emphasis={index === 2} />
+                </li>
+              ))}
+            </ul>
+            <StoryAnnotation />
+          </StoryBackground>
         </div>
-      </div>
+      </Container>
     </section>
   );
 }
