@@ -140,5 +140,14 @@ export const landing: typeof en = {
       annotation: ['Dezelfde stad.', 'Meer kansen.'],
     },
     tagline: 'Gemaakt in Nederland, voor internationale studenten.',
+    legal: {
+      label: 'Juridisch',
+      privacy: 'Privacy',
+      terms: 'Voorwaarden',
+      contact: 'Contact',
+    },
+    productOf: 'Unlisted is een product van',
+    kvk: 'KvK',
+    vat: 'Btw-id',
   },
 };

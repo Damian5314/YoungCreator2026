@@ -15,6 +15,7 @@ import { companies } from './companies';
 import { signals } from './signals';
 import { activity } from './activity';
 import { splash } from './splash';
+import { legal } from './legal';
 
 export const en = {
   common,
@@ -34,4 +35,5 @@ export const en = {
   signals,
   activity,
   splash,
+  legal,
 };

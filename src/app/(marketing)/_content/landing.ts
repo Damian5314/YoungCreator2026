@@ -9,6 +9,7 @@ import {
   UserPlus,
 } from 'lucide-react';
 import type { Dictionary } from '@/i18n/dictionaries';
+import { COMPANY, COMPANY_ADDRESS } from '@/shared/constants/company';
 
 /*
  * Alle niet-tekstuele config van de landingspagina (iconen, links, afbeeldingen, tonen),
@@ -174,7 +175,8 @@ export function buildLanding(t: Dictionary['landing']) {
     annotation: t.finalCta.annotation,
   };
 
-  // Alleen echte bestemmingen: geen placeholders of verzonnen URL's.
+  // Alleen echte bestemmingen: geen placeholders of verzonnen URL's. Ankers met `/` ervoor,
+  // zodat de footer ook op /privacy en /terms naar de juiste sectie van de homepage linkt.
   const { columns } = t.footer;
   const footer = {
     about: t.footer.about,
@@ -183,8 +185,8 @@ export function buildLanding(t: Dictionary['landing']) {
       {
         title: columns.product.title,
         links: [
-          { href: '#how-it-works', label: columns.product.links.howItWorks },
-          { href: '#home', label: columns.product.links.forStudents },
+          { href: '/#how-it-works', label: columns.product.links.howItWorks },
+          { href: '/#home', label: columns.product.links.forStudents },
         ],
       },
       {
@@ -205,6 +207,21 @@ export function buildLanding(t: Dictionary['landing']) {
     },
     copyright: '© 2026 Unlisted',
     tagline: t.footer.tagline,
+    legal: {
+      label: t.footer.legal.label,
+      links: [
+        { href: '/privacy', label: t.footer.legal.privacy },
+        { href: '/terms', label: t.footer.legal.terms },
+        { href: `mailto:${COMPANY.email}`, label: t.footer.legal.contact },
+      ],
+    },
+    // "Unlisted is a product of TechTable · KvK … · VAT ID … · adres"
+    company: {
+      productOf: t.footer.productOf,
+      name: COMPANY.legalName,
+      website: COMPANY.website,
+      details: [`${t.footer.kvk} ${COMPANY.kvk}`, `${t.footer.vat} ${COMPANY.vatId}`, COMPANY_ADDRESS],
+    },
   };
 
   return { media, storyVideo, nav, hero, heroCards, trust, story, signals, finalCta, footer };

@@ -142,5 +142,15 @@ export const landing = {
       annotation: ['Same city.', 'More opportunities.'] as [string, string],
     },
     tagline: 'Made in the Netherlands, for international students.',
+    legal: {
+      label: 'Legal',
+      privacy: 'Privacy',
+      terms: 'Terms',
+      contact: 'Contact',
+    },
+    // Gevolgd door de bedrijfsnaam, KvK, btw-id en adres (src/shared/constants/company.ts)
+    productOf: 'Unlisted is a product of',
+    kvk: 'KvK',
+    vat: 'VAT ID',
   },
 };

@@ -1090,9 +1090,9 @@ Visitor
 
 ## Legal
 
-- [ ] Privacy Policy
-- [ ] Terms of Service
-- [ ] Company information
+- [x] Privacy Policy
+- [x] Terms of Service
+- [x] Company information
 - [ ] Pricing disclosure
 - [ ] Refund/herroeping geregeld
 - [ ] Cookie compliance
