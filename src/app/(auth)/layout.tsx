@@ -4,12 +4,20 @@ import { ArrowLeft } from 'lucide-react';
 import { AuthMobileVisual, AuthVisual } from '@/components/auth/AuthVisual';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { Logo } from '@/components/layout/Logo';
+import { getT } from '@/i18n/server';
+
+const footerLink =
+  'rounded underline-offset-2 hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 /**
  * Login en registratie: foto + productverhaal links, formulier rechts op warm off-white.
  * Mobiel: logo → formulier → kleine foto-uitsnede, zodat het formulier voorrang heeft.
  */
-export default function AuthLayout({ children }: { children: ReactNode }) {
+export default async function AuthLayout({ children }: { children: ReactNode }) {
+  const dict = await getT();
+  const t = dict.authLayout;
+  const legal = dict.landing.footer.legal;
+
   return (
     <div className="relative isolate min-h-svh overflow-hidden bg-background lg:grid lg:grid-cols-[52fr_48fr] xl:grid-cols-[55fr_45fr]">
       <AuthVisual />
@@ -32,13 +40,13 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               className="group inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-[#173A31] transition-[color,transform] duration-200 hover:-translate-x-0.5 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
             >
               <ArrowLeft className="size-4" aria-hidden />
-              Back to home
+              {t.backToHome}
             </Link>
             <LanguageSwitcher />
           </div>
         </header>
 
-        <main className="flex flex-1 items-center justify-center py-8 lg:py-[clamp(8px,1.6svh,40px)]">
+        <main id="main" tabIndex={-1} className="flex flex-1 items-center justify-center py-8 outline-none lg:py-[clamp(8px,1.6svh,40px)]">
           <div className="w-full max-w-[500px] motion-safe:animate-rise [animation-delay:0.15s]">{children}</div>
         </main>
 
@@ -47,7 +55,19 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </div>
 
         <footer className="mt-6 text-center text-xs text-muted-foreground lg:mt-[clamp(8px,1.5svh,24px)]">
-          © 2026 Unlisted <span aria-hidden>·</span> Made in the Netherlands.
+          {t.footer.copyright} <span aria-hidden>·</span> {t.footer.madeIn}{' '}
+          <span aria-hidden>·</span>{' '}
+          <Link href="/privacy" className={footerLink}>
+            {legal.privacy}
+          </Link>{' '}
+          <span aria-hidden>·</span>{' '}
+          <Link href="/terms" className={footerLink}>
+            {legal.terms}
+          </Link>{' '}
+          <span aria-hidden>·</span>{' '}
+          <Link href="/contact" className={footerLink}>
+            {legal.contact}
+          </Link>
         </footer>
       </div>
     </div>

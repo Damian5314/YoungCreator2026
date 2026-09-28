@@ -3,7 +3,8 @@ import { Coins, PlayCircle } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { AgentSettingsCard } from '@/components/settings/AgentSettingsCard';
 import { SettingsPanel } from '@/components/settings/SettingsPanel';
-import { Button, ButtonLink } from '@/components/ui/Button';
+import { ButtonLink } from '@/components/ui/Button';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { getT } from '@/i18n/server';
 import { replayIntro } from '@/lib/actions/onboarding';
@@ -40,10 +41,9 @@ export default async function SettingsPage() {
       <Card>
         <CardHeader title={t.settings.intro.title} description={t.settings.intro.description} />
         <form action={replayIntro} className="flex justify-end">
-          <Button type="submit" variant="secondary" size="sm">
-            <PlayCircle className="size-4" aria-hidden />
+          <SubmitButton variant="secondary" size="sm" icon={<PlayCircle className="size-4" aria-hidden />}>
             {t.settings.intro.button}
-          </Button>
+          </SubmitButton>
         </form>
       </Card>
       {/* Laatste: eindigt met uitloggen */}

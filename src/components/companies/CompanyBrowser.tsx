@@ -60,6 +60,13 @@ export function CompanyBrowser({ companies, initialQuery }: { companies: Company
     .filter((company) => !industry || company.industry === industry);
   const visible = searched.filter((company) => passes(filter, company, relations[company.id]));
   const localFilter = filter === 'saved' || filter === 'following';
+  const filtered = words.length > 0 || industry !== '' || filter !== 'forYou';
+
+  function clearFilters() {
+    setQuery('');
+    setIndustry('');
+    setFilter('forYou');
+  }
 
   return (
     <section>
@@ -121,7 +128,18 @@ export function CompanyBrowser({ companies, initialQuery }: { companies: Company
           ))}
         </div>
       ) : (
-        <Card className="mt-5 text-center text-sm text-muted-foreground">{c.noMatches}</Card>
+        <Card className="mt-5 text-center text-sm text-muted-foreground">
+          {c.noMatches}{' '}
+          {filtered && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              {c.clearFilters}
+            </button>
+          )}
+        </Card>
       )}
     </section>
   );

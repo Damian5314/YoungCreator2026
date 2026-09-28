@@ -171,7 +171,11 @@ export function OpportunityBrowser({ opportunities, initialQuery, companyIndex }
           <Card className="text-center text-sm text-muted-foreground">
             {o.noMatches}{' '}
             {filtered && (
-              <button type="button" onClick={clearFilters} className="font-medium text-primary hover:underline">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="rounded font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
                 {o.clearFilters}
               </button>
             )}

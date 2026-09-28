@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <div className="app-theme min-h-screen">
       <AppHeader name={profile?.fullName || user?.email || ''} email={user?.email ?? ''} credits={credits} />
       {/* Mobiel: extra ruimte onderin voor de vaste tabbalk uit AppHeader */}
-      <main className="mx-auto w-full max-w-[1500px] px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 sm:px-8 sm:pb-14 sm:pt-10 xl:px-12">
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-[1500px] outline-none px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-8 sm:px-8 sm:pb-14 sm:pt-10 xl:px-12">
         {children}
       </main>
       {/* Eerste keer ingelogd: korte uitleg over hoe de agent werkt */}

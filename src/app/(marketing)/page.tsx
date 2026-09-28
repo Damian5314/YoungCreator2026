@@ -18,7 +18,7 @@ export default async function LandingPage() {
   return (
     <SplashGate show={showSplash}>
       <MarketingHeader nav={nav} />
-      <main>
+      <main id="main" tabIndex={-1} className="outline-none">
         <HeroSection />
         <ProblemSection />
         <BeyondJobBoardsSection />

@@ -24,6 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // Taal uit de cookie (standaard Engels); bepaalt <html lang> en alle teksten
   const locale = await getLocale();
+  const t = await getT();
 
   return (
     <html
@@ -33,6 +34,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
+        {/* Eerste tabstop: sla header en navigatie over (elke layout heeft <main id="main">) */}
+        <a
+          href="#main"
+          className="sr-only rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-float focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          {t.common.nav.skipToContent}
+        </a>
         <I18nProvider locale={locale}>
           <Providers>{children}</Providers>
         </I18nProvider>

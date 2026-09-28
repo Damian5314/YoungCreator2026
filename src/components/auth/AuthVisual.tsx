@@ -3,40 +3,46 @@
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/layout/Logo';
+import { useT } from '@/i18n/I18nProvider';
 import { AuthSignalCard } from './AuthSignalCard';
 
 // Login en registratie delen de layout, maar elk heeft een eigen foto. De signaallijn staat in
 // foto-pixels (1672×941), knooppunt en notitie in % van de foto: net rechts van het hoofd en boven het water.
+// Teksten (alt, notitie, signaal) komen uit de authLayout-dictionary.
 const scenes = {
   login: {
     photo: {
       src: '/images/auth/login-student-canal.png',
-      alt: 'International student with a laptop beside an Amsterdam canal at golden hour',
     },
     signalLine: 'M455 409C527 348 518 268 343 221',
     node: 'left-[27.2%] top-[43.5%]',
     annotation: {
-      lines: ['Your next opportunity', 'could be closer than you think.'],
       position: 'left-[28%] top-[63.5%]',
     },
   },
   register: {
     photo: {
       src: '/images/auth/register-student-canal.png',
-      alt: 'International student with a laptop beside an Amsterdam canal at golden hour',
     },
     // Het haar van de studente loopt verder naar rechts door, dus lijn en notitie schuiven iets op
     signalLine: 'M510 395C568 329 535 259 351 221',
     node: 'left-[30.5%] top-[42%]',
     annotation: {
-      lines: ['Your opportunities', 'are already out there.'],
       position: 'left-[31.5%] top-[62%]',
     },
   },
 };
 
 function useAuthScene() {
-  return usePathname() === '/register' ? scenes.register : scenes.login;
+  const t = useT().authLayout;
+  const key = usePathname() === '/register' ? 'register' : 'login';
+  const scene = scenes[key];
+  return {
+    ...scene,
+    photo: { ...scene.photo, alt: t.photoAlt },
+    annotation: { ...scene.annotation, lines: t.annotations[key] },
+    mobileSignal: t.mobileSignal,
+  };
 }
 
 // Een laag met exact de verhouding van de foto: alles erop staat in % van de foto,
@@ -127,7 +133,7 @@ export function AuthVisual() {
 
 /** Mobiel/tablet: een kleine uitsnede van dezelfde foto onder het formulier, met het signaal als label. */
 export function AuthMobileVisual() {
-  const { photo } = useAuthScene();
+  const { photo, mobileSignal } = useAuthScene();
 
   return (
     <div className="relative h-[260px] overflow-hidden rounded-[22px] shadow-soft motion-safe:animate-fade sm:h-[300px] lg:hidden">
@@ -141,7 +147,7 @@ export function AuthMobileVisual() {
       <p className="absolute bottom-3 left-3 right-3 flex items-center gap-2 rounded-full border border-white/75 bg-white/80 px-3 py-2 text-[12px] font-medium shadow-float backdrop-blur-[20px] sm:right-auto">
         <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden />
         <span className="truncate">
-          <span className="font-semibold text-primary-hover">Company signal:</span> ASML opens new R&amp;D center
+          <span className="font-semibold text-primary-hover">{mobileSignal.label}</span> {mobileSignal.text}
         </span>
       </p>
     </div>

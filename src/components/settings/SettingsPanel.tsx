@@ -4,6 +4,7 @@ import { useEffect, useRef, type FormEvent } from 'react';
 import { LogOut } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { SubmitButton } from '@/components/ui/SubmitButton';
 import { Field, Input } from '@/components/ui/Field';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { useT } from '@/i18n/I18nProvider';
@@ -76,10 +77,9 @@ export function SettingsPanel({ email, fullName }: SettingsPanelProps) {
       <Card>
         <CardHeader title={s.session.title} description={s.session.loggedInAs(fullName || email)} />
         <form action={logout} className="flex justify-end">
-          <Button type="submit" variant="secondary" size="sm">
-            <LogOut className="size-4" aria-hidden />
+          <SubmitButton variant="secondary" size="sm" icon={<LogOut className="size-4" aria-hidden />}>
             {s.session.logout}
-          </Button>
+          </SubmitButton>
         </form>
       </Card>
     </div>

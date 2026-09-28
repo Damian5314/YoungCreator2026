@@ -144,6 +144,7 @@ export const landing: typeof en = {
       label: 'Juridisch',
       privacy: 'Privacy',
       terms: 'Voorwaarden',
+      faq: 'FAQ',
       contact: 'Contact',
     },
     productOf: 'Unlisted is een product van',

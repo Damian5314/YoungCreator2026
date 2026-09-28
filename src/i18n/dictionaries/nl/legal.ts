@@ -64,7 +64,7 @@ const privacy: LegalDocument = {
       id: 'outreach',
       heading: '5. E-mails aan bedrijven',
       body: [
-        'Als je via Unlisted een e-mail naar een bedrijf stuurt, verwerken we het adres van de ontvanger, de inhoud van de e-mail en de verzendstatus. E-mails worden pas verstuurd als jij daarvoor kiest. Je bent zelf verantwoordelijk voor de inhoud van de e-mails die je verstuurt.',
+        'Als je via Unlisted een e-mail naar een bedrijf stuurt, verwerken we het adres van de ontvanger, de inhoud van de e-mail en de verzendstatus. E-mails worden pas verstuurd als je ze zelf verstuurt of goedkeurt, of als je automatisch versturen voor je agent uitdrukkelijk hebt aangezet, binnen het daglimiet dat je instelt. Je bent zelf verantwoordelijk voor de inhoud van de e-mails die je verstuurt.',
         'Om bedrijven en openbare zakelijke contactgegevens te vinden, gebruiken we openbaar beschikbare bronnen op het web. Die gegevens gebruiken we alleen voor jouw zoekopdracht.',
       ],
     },
@@ -213,7 +213,7 @@ const terms: LegalDocument = {
       id: 'outreach',
       heading: '7. Outreach-e-mails',
       body: [
-        'Jij bepaalt welke e-mails worden verstuurd en je bent verantwoordelijk voor de inhoud, ook als Unlisted een concept voor je heeft geschreven. Lees elk concept voordat je het verstuurt. We kunnen het aantal e-mails dat je verstuurt beperken, en e-mails die in strijd zijn met deze voorwaarden weigeren of stoppen.',
+        'Jij bepaalt welke e-mails worden verstuurd: je verstuurt of keurt ze zelf goed, of je geeft je agent uitdrukkelijk toestemming om ze automatisch te versturen binnen een daglimiet dat je instelt. Je bent verantwoordelijk voor de inhoud, ook als Unlisted die voor je heeft geschreven. Lees je concepten voordat je ze verstuurt, en zet automatisch versturen alleen aan als je het goed vindt dat er e-mails op jouw naam uitgaan. We kunnen het aantal e-mails dat je verstuurt beperken, en e-mails die in strijd zijn met deze voorwaarden weigeren of stoppen.',
       ],
     },
     {
@@ -284,8 +284,6 @@ export const legal = {
     lastUpdated: 'Laatst bijgewerkt',
     onThisPage: 'Op deze pagina',
     backHome: 'Terug naar home',
-    questions: 'Vragen?',
-    questionsBody: `Mail ons via ${COMPANY.email} of bel ${COMPANY.phone}.`,
     companyDetails: 'Bedrijfsgegevens',
   },
   privacy,

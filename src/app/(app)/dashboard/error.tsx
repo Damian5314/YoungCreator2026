@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useT } from '@/i18n/I18nProvider';
 
 // Dashboard kon niet laden: rustige melding (geen rode pagina) met opnieuw proberen
-export default function DashboardError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function DashboardError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   const t = useT();
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function DashboardError({ error, reset }: { error: Error & { dige
       title={t.common.states.errorTitle}
       description={t.dashboard.home.errorBody}
       action={
-        <Button size="sm" onClick={reset}>
+        <Button size="sm" onClick={retry}>
           {t.dashboard.home.retry}
           <ArrowRight className="size-4" aria-hidden />
         </Button>

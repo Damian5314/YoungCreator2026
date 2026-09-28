@@ -2,15 +2,16 @@
 
 import { useId } from 'react';
 import Link from 'next/link';
-import { ChevronDown, Coins, LogOut, Settings, UserRound } from 'lucide-react';
+import { ChevronDown, Coins, LifeBuoy, LogOut, Settings, UserRound } from 'lucide-react';
 import { useT } from '@/i18n/I18nProvider';
 import { logout } from '@/lib/actions/auth';
+import { SubmitButton } from '../ui/SubmitButton';
 import { usePopover } from './usePopover';
 
 const item =
   'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium text-foreground transition-colors hover:bg-[#F5F6F4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
-// Avatar met accountmenu: profiel & zoekvoorkeuren, Settings, credits en uitloggen
+// Avatar met accountmenu: profiel & zoekvoorkeuren, Settings, credits, help en uitloggen
 export function AvatarMenu({ name, email }: { name: string; email: string }) {
   const t = useT();
   const s = t.common.shell;
@@ -63,11 +64,14 @@ export function AvatarMenu({ name, email }: { name: string; email: string }) {
               <Coins className="size-4 text-muted-foreground" aria-hidden />
               {s.billing}
             </Link>
+            <Link href="/faq" onClick={close} className={item}>
+              <LifeBuoy className="size-4 text-muted-foreground" aria-hidden />
+              {s.help}
+            </Link>
             <form action={logout} className="mt-1 border-t border-border pt-1">
-              <button type="submit" className={item}>
-                <LogOut className="size-4 text-muted-foreground" aria-hidden />
+              <SubmitButton unstyled icon={<LogOut className="size-4 text-muted-foreground" aria-hidden />} className={`${item} disabled:opacity-60`}>
                 {s.logout}
-              </button>
+              </SubmitButton>
             </form>
           </div>
         </div>

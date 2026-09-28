@@ -44,7 +44,11 @@ export async function UniversityLogoRow() {
   const { trust } = buildLanding((await getT()).landing);
 
   return (
-    <ul className="relative -mx-5 mt-3 flex items-center gap-x-7 overflow-x-auto whitespace-nowrap px-5 pb-1 pr-12 text-[#2B3440]/80 [mask-image:linear-gradient(to_right,#000_80%,transparent)] [scrollbar-width:none] sm:-mx-7 sm:px-7 lg:mx-0 lg:gap-x-7 lg:overflow-visible lg:px-0 lg:pb-0 lg:[mask-image:none] xl:mt-0 xl:max-w-[720px] xl:flex-1 xl:justify-between xl:gap-x-6 [&::-webkit-scrollbar]:hidden">
+    // tabIndex: op mobiel scrollt de rij, dus toetsenbordgebruikers moeten hem kunnen focussen en met de pijltjes scrollen
+    <ul
+      tabIndex={0}
+      aria-label={trust.label}
+      className="relative -mx-5 mt-3 flex items-center gap-x-7 overflow-x-auto rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary whitespace-nowrap px-5 pb-1 pr-12 text-[#2B3440]/80 [mask-image:linear-gradient(to_right,#000_80%,transparent)] [scrollbar-width:none] sm:-mx-7 sm:px-7 lg:mx-0 lg:gap-x-7 lg:overflow-visible lg:px-0 lg:pb-0 lg:[mask-image:none] xl:mt-0 xl:max-w-[720px] xl:flex-1 xl:justify-between xl:gap-x-6 [&::-webkit-scrollbar]:hidden">
       {trust.universities.map((university, index) => (
         <li key={university.name} {...revealItem(140 + index * 70, 10)} className="shrink-0">
           <UniversityLogo {...university} />

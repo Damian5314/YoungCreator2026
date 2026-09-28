@@ -146,6 +146,7 @@ export const landing = {
       label: 'Legal',
       privacy: 'Privacy',
       terms: 'Terms',
+      faq: 'FAQ',
       contact: 'Contact',
     },
     // Gevolgd door de bedrijfsnaam, KvK, btw-id en adres (src/shared/constants/company.ts)

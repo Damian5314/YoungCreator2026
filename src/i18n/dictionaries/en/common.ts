@@ -11,6 +11,7 @@ export const common = {
   },
   nav: {
     main: 'Main',
+    skipToContent: 'Skip to content',
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     dashboard: 'Dashboard',
@@ -28,6 +29,13 @@ export const common = {
     notFoundTitle: 'We couldn’t find that',
     notFoundBody: 'It may have been removed, or the link is incomplete.',
     toDashboard: 'Go to dashboard',
+    // Publieke pagina's (404 en fouten buiten de app)
+    notFoundPageTitle: 'This page doesn’t exist',
+    notFoundPageBody: 'The link may be outdated, or the address has a typo. Try the homepage, or ask us for help.',
+    pageErrorBody: 'Something broke on our side while loading this page. Try again in a moment. If it keeps happening, let us know.',
+    toHome: 'Go to homepage',
+    contactSupport: 'Contact support',
+    errorCode: (code: string) => `Error code: ${code}`,
   },
   // Bovenbalk: zoeken, meldingen en het accountmenu
   shell: {
@@ -42,6 +50,7 @@ export const common = {
     profile: 'Profile & search preferences',
     unread: 'New activity',
     billing: 'Credits & billing',
+    help: 'Help & support',
     logout: 'Log out',
   },
   credits: {

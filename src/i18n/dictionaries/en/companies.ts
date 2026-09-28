@@ -88,6 +88,7 @@ export const companies = {
     cta: 'Go to search',
   },
   noMatches: 'No companies match these filters.',
+  clearFilters: 'Clear filters',
   toWatch: {
     title: 'Companies to watch',
     description: 'Where your best matches and signals are.',

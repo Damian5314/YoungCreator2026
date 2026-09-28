@@ -25,6 +25,18 @@ export const auth: typeof en = {
     loginLink: 'Inloggen',
     registerLink: 'Maak een account aan',
     tagline: 'Echte kansen. Niet alleen vacatures.',
+    pending: 'Even geduld…',
+    demoTitle: 'Demo-account',
+    useDemo: 'Demo gebruiken',
+    noSubscription: 'Geen abonnement',
+    payPerUse: 'Betaal alleen voor wat je gebruikt',
+    consent: {
+      before: 'Door een account aan te maken ga je akkoord met onze',
+      terms: 'algemene voorwaarden',
+      middle: 'en erken je ons',
+      privacy: 'privacybeleid',
+      after: '.',
+    },
   },
   layout: {
     backToHome: 'Terug naar home',

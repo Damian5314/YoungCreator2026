@@ -18,7 +18,8 @@ export async function OpportunityCard() {
       </div>
 
       <p className="mt-3 text-balance text-[15.5px] font-semibold leading-snug tracking-[-0.015em]">{title}</p>
-      <p className="mt-1 text-pretty text-[12.5px] leading-relaxed text-muted-foreground">{reason}</p>
+      {/* Op de lichtgroene kaart haalt muted-foreground net geen 4.5:1; iets donkerder */}
+      <p className="mt-1 text-pretty text-[12.5px] leading-relaxed text-foreground/72">{reason}</p>
 
       {/* Product-UI ter illustratie: bewust geen echte knop */}
       <span className="mt-3.5 inline-flex h-8 items-center gap-1.5 rounded-full bg-primary px-3.5 text-[12.5px] font-semibold text-primary-foreground">

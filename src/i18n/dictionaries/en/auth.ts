@@ -24,6 +24,19 @@ export const auth = {
     loginLink: 'Log in',
     registerLink: 'Create an account',
     tagline: 'Real opportunities. Not just job listings.',
+    pending: 'Please wait…',
+    demoTitle: 'Demo account',
+    useDemo: 'Use demo',
+    noSubscription: 'No subscription',
+    payPerUse: 'Pay only for what you use',
+    // "By creating an account, you agree to our {terms} and acknowledge our {privacy}."
+    consent: {
+      before: 'By creating an account, you agree to our',
+      terms: 'Terms of Service',
+      middle: 'and acknowledge our',
+      privacy: 'Privacy Policy',
+      after: '.',
+    },
   },
   // Nog niet gekoppeld: voor de auth-layout, AuthVisual en AuthSignalCard (vertaalt de lead)
   layout: {

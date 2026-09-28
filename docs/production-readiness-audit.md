@@ -1150,13 +1150,13 @@ Visitor
 
 ## UX
 
-- [ ] Mobile
-- [ ] Accessibility
-- [ ] Loading states
-- [ ] Error states
-- [ ] Empty states
-- [ ] Support
-- [ ] FAQ
+- [x] Mobile
+- [x] Accessibility
+- [x] Loading states
+- [x] Error states
+- [x] Empty states
+- [x] Support
+- [x] FAQ
 
 ---
 

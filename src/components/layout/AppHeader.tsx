@@ -107,7 +107,7 @@ export function AppHeader({ name, email, credits }: AppHeaderProps) {
               href="/billing"
               title={t.common.credits.buyMore(credits)}
               aria-current={isActive('/billing') ? 'page' : undefined}
-              className="flex h-9 items-center gap-1.5 rounded-full border border-selected-border bg-selected px-3 text-xs font-semibold text-selected-foreground transition-colors hover:border-primary/40 sm:h-10 sm:text-sm"
+              className="flex h-9 items-center gap-1.5 rounded-full border border-selected-border bg-selected px-3 text-xs font-semibold text-selected-foreground transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:h-10 sm:text-sm"
             >
               <Coins className="size-4 text-primary" aria-hidden />
               <span className="tabular-nums">{credits}</span>
@@ -129,7 +129,7 @@ export function AppHeader({ name, email, credits }: AppHeaderProps) {
               <Link
                 href={href}
                 aria-current={isActive(href) ? 'page' : undefined}
-                className={`flex h-16 flex-col items-center justify-center gap-1 px-0.5 text-[10px] font-medium tracking-[-0.01em] transition-colors min-[380px]:text-[10.5px] min-[380px]:tracking-normal ${
+                className={`flex h-16 flex-col items-center justify-center gap-1 px-0.5 text-[10px] font-medium focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-primary tracking-[-0.01em] transition-colors min-[380px]:text-[10.5px] min-[380px]:tracking-normal ${
                   isActive(href) ? 'text-foreground' : 'text-[#52615C] hover:text-foreground'
                 }`}
               >

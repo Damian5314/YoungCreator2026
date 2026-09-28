@@ -212,7 +212,8 @@ export function buildLanding(t: Dictionary['landing']) {
       links: [
         { href: '/privacy', label: t.footer.legal.privacy },
         { href: '/terms', label: t.footer.legal.terms },
-        { href: `mailto:${COMPANY.email}`, label: t.footer.legal.contact },
+        { href: '/faq', label: t.footer.legal.faq },
+        { href: '/contact', label: t.footer.legal.contact },
       ],
     },
     // "Unlisted is a product of TechTable · KvK … · VAT ID … · adres"

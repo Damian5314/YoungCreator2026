@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { useT } from '@/i18n/I18nProvider';
 
 // Als een pagina in de app faalt: uitleg en twee uitwegen, binnen de app-shell
-export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function AppError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   const t = useT();
   const s = t.common.states;
 
@@ -22,7 +22,7 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
       description={s.errorBody}
       action={
         <div className="flex flex-wrap justify-center gap-2">
-          <Button size="sm" onClick={reset}>
+          <Button size="sm" onClick={retry}>
             <RotateCcw className="size-4" aria-hidden />
             {t.common.actions.retry}
           </Button>

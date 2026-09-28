@@ -16,6 +16,7 @@ import { signals } from './signals';
 import { activity } from './activity';
 import { splash } from './splash';
 import { legal } from './legal';
+import { support } from './support';
 
 export const nl = {
   common,
@@ -36,4 +37,5 @@ export const nl = {
   activity,
   splash,
   legal,
+  support,
 };

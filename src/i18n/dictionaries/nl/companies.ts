@@ -88,6 +88,7 @@ export const companies: typeof en = {
     cta: 'Naar zoeken',
   },
   noMatches: 'Geen bedrijven die bij deze filters passen.',
+  clearFilters: 'Filters wissen',
   toWatch: {
     title: 'Bedrijven om te volgen',
     description: 'Waar je beste matches en signalen zitten.',

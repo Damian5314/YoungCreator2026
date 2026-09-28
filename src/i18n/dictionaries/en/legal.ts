@@ -85,7 +85,7 @@ const privacy: LegalDocument = {
       id: 'outreach',
       heading: '5. Emails to companies',
       body: [
-        'If you choose to send an email to a company through Unlisted, we process the recipient address, the content of the email and its delivery status. Emails are only sent after you choose to send them. You are responsible for the content of the emails you send.',
+        'If you choose to send an email to a company through Unlisted, we process the recipient address, the content of the email and its delivery status. Emails are only sent after you send or approve them yourself, or when you have explicitly turned on automatic sending for your agent, within the daily limit you set. You are responsible for the content of the emails you send.',
         'To find companies and public business contact details, we use publicly available sources on the web. We do not use these details for any other purpose than your search.',
       ],
     },
@@ -234,7 +234,7 @@ const terms: LegalDocument = {
       id: 'outreach',
       heading: '7. Outreach emails',
       body: [
-        'You decide which emails are sent and you are responsible for their content, even when Unlisted wrote a draft for you. Read every draft before you send it. We may limit the number of emails you send, and we may refuse or stop sending emails that violate these terms.',
+        'You decide which emails are sent: you send or approve them yourself, or you explicitly allow your agent to send them automatically within a daily limit you set. You are responsible for their content, even when Unlisted wrote it for you. Read your drafts before you send them, and only turn on automatic sending if you are comfortable with emails going out in your name. We may limit the number of emails you send, and we may refuse or stop sending emails that violate these terms.',
       ],
     },
     {
@@ -305,8 +305,6 @@ export const legal = {
     lastUpdated: 'Last updated',
     onThisPage: 'On this page',
     backHome: 'Back to home',
-    questions: 'Questions?',
-    questionsBody: `Email us at ${COMPANY.email} or call ${COMPANY.phone}.`,
     companyDetails: 'Company details',
   },
   privacy,

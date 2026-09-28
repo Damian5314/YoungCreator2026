@@ -11,6 +11,7 @@ export const common: typeof en = {
   },
   nav: {
     main: 'Hoofdmenu',
+    skipToContent: 'Direct naar de inhoud',
     openMenu: 'Menu openen',
     closeMenu: 'Menu sluiten',
     dashboard: 'Dashboard',
@@ -27,6 +28,12 @@ export const common: typeof en = {
     notFoundTitle: 'Dat konden we niet vinden',
     notFoundBody: 'Misschien is het verwijderd, of is de link niet compleet.',
     toDashboard: 'Naar dashboard',
+    notFoundPageTitle: 'Deze pagina bestaat niet',
+    notFoundPageBody: 'De link is misschien verouderd, of er zit een typefout in het adres. Probeer de homepage, of vraag ons om hulp.',
+    pageErrorBody: 'Er ging aan onze kant iets mis bij het laden van deze pagina. Probeer het zo opnieuw. Blijft het gebeuren, laat het ons dan weten.',
+    toHome: 'Naar de homepage',
+    contactSupport: 'Contact opnemen',
+    errorCode: (code: string) => `Foutcode: ${code}`,
   },
   shell: {
     searchLabel: 'Zoek bedrijven en kansen',
@@ -40,6 +47,7 @@ export const common: typeof en = {
     profile: 'Profiel & zoekvoorkeuren',
     unread: 'Nieuwe activiteit',
     billing: 'Credits & betalen',
+    help: 'Help & support',
     logout: 'Uitloggen',
   },
   credits: {
