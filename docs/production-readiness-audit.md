@@ -1148,6 +1148,13 @@ Visitor
 - [ ] Restore tested
 - [ ] Incident procedure
 
+## Infrastructuur (TechTable)
+
+- [ ] Apify-account op naam van TechTable aanmaken en de API-token in de n8n-zoekworkflow zetten
+- [ ] Supabase-database (productieproject) op naam van TechTable aanmaken, migraties uit `supabase/migrations` draaien en de keys in de productie-env zetten
+- [ ] n8n-workflows (`n8n/*.json`) importeren op de VPS, credentials instellen en `N8N_SEARCH_WEBHOOK_URL` / `N8N_SEND_EMAIL_WEBHOOK_URL` naar de VPS laten wijzen
+- [ ] Domein unlisted.nl kopen op naam van TechTable, koppelen aan Vercel en `APP_URL` bijwerken
+
 ## UX
 
 - [x] Mobile
