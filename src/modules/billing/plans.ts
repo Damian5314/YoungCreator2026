@@ -5,6 +5,14 @@ import { defaultLocale, type Locale } from '@/i18n/config';
 
 export const CURRENCY = 'EUR';
 
+// Prijzen zijn inclusief btw. Digitale diensten aan consumenten in NL: 21%.
+export const VAT_RATE_PERCENT = 21;
+
+// Btw-deel van een bedrag inclusief btw, afgerond op hele centen
+export function vatPart(grossCents: number): number {
+  return grossCents - Math.round((grossCents * 100) / (100 + VAT_RATE_PERCENT));
+}
+
 // De eerste zoekopdracht is gratis: nieuwe accounts krijgen 1 credit (zie de billing-migratie)
 export const FREE_WELCOME_CREDITS = 1;
 

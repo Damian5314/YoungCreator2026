@@ -18,7 +18,15 @@ export async function startCheckout(userId: string, packId: string, origin: stri
   const admin = createAdminClient();
   const { data: payment, error } = await admin
     .from('payments')
-    .insert({ user_id: userId, pack_id: pack.id, credits: pack.credits, amount_cents: pack.amountCents, currency: CURRENCY })
+    .insert({
+      user_id: userId,
+      pack_id: pack.id,
+      credits: pack.credits,
+      amount_cents: pack.amountCents,
+      currency: CURRENCY,
+      // De koper vinkte vóór de checkout aan: directe levering, herroepingsrecht vervalt daarna
+      withdrawal_waiver_at: new Date().toISOString(),
+    })
     .select('id')
     .single();
   if (error) throw error;
@@ -85,6 +93,17 @@ export async function syncMolliePayment(molliePaymentId: string): Promise<Paymen
   });
   if (applyError) throw applyError;
   if (credited) console.info(`[billing] payment ${row.id} paid; credits added`);
+
+  // Terugbetaald of teruggeboekt (Mollie roept dezelfde webhook aan): credits van dit pakket één keer intrekken
+  if (mollie.refundedCents > 0 || mollie.chargedBackCents > 0) {
+    const { data: reversed, error: reversalError } = await admin.rpc('apply_payment_reversal', {
+      p_payment_id: row.id,
+      p_refunded_cents: mollie.refundedCents,
+      p_charged_back_cents: mollie.chargedBackCents,
+    });
+    if (reversalError) throw reversalError;
+    if (reversed) console.warn(`[billing] payment ${row.id} refunded/charged back; credits revoked`);
+  }
 
   return { paymentId: row.id, status: mollie.status, credited: Boolean(credited) };
 }

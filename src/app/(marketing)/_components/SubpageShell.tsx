@@ -18,7 +18,7 @@ export async function SubpageShell({ children }: { children: ReactNode }) {
   const subpageNav = {
     ...nav,
     home: '/',
-    links: nav.links.map((link) => ({ ...link, href: `/${link.href}` })),
+    links: nav.links.map((link) => ({ ...link, href: link.href.startsWith('#') ? `/${link.href}` : link.href })),
   };
 
   return (

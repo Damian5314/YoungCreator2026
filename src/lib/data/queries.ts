@@ -177,6 +177,7 @@ export interface PaymentData {
   mode: 'test' | 'live' | null;
   createdAt: string;
   paidAt: string | null;
+  refundedCents: number; // (deels) terugbetaald of teruggeboekt
 }
 
 // Aankopen van creditpakketten (Mollie), nieuwste eerst. Zonder de billing-migratie: lege lijst.
@@ -187,7 +188,7 @@ export const getPayments = cache(async (): Promise<PaymentData[]> => {
   const supabase = await createClient();
   const { data } = await supabase
     .from('payments')
-    .select('id, pack_id, credits, amount_cents, currency, status, mode, created_at, paid_at')
+    .select('id, pack_id, credits, amount_cents, currency, status, mode, created_at, paid_at, refunded_cents, charged_back_cents')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(20);
@@ -201,8 +202,36 @@ export const getPayments = cache(async (): Promise<PaymentData[]> => {
     mode: row.mode,
     createdAt: row.created_at,
     paidAt: row.paid_at,
+    refundedCents: (row.refunded_cents ?? 0) + (row.charged_back_cents ?? 0),
   }));
 });
+
+// Eén betaling van de ingelogde gebruiker, voor het betaalbewijs (RLS: alleen je eigen betalingen)
+export async function getPayment(paymentId: string): Promise<PaymentData | null> {
+  const payments = await getPayments();
+  const recent = payments.find((payment) => payment.id === paymentId);
+  if (recent) return recent;
+
+  const supabase = await createClient();
+  const { data: row } = await supabase
+    .from('payments')
+    .select('id, pack_id, credits, amount_cents, currency, status, mode, created_at, paid_at, refunded_cents, charged_back_cents')
+    .eq('id', paymentId)
+    .maybeSingle();
+  if (!row) return null;
+  return {
+    id: row.id,
+    packId: row.pack_id,
+    credits: row.credits,
+    amountCents: row.amount_cents,
+    currency: row.currency,
+    status: row.status,
+    mode: row.mode,
+    createdAt: row.created_at,
+    paidAt: row.paid_at,
+    refundedCents: (row.refunded_cents ?? 0) + (row.charged_back_cents ?? 0),
+  };
+}
 
 export interface BillingStatus {
   credits: number;

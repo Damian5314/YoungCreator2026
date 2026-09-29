@@ -84,6 +84,7 @@ export function buildLanding(t: Dictionary['landing']) {
       { href: '#how-it-works', label: t.nav.links.howItWorks },
       // Geen aparte studentensectie: de hero is de pagina voor internationale studenten
       { href: '#home', label: t.nav.links.forStudents },
+      { href: '/pricing', label: t.nav.links.pricing },
     ],
     signIn: { href: '/login', label: t.nav.signIn },
     cta: { href: '/register', label: t.nav.cta },
@@ -187,6 +188,7 @@ export function buildLanding(t: Dictionary['landing']) {
         links: [
           { href: '/#how-it-works', label: columns.product.links.howItWorks },
           { href: '/#home', label: columns.product.links.forStudents },
+          { href: '/pricing', label: columns.product.links.pricing },
         ],
       },
       {

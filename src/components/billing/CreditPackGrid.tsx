@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Check, LoaderCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -19,16 +20,36 @@ export function CreditPackGrid({ paymentsEnabled }: { paymentsEnabled: boolean }
   const included = [g.included.searches, g.included.automations, g.included.noExpiry];
   const { state, pending, submit } = useFormAction(buyCredits);
   const [chosen, setChosen] = useState<string | null>(null);
+  const [waiver, setWaiver] = useState(false);
 
   function buy(packId: string) {
     setChosen(packId);
     const formData = new FormData();
     formData.set('packId', packId);
+    if (waiver) formData.set('waiver', 'on');
     submit(formData);
   }
 
   return (
     <div>
+      {/* Verplicht vóór het betalen van digitale inhoud: akkoord met directe levering + vervallen herroepingsrecht */}
+      <label
+        id="checkout-waiver"
+        className="mb-4 flex cursor-pointer items-start gap-3 rounded-card border border-border bg-card p-4 text-sm leading-relaxed"
+      >
+        <input
+          type="checkbox"
+          checked={waiver}
+          onChange={(event) => setWaiver(event.target.checked)}
+          className="mt-0.5 size-4 shrink-0 accent-primary"
+        />
+        <span>
+          {g.waiver}{' '}
+          <Link href="/terms#withdrawal" target="_blank" className="font-medium text-primary underline-offset-2 hover:underline">
+            {g.waiverLink}
+          </Link>
+        </span>
+      </label>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {CREDIT_PACKS.map((pack) => {
           const popular = 'popular' in pack && pack.popular;
@@ -40,6 +61,7 @@ export function CreditPackGrid({ paymentsEnabled }: { paymentsEnabled: boolean }
                 {popular && <Badge tone="primary">{g.mostPopular}</Badge>}
               </div>
               <p className="mt-3 text-3xl font-semibold tracking-tight">{formatMoney(pack.amountCents, locale)}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{g.inclVat}</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {g.searchesPrice(pack.credits, pricePerCredit(pack, locale))}
               </p>
@@ -55,7 +77,8 @@ export function CreditPackGrid({ paymentsEnabled }: { paymentsEnabled: boolean }
               <Button
                 className="mt-5 w-full"
                 variant={popular ? 'primary' : 'secondary'}
-                disabled={!paymentsEnabled || pending}
+                disabled={!paymentsEnabled || pending || !waiver}
+                aria-describedby="checkout-waiver"
                 onClick={() => buy(pack.id)}
               >
                 {busy && <LoaderCircle className="size-4 animate-spin" aria-hidden />}

@@ -60,7 +60,7 @@ export function AppHeader({ name, email, credits }: AppHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-[rgb(16_24_32/0.06)] bg-white/90 backdrop-blur-[18px]">
+      <header className="sticky top-0 z-30 print:hidden border-b border-[rgb(16_24_32/0.06)] bg-white/90 backdrop-blur-[18px]">
         <div className="mx-auto flex h-16 w-full max-w-[1500px] items-center gap-3 px-4 sm:h-[76px] sm:px-8 xl:px-12">
           {/* Heel smalle telefoons: alleen het merkteken, zodat taal, credits, bel en avatar passen */}
           <div className="shrink-0 max-[400px]:w-10 max-[400px]:overflow-hidden">
@@ -121,7 +121,7 @@ export function AppHeader({ name, email, credits }: AppHeaderProps) {
 
       <nav
         aria-label={t.common.nav.main}
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[rgb(16_24_32/0.06)] bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 print:hidden border-t border-[rgb(16_24_32/0.06)] bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden"
       >
         <ul className="grid grid-cols-5">
           {navItems.map(({ href, key, icon: Icon }) => (

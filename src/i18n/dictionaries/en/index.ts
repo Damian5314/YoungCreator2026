@@ -17,6 +17,7 @@ import { activity } from './activity';
 import { splash } from './splash';
 import { legal } from './legal';
 import { support } from './support';
+import { pricing } from './pricing';
 
 export const en = {
   common,
@@ -38,4 +39,5 @@ export const en = {
   splash,
   legal,
   support,
+  pricing,
 };

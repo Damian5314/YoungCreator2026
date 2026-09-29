@@ -7,6 +7,7 @@ export const landing = {
       problem: 'Problem',
       howItWorks: 'How it works',
       forStudents: 'For students',
+      pricing: 'Pricing',
     },
     signIn: 'Sign in',
     cta: 'Find opportunities',
@@ -123,6 +124,7 @@ export const landing = {
         links: {
           howItWorks: 'How it works',
           forStudents: 'For students',
+          pricing: 'Pricing',
         },
       },
       getStarted: {

@@ -25,6 +25,9 @@ const paymentSchema = z.object({
   status: z.enum(MOLLIE_PAYMENT_STATUSES),
   amount: z.object({ currency: z.string(), value: z.string() }),
   paidAt: z.string().nullish(),
+  // Alleen aanwezig als er (deels) is terugbetaald of teruggeboekt
+  amountRefunded: z.object({ currency: z.string(), value: z.string() }).nullish(),
+  amountChargedBack: z.object({ currency: z.string(), value: z.string() }).nullish(),
   metadata: z.unknown().optional(),
   _links: z.object({ checkout: z.object({ href: z.url() }).nullish() }).partial().optional(),
 });
@@ -36,6 +39,8 @@ export interface MolliePayment {
   amountCents: number;
   currency: string;
   paidAt: string | null;
+  refundedCents: number;
+  chargedBackCents: number;
   checkoutUrl: string | null;
   metadata: unknown;
 }
@@ -63,6 +68,8 @@ function toPayment(raw: unknown): MolliePayment {
     amountCents: toCents(payment.amount.value),
     currency: payment.amount.currency,
     paidAt: payment.paidAt ?? null,
+    refundedCents: payment.amountRefunded ? toCents(payment.amountRefunded.value) : 0,
+    chargedBackCents: payment.amountChargedBack ? toCents(payment.amountChargedBack.value) : 0,
     checkoutUrl: payment._links?.checkout?.href ?? null,
     metadata: payment.metadata,
   };

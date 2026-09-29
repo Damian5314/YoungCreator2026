@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { intlLocale } from '@/i18n/config';
@@ -39,8 +40,20 @@ export async function PaymentHistory({ payments }: { payments: PaymentData[] }) 
                 </div>
                 <div className="flex items-center gap-2">
                   {payment.mode === 'test' && <Badge>{h.test}</Badge>}
-                  <Badge tone={STATUS_TONE[statusKey]}>{h.statuses[statusKey]}</Badge>
+                  {payment.refundedCents > 0 ? (
+                    <Badge tone="warning">{h.refunded}</Badge>
+                  ) : (
+                    <Badge tone={STATUS_TONE[statusKey]}>{h.statuses[statusKey]}</Badge>
+                  )}
                   <span className="w-20 text-right font-medium tabular-nums">{formatMoney(payment.amountCents, locale)}</span>
+                  {payment.status === 'paid' && (
+                    <Link
+                      href={`/billing/receipts/${payment.id}`}
+                      className="rounded font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      {t.billing.receipt.link}
+                    </Link>
+                  )}
                 </div>
               </li>
             );

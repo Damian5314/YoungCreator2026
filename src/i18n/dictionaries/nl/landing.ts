@@ -6,6 +6,7 @@ export const landing: typeof en = {
       problem: 'Probleem',
       howItWorks: 'Hoe het werkt',
       forStudents: 'Voor studenten',
+      pricing: 'Prijzen',
     },
     signIn: 'Inloggen',
     cta: 'Vind kansen',
@@ -122,6 +123,7 @@ export const landing: typeof en = {
         links: {
           howItWorks: 'Hoe het werkt',
           forStudents: 'Voor studenten',
+          pricing: 'Prijzen',
         },
       },
       getStarted: {
