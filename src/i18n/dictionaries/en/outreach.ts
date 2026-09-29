@@ -26,6 +26,7 @@ export const outreach = {
     byAgent: 'Prepared by your agent',
   },
   panel: {
+    aiNote: 'Written by your agent with AI. Read it and adjust anything that isn’t right before it’s sent: it goes out in your name.',
     intro: (recipient: string) =>
       `Let your agent write a short, personal email to ${recipient}, based on this opportunity and your profile. You check it before anything is sent.`,
     noEmail: {

@@ -20,6 +20,8 @@ export const matches: typeof en = {
       description: 'Hoe je agent dit aan je profiel heeft gekoppeld.',
     },
     noReasons: 'Voor deze match zijn geen specifieke redenen vastgelegd.',
+    signalNote: 'Dit is een kanssignaal, geen bevestigde vacature.',
+    aiNote: 'De matchscore en redenen zijn suggesties, deels door AI gemaakt op basis van je profiel en openbare bronnen. Ze kunnen fouten bevatten, dus controleer de oorspronkelijke bron.',
     whyNow: 'Waarom nu',
     foundVia: (source: string, date: string) => `Gevonden via ${source} op ${date}`,
     reachOut: {

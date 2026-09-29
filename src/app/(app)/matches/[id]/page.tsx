@@ -167,6 +167,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
             ) : (
               <p className="text-sm text-muted-foreground">{d.noReasons}</p>
             )}
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+              {match.isHidden && <strong className="font-medium text-foreground">{d.signalNote} </strong>}
+              {d.aiNote}
+            </p>
             {match.signals.length > 0 && (
               <div className="mt-5">
                 <p className="flex items-center gap-2 text-sm font-medium">

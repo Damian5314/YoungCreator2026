@@ -178,6 +178,7 @@ export function OutreachPanel({
       <Field label={p.fields.message} htmlFor="outreach-body">
         <Textarea id="outreach-body" rows={12} value={body} onChange={(event) => setBody(event.target.value)} maxLength={5000} />
       </Field>
+      <p className="text-xs leading-relaxed text-muted-foreground">{p.aiNote}</p>
 
       <FormMessage state={state?.error ? state : undefined} />
 

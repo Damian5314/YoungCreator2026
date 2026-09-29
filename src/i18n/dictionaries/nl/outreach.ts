@@ -27,6 +27,7 @@ export const outreach: typeof en = {
     byAgent: 'Voorbereid door je agent',
   },
   panel: {
+    aiNote: 'Geschreven door je agent met AI. Lees hem en pas aan wat niet klopt voordat hij wordt verstuurd: hij gaat op jouw naam de deur uit.',
     intro: (recipient: string) =>
       `Laat je agent een korte, persoonlijke e-mail aan ${recipient} schrijven, op basis van deze kans en je profiel. Jij checkt hem voordat er iets wordt verstuurd.`,
     noEmail: {
