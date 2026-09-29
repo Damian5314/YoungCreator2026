@@ -1088,7 +1088,7 @@ Visitor
 
 # Launch checklist
 
-> Stand 29-09-2026. Details: `docs/security.md` en `docs/operations.md`.
+> Stand 29-09-2026. Volledige en actuele lijst: `docs/launch-checklist.md`. Details: `docs/security.md` en `docs/operations.md`.
 > **Let op:** draai eerst migratie `supabase/migrations/20260929100000_production_hardening.sql` op de database voordat deze code live gaat. Zonder die migratie werkt afrekenen niet (kolom `withdrawal_waiver_at` ontbreekt).
 
 ## Legal
