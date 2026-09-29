@@ -37,10 +37,10 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
           <div className="flex items-center gap-3 sm:gap-5">
             <Link
               href="/"
-              className="group inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-[#173A31] transition-[color,transform] duration-200 hover:-translate-x-0.5 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              className="group inline-flex items-center gap-1.5 rounded-md max-[400px]:size-10 max-[400px]:justify-center text-sm font-medium text-[#173A31] transition-[color,transform] duration-200 hover:-translate-x-0.5 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
             >
               <ArrowLeft className="size-4" aria-hidden />
-              {t.backToHome}
+              <span className="max-[400px]:sr-only">{t.backToHome}</span>
             </Link>
             <LanguageSwitcher />
           </div>

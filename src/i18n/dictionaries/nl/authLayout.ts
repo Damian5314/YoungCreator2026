@@ -4,7 +4,7 @@ export const authLayout: typeof en = {
   backToHome: 'Terug naar home',
   footer: {
     copyright: '© 2026 Unlisted',
-    madeIn: 'Gemaakt in Nederland.',
+    madeIn: 'Gemaakt in Nederland',
   },
   photoAlt: 'Internationale student met een laptop aan een Amsterdamse gracht tijdens het gouden uur',
   annotations: {

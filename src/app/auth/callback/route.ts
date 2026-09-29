@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Landingsplek voor links uit Supabase-mails (account bevestigen, e-mail wijzigen)
+// Landingsplek voor links uit Supabase-mails (account bevestigen, e-mail wijzigen, wachtwoord resetten)
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get('code');
@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
   } else {
     console.warn('[auth/callback] no code in query params', Object.fromEntries(searchParams.entries()));
   }
+
+  // Resetlink verlopen of in een andere browser geopend: meteen een nieuwe kunnen aanvragen
+  if (safeNext === '/reset-password') return NextResponse.redirect(`${origin}/forgot-password?expired=1`);
 
   console.log('[auth/callback] falling back to /login');
   return NextResponse.redirect(`${origin}/login`);

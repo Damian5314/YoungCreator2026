@@ -3,7 +3,7 @@ export const authLayout = {
   backToHome: 'Back to home',
   footer: {
     copyright: '© 2026 Unlisted',
-    madeIn: 'Made in the Netherlands.',
+    madeIn: 'Made in the Netherlands',
   },
   photoAlt: 'International student with a laptop beside an Amsterdam canal at golden hour',
   annotations: {

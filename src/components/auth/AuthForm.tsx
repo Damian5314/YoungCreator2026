@@ -7,17 +7,27 @@ import { FormMessage } from '@/components/ui/FormMessage';
 import { useT } from '@/i18n/I18nProvider';
 import { login, register } from '@/lib/actions/auth';
 import { useFormAction } from '@/lib/hooks/useFormAction';
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@/shared/constants/auth';
 import { DEMO_ACCOUNT } from '@/shared/constants/demoAccount';
 
 // Ruime velden in de huisstijl van de landingspagina; 16px op mobiel zodat iOS niet inzoomt.
 // Desktop: hoogtes en ruimtes schalen mee met de schermhoogte (svh), zodat de kaart zonder scrollen past.
-const inputClasses =
+export const inputClasses =
   'h-[54px] lg:h-[clamp(42px,6.6svh,54px)] w-full rounded-[13px] border border-[#D9E2DD] bg-white px-4 text-base text-foreground transition-[border-color,box-shadow] duration-200 placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/12 disabled:opacity-50 sm:text-[15px]';
+
+export const authCardClasses =
+  'rounded-[28px] border border-[rgb(16_24_32/0.06)] bg-white p-6 shadow-[0_20px_70px_rgb(16_24_32/0.09)] sm:p-10 lg:p-[clamp(26px,4.4svh,48px)]';
+
+export const authSubmitClasses =
+  'group inline-flex h-[54px] w-full lg:h-[clamp(42px,6.6svh,54px)] items-center justify-center gap-2 rounded-[13px] bg-primary text-base font-semibold text-primary-foreground transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-primary-hover hover:shadow-[0_10px_24px_rgb(8_127_99/0.25)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-60';
+
+export const authLinkClasses =
+  'rounded font-semibold text-primary hover:text-primary-hover hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
 const consentLink =
   'rounded font-medium text-foreground underline underline-offset-2 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
-function AuthField({ label, htmlFor, hint, children }: { label: string; htmlFor: string; hint?: string; children: ReactNode }) {
+export function AuthField({ label, htmlFor, hint, children }: { label: string; htmlFor: string; hint?: string; children: ReactNode }) {
   return (
     <div className="space-y-2 lg:space-y-1.5">
       <label htmlFor={htmlFor} className="block text-sm font-medium text-foreground">
@@ -29,7 +39,7 @@ function AuthField({ label, htmlFor, hint, children }: { label: string; htmlFor:
   );
 }
 
-function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
+export function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
   const f = useT().auth.form;
   const [visible, setVisible] = useState(false);
 
@@ -51,7 +61,8 @@ function PasswordInput(props: InputHTMLAttributes<HTMLInputElement>) {
 
 // Gedeeld formulier voor login en registratie
 export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
-  const f = useT().auth.form;
+  const t = useT();
+  const f = t.auth.form;
   const isRegister = mode === 'register';
   const { state, pending, submit } = useFormAction(isRegister ? register : login);
   const formRef = useRef<HTMLFormElement>(null);
@@ -71,7 +82,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   }
 
   return (
-    <div className="rounded-[28px] border border-[rgb(16_24_32/0.06)] bg-white p-6 shadow-[0_20px_70px_rgb(16_24_32/0.09)] sm:p-10 lg:p-[clamp(26px,4.4svh,48px)]">
+    <div className={authCardClasses}>
       <h1 className="text-[28px] font-bold leading-tight tracking-[-0.025em] text-foreground sm:text-[32px] lg:text-[length:clamp(26px,4.4svh,32px)]">
         {isRegister ? f.registerTitle : f.loginTitle}
       </h1>
@@ -121,16 +132,24 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
             name="password"
             autoComplete={isRegister ? 'new-password' : 'current-password'}
             placeholder="••••••••"
-            minLength={isRegister ? 6 : undefined}
+            minLength={isRegister ? PASSWORD_MIN_LENGTH : undefined}
+            maxLength={PASSWORD_MAX_LENGTH}
             required
           />
         </AuthField>
+        {!isRegister && (
+          <p className="-mt-2 text-right text-sm lg:-mt-1">
+            <Link href="/forgot-password" className={authLinkClasses}>
+              {t.auth.reset.forgotLink}
+            </Link>
+          </p>
+        )}
         <FormMessage state={state} />
         <button
           type="submit"
           disabled={pending}
           aria-busy={pending || undefined}
-          className="group inline-flex h-[54px] w-full lg:h-[clamp(42px,6.6svh,54px)] items-center justify-center gap-2 rounded-[13px] bg-primary text-base font-semibold text-primary-foreground transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-px hover:bg-primary-hover hover:shadow-[0_10px_24px_rgb(8_127_99/0.25)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-60"
+          className={authSubmitClasses}
         >
           {pending ? f.pending : isRegister ? f.submitRegister : f.submitLogin}
           {!pending && (
