@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser, getProfile } from '@/lib/data/queries';
 import { AUTOMATIONS_LOCKED_MESSAGE, hasPaidAccess } from '@/modules/billing/entitlements';
 import { text, type FormState } from './formState';
@@ -39,7 +39,8 @@ export async function saveAgentSettings(_prev: FormState, formData: FormData): P
   const level = parsed.data.automationLevel;
   // Niveau 2 en 3 laten Unlisted mails versturen: dat is een automation (betaald)
   if (level >= 2 && !(await hasPaidAccess(user.id))) return { error: AUTOMATIONS_LOCKED_MESSAGE };
-  const supabase = await createClient();
+  // Via de server: automation_level en auto_send_consent_at zijn voor gebruikers zelf read-only (zie migratie 20260929100000)
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -51,7 +52,10 @@ export async function saveAgentSettings(_prev: FormState, formData: FormData): P
       portfolio_url: parsed.data.portfolioUrl || null,
     })
     .eq('id', user.id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('[agent] saving settings failed', error);
+    return { error: 'Saving your settings failed. Please try again.' };
+  }
 
   revalidatePath('/settings');
   return { message: 'Saved' };

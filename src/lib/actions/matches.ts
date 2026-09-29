@@ -24,7 +24,10 @@ export async function setMatchStatus(matchId: string, status: string): Promise<{
     .update({ status: parsed.data.status, status_changed_at: new Date().toISOString() })
     .eq('id', parsed.data.matchId)
     .eq('user_id', user.id);
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('[matches] status update failed', error);
+    return { error: t.matches.errors.invalidStatus };
+  }
 
   revalidatePath('/dashboard');
   revalidatePath(`/matches/${parsed.data.matchId}`);

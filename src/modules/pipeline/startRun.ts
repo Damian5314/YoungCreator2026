@@ -26,6 +26,7 @@ interface StartRunInput {
   trigger: 'manual' | 'scheduled';
   options?: Partial<Omit<SearchOptions, 'maxResults'>>;
   origin: string; // basis-URL van deze app, voor de callback van n8n
+  forceDemo?: boolean; // voorbeelddata i.p.v. n8n (demo-account)
 }
 
 // Wat n8n bij de zoek-webhook binnenkrijgt. Geen e-mailadres of user-id: runId is genoeg.
@@ -36,7 +37,7 @@ export interface SearchWebhookPayload extends RunSnapshot {
 }
 
 // Start een zoekrun: run vastleggen, credit afschrijven, n8n (of de demo-bron) aan het werk zetten
-export async function startSearchRun({ userId, searchProfileId, trigger, options, origin }: StartRunInput): Promise<StartRunResult> {
+export async function startSearchRun({ userId, searchProfileId, trigger, options, origin, forceDemo = false }: StartRunInput): Promise<StartRunResult> {
   const admin = createAdminClient();
 
   let loaded;
@@ -115,7 +116,7 @@ export async function startSearchRun({ userId, searchProfileId, trigger, options
     return { ok: false, error: OUT_OF_CREDITS_MESSAGE };
   }
 
-  if (features.demoMode) {
+  if (features.demoMode || forceDemo) {
     await admin.from('search_runs').update({ status: 'running', started_at: new Date().toISOString() }).eq('id', run.id);
     after(() => runDemoSearch(run.id));
     return { ok: true, runId: run.id };

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { env, features } from '@/lib/env';
 import { isPublicUrl } from '@/lib/mollie';
+import { isAuthorizedN8nRequest } from '@/lib/n8n';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -19,14 +20,24 @@ async function tableStatus(table: string, column = 'id'): Promise<MigrationStatu
   }
 }
 
-// GET /api/health — wat is er gekoppeld? Alleen ja/nee en statussen, nooit geheimen.
-export async function GET() {
+// GET /api/health — voor uptime-monitoring: 200 als app en database werken, anders 503.
+// Details over de koppelingen alleen met "Authorization: Bearer <N8N_SECRET>" (niets publiek prijsgeven).
+export async function GET(request: Request) {
+  if (!isAuthorizedN8nRequest(request)) {
+    const databaseUp = (await tableStatus('profiles')) === 'ok';
+    return NextResponse.json(
+      { ok: databaseUp, database: databaseUp ? 'up' : 'down' },
+      { status: databaseUp ? 200 : 503, headers: { 'cache-control': 'no-store' } },
+    );
+  }
+
   const database = env.supabaseUrl && env.supabaseSecretKey
     ? {
         initialSchema: await tableStatus('search_runs'),
         agentPipeline: await tableStatus('outreach_messages'),
         onboardingIntro: await tableStatus('profiles', 'onboarded_at'),
         billing: await tableStatus('payments'),
+        productionHardening: await tableStatus('rate_limits', 'key'),
       }
     : 'not-configured';
 

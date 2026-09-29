@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser, getProfile } from '@/lib/data/queries';
+import { withinRateLimit } from '@/lib/rateLimit';
+import { isDemoEmail } from '@/shared/constants/demoAccount';
 import {
   createOutreachDraft,
   markOutreachSentManually,
@@ -25,6 +27,10 @@ export async function draftOutreach(matchId: string): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'Your session expired. Please log in again.' };
   if (!uuid.safeParse(matchId).success) return { ok: false, error: 'Opportunity not found.' };
+  // Elk concept is een AI-aanroep: remt misbruik van de AI-kosten
+  if (!(await withinRateLimit('outreachDraft', `user:${user.id}`))) {
+    return { ok: false, error: 'You’ve written a lot of emails in a short time. Please wait a while and try again.' };
+  }
 
   try {
     const draft = await createOutreachDraft(user.id, matchId, 'user');
@@ -73,7 +79,10 @@ export async function saveOutreachDraft(_prev: FormState, formData: FormData): P
     .eq('id', parsed.data.id)
     .eq('user_id', user.id)
     .select('id');
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('[outreach] saving draft failed', error);
+    return { error: 'Saving the email failed. Please try again.' };
+  }
   if (!data?.length) return { error: 'This email was already sent and can’t be changed anymore.' };
 
   refresh(parsed.data.matchId);
@@ -85,6 +94,12 @@ export async function sendOutreachNow(messageId: string, matchId: string): Promi
   const user = await getCurrentUser();
   if (!user) return { ok: false, error: 'Your session expired. Please log in again.' };
   if (!uuid.safeParse(messageId).success || !uuid.safeParse(matchId).success) return { ok: false, error: 'Message not found.' };
+
+  // Het demo-account is openbaar: nooit echte e-mails versturen
+  if (isDemoEmail(user.email)) return { ok: false, error: 'The demo account can’t send real emails. Copy the draft instead.' };
+  if (!(await withinRateLimit('outreachSend', `user:${user.id}`))) {
+    return { ok: false, error: 'Too many emails in a short time. Please wait a while and try again.' };
+  }
 
   const profile = await getProfile();
   if (!profile || profile.automationLevel < 2) {

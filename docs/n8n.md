@@ -47,7 +47,7 @@ De workflows in `n8n/` zijn kant-en-klaar. Je hoeft alleen accounts, keys en cre
    Op n8n cloud is Gmail één klik ("Sign in with Google"). Self-hosted heb je een eigen Google Cloud OAuth-client nodig (Gmail API aan, redirect-URL uit n8n).
 6. **Planning:** vervang in de node "Run due searches" `https://JOUW-APP-URL` door je `APP_URL`.
 7. **Publiceren:** publiceer alle drie de workflows (**Publish**; in n8n-versies vóór 2.0 heet dit **Active**). Pas daarna bestaat de Production URL. Kopieer de **Production URL** van beide webhooks (`…/webhook/jobhunter-search` en `…/webhook/jobhunter-send-email`, niet `/webhook-test/`) naar `N8N_SEARCH_WEBHOOK_URL` en `N8N_SEND_EMAIL_WEBHOOK_URL`. Herstart de dev-server of redeploy.
-8. **Check:** open `{APP_URL}/api/health`. `mode` moet `n8n` zijn, zonder waarschuwingen. Klik daarna in de app op **Search** en volg de run in n8n → Executions.
+8. **Check:** vraag `{APP_URL}/api/health` op met de header `Authorization: Bearer <N8N_SECRET>` (bijv. `curl -H "Authorization: Bearer …" {APP_URL}/api/health`). `mode` moet `n8n` zijn, zonder waarschuwingen. Klik daarna in de app op **Search** en volg de run in n8n → Executions.
 
 > n8n cloud kan `localhost` niet bereiken. Test lokaal met een tunnel (`ngrok http 3000`) en zet die URL in `APP_URL`, of test tegen de Vercel-deploy.
 > Ook een zelf-gehoste n8n kan callbacks naar `localhost`/privé-adressen blokkeren (SSRF-bescherming, strenger vanaf n8n 3.0). Gebruik dus altijd een publieke `APP_URL`.

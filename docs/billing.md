@@ -25,7 +25,7 @@ Studenten betalen per gebruik, zonder abonnement. Alles zit al in de code: je he
    MOLLIE_API_KEY=test_...
    APP_URL=https://<jouw-app>.vercel.app   # publieke https-URL, anders geen webhooks (zie hieronder)
    ```
-4. Controleer `GET /api/health`: `payments.mode` = `test` en `database.billing` = `ok`.
+4. Controleer `GET /api/health` met de header `Authorization: Bearer <N8N_SECRET>` (zonder token toont hij alleen of de app en database werken): `payments.mode` = `test` en `database.billing` = `ok`.
 
 Met een test-key toont de app "Test mode" op `/billing`. Mollie laat een testcheckout zien waarin je zelf kiest of de betaling lukt (paid, failed, canceled, expired). Er wordt geen echt geld afgeschreven.
 

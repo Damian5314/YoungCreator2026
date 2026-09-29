@@ -6,10 +6,12 @@ import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/data/queries';
+import { withinRateLimit } from '@/lib/rateLimit';
 import { requestOrigin } from '@/lib/requestOrigin';
 import { AUTOMATIONS_LOCKED_MESSAGE, hasPaidAccess } from '@/modules/billing/entitlements';
 import { CVParser } from '@/modules/profile/CVParser';
 import { startSearchRun } from '@/modules/pipeline/startRun';
+import { isDemoEmail } from '@/shared/constants/demoAccount';
 import { OPPORTUNITY_TYPE_LABELS } from '@/shared/constants/opportunityTypes';
 import { list, mergeUnique, optionalInt, optionalText, text, type FormState } from './formState';
 
@@ -71,6 +73,8 @@ export async function savePreferences(_prev: FormState, formData: FormData): Pro
   let cv: CvResult | null = null;
   const cvFile = formData.get('cv');
   if (cvFile instanceof File && cvFile.size > 0) {
+    // Cv uitlezen kost AI-tokens: niet eindeloos opnieuw uploaden
+    if (!(await withinRateLimit('cvUpload', `user:${user.id}`))) return { error: 'Too many uploads. Please wait a while and try again.' };
     cv = await processCv(user.id, cvFile);
     if (!cv.ok) return { error: cv.error };
   }
@@ -97,7 +101,7 @@ export async function savePreferences(_prev: FormState, formData: FormData): Pro
     .eq('id', user.id);
   if (profileError) {
     console.error('[search] savePreferences: profile update failed', profileError);
-    return { error: profileError.message };
+    return { error: 'Saving your profile failed. Please try again.' };
   }
 
   const minSalary = optionalInt(formData, 'minSalary');
@@ -116,7 +120,7 @@ export async function savePreferences(_prev: FormState, formData: FormData): Pro
     : await supabase.from('search_profiles').insert({ ...preferences, user_id: user.id });
   if (error) {
     console.error('[search] savePreferences: search_profiles upsert failed', error);
-    return { error: error.message };
+    return { error: 'Saving your preferences failed. Please try again.' };
   }
 
   revalidatePath('/', 'layout');
@@ -158,7 +162,7 @@ export async function saveSchedule(_prev: FormState, formData: FormData): Promis
     .eq('user_id', user.id);
   if (error) {
     console.error('[search] saveSchedule: schedule update failed', error);
-    return { error: error.message };
+    return { error: 'Saving your schedule failed. Please try again.' };
   }
 
   revalidatePath('/dashboard');
@@ -177,6 +181,9 @@ export async function startSearch(input: z.input<typeof startSearchInput>): Prom
 
   const parsed = startSearchInput.safeParse(input);
   if (!parsed.success) return { error: 'Invalid search options.' };
+  if (!(await withinRateLimit('search', `user:${user.id}`))) {
+    return { error: 'You’ve started a lot of searches in a short time. Please wait a while before the next one.' };
+  }
 
   try {
     const supabase = await createClient();
@@ -194,6 +201,8 @@ export async function startSearch(input: z.input<typeof startSearchInput>): Prom
         includeCompanyHunting: parsed.data.includeHunting,
       },
       origin: await requestOrigin(),
+      // Demo-account: altijd voorbeelddata, nooit echte zoekkosten (n8n/Apify)
+      forceDemo: isDemoEmail(user.email),
     });
     if (!result.ok) return { error: result.error };
 

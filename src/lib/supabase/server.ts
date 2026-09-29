@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE_OPTIONS } from '@/lib/supabase/cookieOptions';
 
 // Supabase-client voor server components, server actions en route handlers.
 // Draait als de ingelogde gebruiker, dus Row Level Security bepaalt wat hij mag zien.
@@ -10,6 +11,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      cookieOptions: SESSION_COOKIE_OPTIONS,
       cookies: {
         getAll() {
           return cookieStore.getAll();
