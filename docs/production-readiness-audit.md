@@ -1088,65 +1088,68 @@ Visitor
 
 # Launch checklist
 
+> Stand 29-09-2026. Details: `docs/security.md` en `docs/operations.md`.
+> **Let op:** draai eerst migratie `supabase/migrations/20260929100000_production_hardening.sql` op de database voordat deze code live gaat. Zonder die migratie werkt afrekenen niet (kolom `withdrawal_waiver_at` ontbreekt).
+
 ## Legal
 
 - [x] Privacy Policy
 - [x] Terms of Service
 - [x] Company information
-- [ ] Pricing disclosure
-- [ ] Refund/herroeping geregeld
-- [ ] Cookie compliance
-- [ ] AI/profiling disclosure
+- [x] Pricing disclosure — publieke pagina `/pricing` (prijzen incl. btw, creditregels, herroeping)
+- [x] Refund/herroeping geregeld — verplicht vinkje bij het afrekenen (tijdstip opgeslagen), regels in de voorwaarden en op `/pricing`
+- [x] Cookie compliance — alleen functionele cookies (sessie, taal, splash), geen analytics of tracking, dus geen banner nodig
+- [x] AI/profiling disclosure — privacybeleid, plus uitleg bij elke match en onder elk e-mailconcept
 
 ## Accounts
 
-- [ ] Email verification
-- [ ] Forgot password
-- [ ] Change password
-- [ ] Logout
-- [ ] Delete account
-- [ ] Export personal data
+- [ ] Email verification — code is klaar; **"Confirm email" aanzetten in het Supabase-dashboard** (en een eigen SMTP-afzender)
+- [x] Forgot password — `/forgot-password` → mail → `/reset-password`, andere sessies worden uitgelogd
+- [x] Change password — minimaal 8 tekens, andere sessies worden uitgelogd
+- [x] Logout
+- [x] Delete account — Instellingen → Account verwijderen (cv, runs en data weg; betalingen anoniem bewaard)
+- [x] Export personal data — Instellingen → Je gegevens (JSON-download)
 
 ## Product
 
-- [ ] Onboarding
-- [ ] Search
-- [ ] Search progress
-- [ ] Results
-- [ ] Opportunity details
-- [ ] Source links
-- [ ] Match explanation
-- [ ] Outreach drafts
-- [ ] Zero-result state
+- [x] Onboarding
+- [x] Search
+- [x] Search progress
+- [x] Results
+- [x] Opportunity details
+- [x] Source links
+- [x] Match explanation
+- [x] Outreach drafts
+- [x] Zero-result state
 
 ## Billing
 
-- [ ] Pricing page
-- [ ] Checkout
-- [ ] Webhooks
-- [ ] Idempotency
-- [ ] Credit ledger
-- [ ] Receipts
-- [ ] Refund handling
+- [x] Pricing page
+- [x] Checkout
+- [x] Webhooks
+- [x] Idempotency
+- [x] Credit ledger
+- [x] Receipts — betaalbewijs per betaling (`/billing/receipts/[id]`, printbaar, met btw); een bon per e-mail volgt met de mailprovider
+- [x] Refund handling — terugbetalingen en chargebacks bij Mollie trekken de credits één keer in
 
 ## Security
 
-- [ ] Rate limiting
-- [ ] Authorization audit
-- [ ] Input validation
-- [ ] Secret audit
-- [ ] Secure sessions
-- [ ] Production headers
-- [ ] Dependency audit
+- [x] Rate limiting
+- [x] Authorization audit — lek gedicht: `automation_level` was via de publieke API zelf aan te passen
+- [x] Input validation
+- [x] Secret audit
+- [x] Secure sessions — httpOnly, Secure en SameSite=Lax cookies
+- [x] Production headers
+- [x] Dependency audit — `npm audit`: 0 kwetsbaarheden
 
 ## Operations
 
-- [ ] Error monitoring
-- [ ] Logs
-- [ ] Uptime monitoring
-- [ ] Database backups
-- [ ] Restore tested
-- [ ] Incident procedure
+- [ ] Error monitoring — keuze en account nodig (bijv. Sentry)
+- [x] Logs — Vercel-logs met vaste prefixes, zie `docs/operations.md`
+- [ ] Uptime monitoring — `/api/health` is er klaar voor (503 bij storing); dienst kiezen (bijv. Better Stack of UptimeRobot)
+- [ ] Database backups — afhankelijk van het Supabase-plan van TechTable
+- [ ] Restore tested — stappenplan staat in `docs/operations.md`
+- [x] Incident procedure — `docs/operations.md`
 
 ## Infrastructuur (TechTable)
 
