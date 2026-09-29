@@ -173,8 +173,9 @@ const categories: FaqCategory[] = [
         id: 'delete-account',
         question: 'How do I delete my account?',
         answer: [
-          `Email ${COMPANY.email} from the address you log in with and ask us to delete your account. We delete your profile, CV, searches and emails within 30 days. Payment records are kept for seven years because Dutch law requires it.`,
+          'Go to Settings and scroll to "Delete account". Type your email address to confirm. Your profile, CV, searches and emails are deleted right away. Payment records are kept for seven years without your name, because Dutch law requires it.',
         ],
+        link: { href: '/settings', label: 'Go to Settings' },
       },
       {
         id: 'my-data',
@@ -188,8 +189,10 @@ const categories: FaqCategory[] = [
         id: 'privacy-request',
         question: 'I want to see, correct or export my data.',
         answer: [
-          `Email ${COMPANY.email} with your request. We respond within four weeks.`,
+          'You can correct your profile and preferences yourself, and download all your data at any time via Settings → Your data.',
+          `For anything else, email ${COMPANY.email}. We respond within four weeks.`,
         ],
+        link: { href: '/settings', label: 'Go to Settings' },
       },
     ],
   },

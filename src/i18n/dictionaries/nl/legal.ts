@@ -95,8 +95,8 @@ const privacy: LegalDocument = {
       id: 'retention',
       heading: '8. Hoe lang we gegevens bewaren',
       list: [
-        'Account-, profiel-, cv-, zoek- en outreachgegevens: zolang je account bestaat. Verwijder je je account, dan verwijderen of anonimiseren we deze gegevens binnen 30 dagen.',
-        'Betaal- en factuurgegevens: zeven jaar, vanwege de wettelijke bewaarplicht.',
+        'Account-, profiel-, cv-, zoek- en outreachgegevens: zolang je account bestaat. Verwijder je je account, dan worden deze gegevens direct verwijderd; kopieën in back-ups verdwijnen binnen 30 dagen.',
+        'Betaal- en factuurgegevens: zeven jaar, vanwege de wettelijke bewaarplicht. Na het verwijderen van je account zijn deze niet meer aan je profiel gekoppeld.',
         'Contact met onze support: maximaal twee jaar na het laatste contact.',
         'Serverlogs: beperkte tijd, alleen zolang nodig voor beveiliging en het oplossen van fouten.',
       ],
@@ -244,7 +244,7 @@ const terms: LegalDocument = {
       id: 'termination',
       heading: '11. Je account beëindigen',
       body: [
-        `Je kunt op elk moment stoppen met Unlisted en ons vragen je account te verwijderen door te mailen naar ${COMPANY.email}. Ongebruikte betaalde credits worden bij het verwijderen van je account niet terugbetaald, behalve zoals beschreven onder "Herroepingsrecht en terugbetaling".`,
+        `Je kunt op elk moment stoppen met Unlisted en je account zelf verwijderen via Instellingen, of ons vragen dat te doen door te mailen naar ${COMPANY.email}. Ongebruikte betaalde credits worden bij het verwijderen van je account niet terugbetaald, behalve zoals beschreven onder "Herroepingsrecht en terugbetaling".`,
         'We kunnen je account opschorten of sluiten als je deze voorwaarden overtreedt. Bij ernstige of herhaalde overtredingen kan dat zonder voorafgaande waarschuwing.',
       ],
     },

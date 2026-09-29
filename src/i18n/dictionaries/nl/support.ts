@@ -157,8 +157,9 @@ const categories: FaqCategory[] = [
         id: 'delete-account',
         question: 'Hoe verwijder ik mijn account?',
         answer: [
-          `Mail naar ${COMPANY.email} vanaf het adres waarmee je inlogt en vraag ons je account te verwijderen. We verwijderen je profiel, cv, zoekopdrachten en e-mails binnen 30 dagen. Betaalgegevens bewaren we zeven jaar, omdat de wet dat verplicht.`,
+          'Ga naar Instellingen en scrol naar "Account verwijderen". Typ je e-mailadres ter bevestiging. Je profiel, cv, zoekopdrachten en e-mails worden direct verwijderd. Betaalgegevens bewaren we zeven jaar zonder je naam, omdat de wet dat verplicht.',
         ],
+        link: { href: '/settings', label: 'Naar Instellingen' },
       },
       {
         id: 'my-data',
@@ -171,7 +172,11 @@ const categories: FaqCategory[] = [
       {
         id: 'privacy-request',
         question: 'Ik wil mijn gegevens inzien, corrigeren of exporteren.',
-        answer: [`Mail je verzoek naar ${COMPANY.email}. We reageren binnen vier weken.`],
+        answer: [
+          'Je profiel en voorkeuren pas je zelf aan, en je kunt al je gegevens op elk moment downloaden via Instellingen → Je gegevens.',
+          `Voor al het andere mail je naar ${COMPANY.email}. We reageren binnen vier weken.`,
+        ],
+        link: { href: '/settings', label: 'Naar Instellingen' },
       },
     ],
   },

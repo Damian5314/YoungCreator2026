@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'glass';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'glass' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
 type Shape = 'rounded' | 'pill';
 
@@ -15,6 +15,8 @@ const variants: Record<Variant, string> = {
   ghost: 'text-foreground hover:bg-muted',
   // Voor gebruik op foto's / donkere vlakken
   glass: 'border border-white/30 bg-white/10 text-white backdrop-blur-md hover:bg-white/20',
+  // Onomkeerbare acties (account verwijderen)
+  danger: 'bg-danger text-white hover:bg-danger/90 focus-visible:outline-danger',
 };
 
 const sizes: Record<Size, string> = {

@@ -116,8 +116,8 @@ const privacy: LegalDocument = {
       id: 'retention',
       heading: '8. How long we keep data',
       list: [
-        'Account, profile, CV, search and outreach data: as long as your account exists. When you delete your account, we delete this data or make it anonymous within 30 days.',
-        'Payment and invoice data: seven years, due to Dutch statutory retention obligations.',
+        'Account, profile, CV, search and outreach data: as long as your account exists. When you delete your account, this data is deleted right away; copies in backups disappear within 30 days.',
+        'Payment and invoice data: seven years, due to Dutch statutory retention obligations. After you delete your account, these records are no longer linked to your profile.',
         'Contact with our support: up to two years after our last contact.',
         'Server logs: for a limited period, only as long as needed for security and troubleshooting.',
       ],
@@ -265,7 +265,7 @@ const terms: LegalDocument = {
       id: 'termination',
       heading: '11. Ending your account',
       body: [
-        `You can stop using Unlisted at any time and ask us to delete your account by emailing ${COMPANY.email}. Unused paid credits are not refunded when you delete your account, except as described under "Right of withdrawal and refunds".`,
+        `You can stop using Unlisted at any time and delete your account yourself in Settings, or ask us to do it by emailing ${COMPANY.email}. Unused paid credits are not refunded when you delete your account, except as described under "Right of withdrawal and refunds".`,
         'We may suspend or close your account if you violate these terms. In case of serious or repeated violations we may do so without prior notice.',
       ],
     },
