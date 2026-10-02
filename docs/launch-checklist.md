@@ -1,6 +1,6 @@
 # Unlisted: launch checklist
 
-Stand: 29 september 2026. Gebaseerd op [production-readiness-audit.md](production-readiness-audit.md).
+Stand: 2 oktober 2026. Gebaseerd op [production-readiness-audit.md](production-readiness-audit.md).
 Afgevinkt = gebouwd en gecontroleerd. Open = moet nog gebeuren. Bij open punten staat erachter wat er nodig is.
 
 Legenda achter open punten:
@@ -15,6 +15,8 @@ Legenda achter open punten:
 ## 0. Vóór de eerste productie-deploy
 
 - [ ] Migratie `supabase/migrations/20260929100000_production_hardening.sql` draaien op de productiedatabase (anders werkt afrekenen niet)
+- [ ] Migratie `supabase/migrations/20261002100000_outreach_suppressions.sql` draaien (anders faalt versturen via Unlisted)
+- [ ] `APP_URL` op het productiedomein zetten: canonical-URL's, sitemap, deellinks en afmeldlinks gebruiken hem
 - [ ] Alle migraties in `supabase/migrations` op volgorde gedraaid; `GET /api/health` met `Authorization: Bearer <N8N_SECRET>` geeft overal `ok`
 - [ ] Juridische review van privacybeleid en algemene voorwaarden (consumentenrecht, herroeping, aansprakelijkheid) **(beslissing)**
 - [ ] Aannames bevestigen: 21% btw, minimumleeftijd 16, reactietijd support 2 werkdagen, telefonisch bereikbaar tijdens kantooruren **(beslissing)**
@@ -60,8 +62,8 @@ Legenda achter open punten:
 - [x] E-mailconcepten schrijven en versturen (niveau 1 zelf, 2 goedkeuren, 3 automatisch met toestemming en daglimiet)
 - [x] Toestand bij nul resultaten
 - [x] Mislukte zoekopdracht → credit automatisch terug; vastgelopen runs na 30 minuten afgebroken
-- [ ] Bij elk resultaat de brondatum en een betrouwbaarheid ("strong/possible signal") tonen **(bouwen)**
-- [ ] Matchscore: percentage houden of vervangen door labels als "Strong / Good / Possible match" **(beslissing)**
+- [x] Brondatum bij elk resultaat (gepubliceerd of gevonden door de agent)
+- [ ] Matchscore: percentage houden of vervangen door labels als "Strong / Good / Possible match", eventueel met een betrouwbaarheid per signaal **(beslissing)**
 
 ## 5. Billing
 
@@ -83,7 +85,7 @@ Legenda achter open punten:
 - [x] Security-headers
 - [x] Dependency-audit (`npm audit`: 0 kwetsbaarheden)
 - [x] Demo-account afgeschermd (geen betalingen, geen echte mails, geen zoekkosten, niet te verwijderen of over te nemen)
-- [ ] Strikte Content-Security-Policy met nonces **(bouwen)**
+- [x] Strikte Content-Security-Policy met nonces
 - [ ] `npm audit` opnieuw draaien vóór elke release **(testen)**
 
 ## 7. Operations
@@ -96,14 +98,16 @@ Legenda achter open punten:
 - [ ] Database-back-ups (afhankelijk van het Supabase-plan) **(account)**
 - [ ] Hersteltest gedaan en vastgelegd in operations.md **(testen)**
 - [ ] Back-up van de cv-opslag (Supabase Storage valt niet onder de database-back-ups), of dat verlies accepteren **(beslissing)**
+- [ ] Analytics kiezen: cookieloos (Vercel Analytics of Plausible, geen banner nodig) of GA4 (cookiebanner nodig) **(beslissing)**
+- [ ] Intern dashboard voor gebruikers en omzet (bijv. Metabase op de VPS en/of een wekelijks n8n-rapport) **(beslissing)**
 
 ## 8. E-mail en outreach
 
 - [ ] Mailprovider kiezen voor transactionele mails (bijv. Resend, Postmark of Google Workspace) **(beslissing)**
 - [ ] Transactionele mails: welkom, betaalbevestiging met bon, credits toegevoegd, zoekopdracht klaar of mislukt, e-mail verstuurd of mislukt, melding bij verdachte login **(bouwen, na de keuze van de provider)**
 - [ ] Afzenderdomein instellen voor outreach (SPF, DKIM, DMARC) zodat mails niet in spam belanden **(account)**
-- [ ] Suppressielijst: adressen die niet meer gemaild willen worden **(bouwen)**
-- [ ] Opt-out/afmelden respecteren in outreach-mails **(bouwen)**
+- [x] Suppressielijst: afgemelde adressen krijgen via Unlisted nooit meer mail
+- [x] Afmeldlink (ondertekend) onder elke mail die Unlisted verstuurt, met bevestigingspagina `/unsubscribe`
 - [ ] Bounces en spamklachten verwerken (terugkoppeling vanuit de mailprovider) **(bouwen, na de keuze van de provider)**
 
 ## 9. UX
@@ -119,21 +123,27 @@ Legenda achter open punten:
 
 ## 10. Marketing en homepage
 
-- [ ] Voorbeeldkaarten in de hero markeren als "Voorbeeld" (ASML-signaal, 92% match) **(bouwen)**
+- [x] Voorbeeldkaarten in de hero gemarkeerd als "Voorbeeld"
 - [ ] Claim "Trusted by students from top universities" onderbouwen of vervangen door "Built for students at universities such as…" **(beslissing)**
 - [ ] Namen of logo's van universiteiten: toestemming, of weghalen **(beslissing)**
 - [ ] Marketingclaims aanscherpen ("before everyone else sees them" → "early signals that may indicate…") **(beslissing)**
-- [ ] Demo-account zichtbaar markeren in de app (een `DEMO`-label) **(bouwen)**
-- [ ] Demo-account periodiek resetten naar een schone stand **(bouwen)**
+- [x] Demo-account zichtbaar gemarkeerd in de app (`DEMO`-label)
+- [x] Demo-account ruimt bij inloggen data ouder dan 24 uur op
 
 ## 11. SEO
 
 - [x] Paginatitels en beschrijvingen (metadata per pagina)
 - [x] Favicon
-- [ ] `robots.txt` en `sitemap.xml` **(bouwen)**
-- [ ] OpenGraph- en Twitter-afbeeldingen voor delen **(bouwen)**
-- [ ] Canonical URL's (na het domein unlisted.nl) **(bouwen)**
-- [ ] Structured data (Organization / Product) **(bouwen)**
+- [x] Nederlandse URL's (`/nl/...`) met hreflang, zodat Google beide talen kan indexeren; de taalschakelaar wisselt de URL mee
+- [x] `robots.txt` en `sitemap.xml` (beide talen, met alternates)
+- [x] OpenGraph- en Twitter-afbeelding voor delen (gegenereerd)
+- [x] Canonical URL's (volgen `APP_URL` automatisch)
+- [x] Structured data: Organization, WebSite, SoftwareApplication met de echte prijzen, FAQPage, BreadcrumbList
+- [x] `llms.txt` voor AI-assistenten
+- [x] App, login en hulpschermen op `noindex`
+- [ ] Google Search Console en Bing Webmaster Tools koppelen en de sitemap indienen (na het domein) **(account)**
+- [ ] Kennisbank met een paar sterke artikelen voor studentenzoekvragen (zoekjaar, stage zonder Nederlands, open sollicitatie) **(beslissing: onderwerpen)**
+- [ ] Een handvol landingspagina's per zoekintentie of stad (alleen met echte, unieke inhoud) **(beslissing)**
 
 ## 12. Productie-acceptatietest
 
