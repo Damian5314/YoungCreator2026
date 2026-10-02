@@ -11,7 +11,7 @@ export async function CompanySignalCard() {
   const { company, time, title, tags, tagsLabel } = heroCards.signal;
 
   return (
-    <FloatCard className="p-3.5">
+    <FloatCard exampleLabel={heroCards.exampleLabel} className="p-3.5">
       <div className="flex items-center gap-2.5">
         <CompanyLogo text={company} tone="bg-[#10238A] text-[8px] text-white" className="size-8" />
         <div className="min-w-0 flex-1 leading-tight">

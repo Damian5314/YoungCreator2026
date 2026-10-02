@@ -9,7 +9,7 @@ export async function OpportunityCard() {
   const { label, title, reason, cta } = heroCards.opportunity;
 
   return (
-    <FloatCard tone="tint" className="p-[18px]">
+    <FloatCard tone="tint" exampleLabel={heroCards.exampleLabel} className="p-[18px]">
       <div className="flex items-center gap-2.5">
         <span className={`${glassIcon} size-8 bg-lime/30`}>
           <Sparkles className="size-3.5 text-primary-hover" aria-hidden />

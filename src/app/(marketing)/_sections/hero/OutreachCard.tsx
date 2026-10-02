@@ -12,7 +12,7 @@ export async function OutreachCard() {
   const { label, greeting, preview, cta } = heroCards.outreach;
 
   return (
-    <FloatCard className="p-3.5 xl:p-3 2xl:p-3.5">
+    <FloatCard exampleLabel={heroCards.exampleLabel} className="p-3.5 xl:p-3 2xl:p-3.5">
       <div className="flex items-center gap-2">
         <span className={`${glassIcon} size-7 text-primary xl:size-6 2xl:size-7`}>
           <PenLine className="size-3.5 xl:size-3 2xl:size-3.5" aria-hidden />

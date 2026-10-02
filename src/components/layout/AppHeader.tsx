@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Coins, Search } from 'lucide-react';
 import { useT } from '@/i18n/I18nProvider';
+import { isDemoEmail } from '@/shared/constants/demoAccount';
 import { appNavItems as navItems, isNavActive } from './appNav';
 import { AvatarMenu } from './AvatarMenu';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -66,6 +67,16 @@ export function AppHeader({ name, email, credits }: AppHeaderProps) {
           <div className="shrink-0 max-[400px]:w-10 max-[400px]:overflow-hidden">
             <Logo href="/dashboard" />
           </div>
+          {/* Openbaar demo-account: duidelijk maken dat dit voorbeelddata is en er niets echt gebeurt */}
+          {isDemoEmail(email) && (
+            <span
+              title={t.common.shell.demoHint}
+              className="shrink-0 rounded-full border border-warning/30 bg-warning-soft px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-warning"
+            >
+              {t.common.shell.demo}
+              <span className="sr-only">: {t.common.shell.demoHint}</span>
+            </span>
+          )}
 
           <nav aria-label={t.common.nav.main} className="hidden flex-1 items-center justify-center gap-1 sm:flex">
             {navItems.map(({ href, key, icon: Icon }) => {

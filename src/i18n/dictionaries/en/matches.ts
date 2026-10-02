@@ -11,6 +11,10 @@ export const matches = {
     location: 'Location',
     remotePossible: 'remote possible',
     date: 'Date',
+    // Bronvermelding: wanneer gepubliceerd, of wanneer je agent het vond
+    sourceDate: 'Source date',
+    postedOn: (date: string) => `Posted ${date}`,
+    foundOn: (date: string) => `Found by your agent ${date}`,
     contact: 'Contact',
     website: 'Website',
     viewOriginal: 'View original',

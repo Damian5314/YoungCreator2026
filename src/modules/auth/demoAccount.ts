@@ -42,6 +42,20 @@ export async function topUpDemoCredits(userId: string): Promise<void> {
   if (insertError) throw insertError;
 }
 
+// Demo-data die ouder is dan een dag opruimen, zodat elke bezoeker een overzichtelijk account ziet.
+// Alleen het demo-account; gedeelde bedrijven en kansen blijven staan (andere demo-bezoekers zien ze ook).
+const DEMO_DATA_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+export async function resetStaleDemoData(userId: string): Promise<void> {
+  const admin = createAdminClient();
+  const cutoff = new Date(Date.now() - DEMO_DATA_MAX_AGE_MS).toISOString();
+  // Volgorde: outreach hangt aan matches, matches verwijzen naar runs
+  for (const table of ['outreach_messages', 'matches', 'search_runs'] as const) {
+    const { error } = await admin.from(table).delete().eq('user_id', userId).lt('created_at', cutoff);
+    if (error) throw error;
+  }
+}
+
 async function findUserId(email: string): Promise<string | null> {
   const admin = createAdminClient();
   const perPage = 1000;

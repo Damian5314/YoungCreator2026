@@ -9,7 +9,7 @@ export async function MatchCard() {
   const { score, label, reasons } = heroCards.match;
 
   return (
-    <FloatCard className="p-3.5">
+    <FloatCard exampleLabel={heroCards.exampleLabel} className="p-3.5">
       <div className="flex items-baseline gap-2">
         <p className="text-[28px] font-extrabold leading-none tracking-[-0.03em] text-primary">{score}%</p>
         <p className="text-[12.5px] font-semibold">{label}</p>

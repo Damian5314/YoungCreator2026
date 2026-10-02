@@ -111,6 +111,7 @@ export function buildLanding(t: Dictionary['landing']) {
   };
 
   const heroCards = {
+    exampleLabel: t.heroCards.exampleLabel,
     signal: {
       company: 'ASML',
       time: t.heroCards.signal.time,

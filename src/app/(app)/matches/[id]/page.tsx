@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Building,
   CalendarDays,
+  Clock,
   ExternalLink,
   Globe,
   MapPin,
@@ -91,6 +92,15 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
                   <dd>{[match.location, match.remote ? d.remotePossible : null].filter(Boolean).join(' · ')}</dd>
                 </div>
               )}
+              <div className="flex items-center gap-2">
+                <Clock className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <dt className="sr-only">{d.sourceDate}</dt>
+                <dd>
+                  {match.postedAt
+                    ? d.postedOn(formatShortDate(match.postedAt, locale))
+                    : d.foundOn(formatShortDate(match.discoveredAt, locale))}
+                </dd>
+              </div>
               {match.startsAt && (
                 <div className="flex items-center gap-2">
                   <CalendarDays className="size-4 shrink-0 text-muted-foreground" aria-hidden />

@@ -8,7 +8,7 @@ import { env } from '@/lib/env';
 import { clientIp, withinRateLimit } from '@/lib/rateLimit';
 import { requestOrigin } from '@/lib/requestOrigin';
 import { createClient } from '@/lib/supabase/server';
-import { ensureDemoAccount, isDemoLogin, topUpDemoCredits } from '@/modules/auth/demoAccount';
+import { ensureDemoAccount, isDemoLogin, resetStaleDemoData, topUpDemoCredits } from '@/modules/auth/demoAccount';
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@/shared/constants/auth';
 import { isDemoEmail } from '@/shared/constants/demoAccount';
 import { text, type FormState } from './formState';
@@ -56,6 +56,7 @@ export async function login(_prev: FormState, formData: FormData): Promise<FormS
 
   if (demo) {
     await topUpDemoCredits(result.data.user.id).catch((error) => console.error('[demo] topping up credits failed', error));
+    await resetStaleDemoData(result.data.user.id).catch((error) => console.error('[demo] resetting old demo data failed', error));
   }
 
   revalidatePath('/', 'layout');

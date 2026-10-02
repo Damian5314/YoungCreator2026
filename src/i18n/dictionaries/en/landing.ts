@@ -41,6 +41,8 @@ export const landing = {
   },
 
   heroCards: {
+    // Label op de hero-kaarten: illustraties, geen live data
+    exampleLabel: 'Example',
     signal: {
       time: '2 hours ago',
       title: 'ASML announces new R&D center in Eindhoven',

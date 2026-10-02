@@ -40,6 +40,7 @@ export const landing: typeof en = {
   },
 
   heroCards: {
+    exampleLabel: 'Voorbeeld',
     signal: {
       time: '2 uur geleden',
       title: 'ASML kondigt nieuw R&D-centrum in Eindhoven aan',
