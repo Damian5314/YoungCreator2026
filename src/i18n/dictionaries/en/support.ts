@@ -199,6 +199,17 @@ const categories: FaqCategory[] = [
 ];
 
 export const support = {
+  // /unsubscribe: ontvangers van outreach-mails die geen berichten via Unlisted meer willen
+  unsubscribe: {
+    metaTitle: 'Unsubscribe',
+    title: 'No more emails via Unlisted',
+    body: (email: string) => `Students use Unlisted to send personal emails to companies. Confirm below and we won’t send anything to ${email} via Unlisted again.`,
+    button: 'Unsubscribe this address',
+    doneTitle: 'You’re unsubscribed',
+    doneBody: 'We won’t send emails to this address via Unlisted anymore. Sorry for the bother.',
+    invalidTitle: 'This link doesn’t work',
+    invalidBody: 'The unsubscribe link is incomplete or has been changed. Use the link from the email, or contact us and we’ll take care of it.',
+  },
   card: {
     title: 'Questions?',
     body: 'Check the frequently asked questions or get in touch.',

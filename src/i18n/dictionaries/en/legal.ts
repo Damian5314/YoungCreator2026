@@ -87,6 +87,7 @@ const privacy: LegalDocument = {
       body: [
         'If you choose to send an email to a company through Unlisted, we process the recipient address, the content of the email and its delivery status. Emails are only sent after you send or approve them yourself, or when you have explicitly turned on automatic sending for your agent, within the daily limit you set. You are responsible for the content of the emails you send.',
         'To find companies and public business contact details, we use publicly available sources on the web. We do not use these details for any other purpose than your search.',
+        'Every email sent through Unlisted says it was sent via Unlisted and contains a link to unsubscribe. If a recipient unsubscribes, we keep only their email address on a block list, so no student can email them via Unlisted again.',
       ],
     },
     {

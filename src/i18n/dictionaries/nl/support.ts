@@ -183,6 +183,16 @@ const categories: FaqCategory[] = [
 ];
 
 export const support = {
+  unsubscribe: {
+    metaTitle: 'Afmelden',
+    title: 'Geen e-mails meer via Unlisted',
+    body: (email: string) => `Studenten gebruiken Unlisted om persoonlijke e-mails naar bedrijven te sturen. Bevestig hieronder en we sturen via Unlisted nooit meer iets naar ${email}.`,
+    button: 'Dit adres afmelden',
+    doneTitle: 'Je bent afgemeld',
+    doneBody: 'We sturen via Unlisted geen e-mails meer naar dit adres. Excuses voor het ongemak.',
+    invalidTitle: 'Deze link werkt niet',
+    invalidBody: 'De afmeldlink is onvolledig of aangepast. Gebruik de link uit de e-mail, of neem contact met ons op, dan regelen we het.',
+  },
   card: {
     title: 'Vragen?',
     body: 'Bekijk de veelgestelde vragen of neem contact op.',

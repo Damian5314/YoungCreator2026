@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { hasPaidAccess } from '@/modules/billing/entitlements';
 import type { OpportunityType } from '@/shared/types/OpportunityType';
 import { writeOutreachEmail } from './emailWriter';
+import { isSuppressed, outreachFooter } from './unsubscribe';
 
 export const AUTO_DRAFT_MIN_SCORE = 70; // de agent bereidt alleen mails voor bij sterke matches
 const AUTO_DRAFTS_PER_RUN = 3;
@@ -158,6 +159,10 @@ export async function sendOutreach(userId: string, messageId: string, { auto = f
     return { ok: false, error: 'Add a valid email address for the recipient first.' };
   }
   if (!message.subject.trim() || !message.body.trim()) return { ok: false, error: 'Subject and message can’t be empty.' };
+  // Ontvanger heeft zich afgemeld (of het adres bounced): nooit meer via Unlisted mailen
+  if (await isSuppressed(message.to_email)) {
+    return { ok: false, error: 'This address has asked not to receive emails via Unlisted. Contact them another way.' };
+  }
 
   const student = await loadStudent(userId);
   const limit = auto ? student.profile.daily_send_limit : MANUAL_DAILY_SEND_CAP;
@@ -184,7 +189,8 @@ export async function sendOutreach(userId: string, messageId: string, { auto = f
       messageId,
       to: { email: message.to_email, name: message.to_name },
       subject: message.subject,
-      body: message.body,
+      // Afmeldlink alleen in de verstuurde mail; het opgeslagen concept blijft zoals de student het schreef
+      body: `${message.body}${outreachFooter(message.to_email)}`,
       from: { name: student.profile.full_name },
       replyTo: student.email ? { email: student.email, name: student.profile.full_name } : null,
       sentBy: auto ? 'agent' : 'user',

@@ -66,6 +66,7 @@ const privacy: LegalDocument = {
       body: [
         'Als je via Unlisted een e-mail naar een bedrijf stuurt, verwerken we het adres van de ontvanger, de inhoud van de e-mail en de verzendstatus. E-mails worden pas verstuurd als je ze zelf verstuurt of goedkeurt, of als je automatisch versturen voor je agent uitdrukkelijk hebt aangezet, binnen het daglimiet dat je instelt. Je bent zelf verantwoordelijk voor de inhoud van de e-mails die je verstuurt.',
         'Om bedrijven en openbare zakelijke contactgegevens te vinden, gebruiken we openbaar beschikbare bronnen op het web. Die gegevens gebruiken we alleen voor jouw zoekopdracht.',
+        'Elke e-mail die via Unlisted wordt verstuurd, vermeldt dat hij via Unlisted is verstuurd en bevat een afmeldlink. Meldt een ontvanger zich af, dan bewaren we alleen zijn e-mailadres op een blokkeerlijst, zodat geen enkele student hem via Unlisted nog kan mailen.',
       ],
     },
     {
