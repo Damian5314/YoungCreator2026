@@ -1,13 +1,15 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ArrowRight, Mail, MessageCircle, Phone, type LucideIcon } from 'lucide-react';
 import { getT } from '@/i18n/server';
+import { publicPageMetadata } from '@/lib/seo';
 import { COMPANY, COMPANY_ADDRESS } from '@/shared/constants/company';
 import { SubpageHeading, SubpageShell } from '../_components/SubpageShell';
+import { BreadcrumbJsonLd } from '../_components/StructuredData';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { contact } = (await getT()).support;
-  return { title: contact.metaTitle, description: contact.metaDescription };
+  return publicPageMetadata('/contact', { title: contact.metaTitle, description: contact.metaDescription });
 }
 
 const linkClass =
@@ -31,6 +33,7 @@ export default async function ContactPage() {
 
   return (
     <SubpageShell>
+      <BreadcrumbJsonLd name={c.title} path="/contact" />
       <div className="mt-8 max-w-[62rem]">
         <SubpageHeading eyebrow={c.eyebrow} title={c.title}>
           <p className="mt-4 max-w-[40rem] text-[17px] leading-[1.7] text-muted-foreground">{c.intro}</p>

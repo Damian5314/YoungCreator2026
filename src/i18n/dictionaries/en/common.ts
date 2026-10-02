@@ -2,6 +2,7 @@
 // kanstypes, bronnen en statussen (gebruikt door dashboard, matches en zoeken).
 export const common = {
   meta: {
+    homeTitle: 'Unlisted · Find hidden jobs and internships in the Netherlands',
     description:
       'Unlisted helps international students find jobs, internships and hidden opportunities in the Netherlands by analyzing real-time company signals, news and hiring activity.',
   },
@@ -51,6 +52,8 @@ export const common = {
     unread: 'New activity',
     billing: 'Credits & billing',
     help: 'Help & support',
+    demo: 'Demo',
+    demoHint: 'Demo account with example data. No real emails are sent and nothing is charged.',
     logout: 'Log out',
   },
   credits: {

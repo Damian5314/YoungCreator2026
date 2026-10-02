@@ -1,4 +1,9 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { NO_INDEX } from '@/lib/seo';
+
+// Niet in zoekmachines: persoonlijke app-schermen en login/registratie
+export const metadata: Metadata = NO_INDEX;
 import { AppHeader } from '@/components/layout/AppHeader';
 import { WelcomeIntro } from '@/components/onboarding/WelcomeIntro';
 import { getCreditBalance, getCurrentUser, getProfile } from '@/lib/data/queries';

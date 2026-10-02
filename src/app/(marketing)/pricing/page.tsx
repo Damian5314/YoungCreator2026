@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ArrowRight, Check, Info } from 'lucide-react';
 import { ButtonLink } from '@/components/ui/Button';
 import { getLocale, getT } from '@/i18n/server';
+import { publicPageMetadata } from '@/lib/seo';
 import { CREDIT_PACKS, formatMoney, pricePerCredit } from '@/modules/billing/plans';
 import { SubpageHeading, SubpageShell } from '../_components/SubpageShell';
+import { BreadcrumbJsonLd } from '../_components/StructuredData';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { pricing } = await getT();
-  return { title: pricing.metaTitle, description: pricing.metaDescription };
+  return publicPageMetadata('/pricing', { title: pricing.metaTitle, description: pricing.metaDescription });
 }
 
 // Publieke prijzen: pakketten (uit plans.ts), regels rond credits en herroeping, vóór je een account maakt
@@ -18,6 +20,7 @@ export default async function PricingPage() {
 
   return (
     <SubpageShell>
+      <BreadcrumbJsonLd name={p.metaTitle} path="/pricing" />
       <div className="mt-8 max-w-[62rem]">
         <SubpageHeading eyebrow={p.eyebrow} title={p.title}>
           <p className="mt-4 max-w-[40rem] text-[17px] leading-[1.7] text-muted-foreground">{p.intro}</p>

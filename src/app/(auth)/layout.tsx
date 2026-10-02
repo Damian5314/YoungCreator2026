@@ -1,5 +1,10 @@
+import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import Link from 'next/link';
+import { NO_INDEX } from '@/lib/seo';
+
+// Niet in zoekmachines: persoonlijke app-schermen en login/registratie
+export const metadata: Metadata = NO_INDEX;
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ArrowLeft } from 'lucide-react';
 import { AuthMobileVisual, AuthVisual } from '@/components/auth/AuthVisual';
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';

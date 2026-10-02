@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { getT } from '@/i18n/server';
+import { publicPageMetadata } from '@/lib/seo';
 import { SubpageHeading, SubpageShell } from '../_components/SubpageShell';
 import { SupportCard } from '../_components/SupportCard';
+import { BreadcrumbJsonLd, FaqJsonLd } from '../_components/StructuredData';
 import { OpenFromHash } from './OpenFromHash';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { faq } = (await getT()).support;
-  return { title: faq.metaTitle, description: faq.metaDescription };
+  return publicPageMetadata('/faq', { title: faq.metaTitle, description: faq.metaDescription });
 }
 
 // Veelgestelde vragen: native <details>, dus zonder JavaScript toetsenbord- en screenreadervriendelijk
@@ -18,6 +20,8 @@ export default async function FaqPage() {
   return (
     <SubpageShell>
       <OpenFromHash />
+      <FaqJsonLd categories={faq.categories} />
+      <BreadcrumbJsonLd name={faq.title} path="/faq" />
       <div className="mt-8 grid gap-12 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-16 xl:gap-24">
         <aside className="hidden lg:block">
           <nav aria-label={faq.onThisPage} className="sticky top-28">

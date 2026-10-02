@@ -1,5 +1,7 @@
 import { getT } from '@/i18n/server';
 import type { LegalDocument } from '@/i18n/dictionaries/en/legal';
+import type { PublicPath } from '@/i18n/routing';
+import { BreadcrumbJsonLd } from './StructuredData';
 import { SubpageHeading, SubpageShell } from './SubpageShell';
 import { SupportCard } from './SupportCard';
 
@@ -7,11 +9,12 @@ import { SupportCard } from './SupportCard';
  * Gedeelde opmaak voor /privacy en /terms: een leesbare tekstkolom en (vanaf lg) een
  * inhoudsopgave die meeloopt.
  */
-export async function LegalPage({ doc }: { doc: LegalDocument }) {
+export async function LegalPage({ doc, path }: { doc: LegalDocument; path: PublicPath }) {
   const labels = (await getT()).legal.labels;
 
   return (
     <SubpageShell>
+      <BreadcrumbJsonLd name={doc.title} path={path} />
       <div className="mt-8 grid gap-12 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-16 xl:gap-24">
         <aside className="hidden lg:block">
           <nav aria-label={labels.onThisPage} className="sticky top-28">

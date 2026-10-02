@@ -2,6 +2,7 @@ import type { common as en } from '../en/common';
 
 export const common: typeof en = {
   meta: {
+    homeTitle: 'Unlisted · Vind verborgen banen en stages in Nederland',
     description:
       'Unlisted helpt internationale studenten banen, stages en verborgen kansen in Nederland te vinden door realtime bedrijfssignalen, nieuws en wervingsactiviteit te analyseren.',
   },
@@ -48,6 +49,8 @@ export const common: typeof en = {
     unread: 'Nieuwe activiteit',
     billing: 'Credits & betalen',
     help: 'Help & support',
+    demo: 'Demo',
+    demoHint: 'Demo-account met voorbeelddata. Er worden geen echte e-mails verstuurd en er wordt niets afgerekend.',
     logout: 'Uitloggen',
   },
   credits: {
