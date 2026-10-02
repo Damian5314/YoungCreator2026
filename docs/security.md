@@ -71,9 +71,15 @@ Supabase Auth heeft daarnaast eigen limieten op inloggen en e-mails.
 
 ## Headers
 
-Op elke response (`next.config.ts`): HSTS (2 jaar), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` en `frame-ancestors 'none'`, `Referrer-Policy: strict-origin-when-cross-origin` en een `Permissions-Policy` die camera, microfoon, locatie en payment uitzet. `X-Powered-By` staat uit.
+Op elke response (`next.config.ts`): HSTS (2 jaar), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` en een `Permissions-Policy` die camera, microfoon, locatie en payment uitzet. `X-Powered-By` staat uit.
 
-Nog niet: een strikte script-CSP met nonces. Dat is een apart project, omdat Next.js inline scripts gebruikt.
+Content-Security-Policy (`src/lib/csp.ts`, gezet in `src/proxy.ts`) met een nieuwe nonce per request:
+
+- Scripts mogen alleen draaien met de nonce plus `'strict-dynamic'`. Geïnjecteerde scripts worden dus geblokkeerd.
+- Styles gebruiken `'unsafe-inline'`, omdat de code style-attributen gebruikt (animatievertragingen); een nonce kan die niet toestaan.
+- Verder: `img-src 'self' data: blob:`, `connect-src 'self'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self' https://*.mollie.com` en `frame-ancestors 'none'`.
+- De nonce gaat ook naar het inline script van next-themes.
+- Komt er een externe dienst bij (analytics, Sentry, een CDN), voeg die dan toe in `src/lib/csp.ts`, anders blokkeert de browser hem.
 
 ## Secrets
 

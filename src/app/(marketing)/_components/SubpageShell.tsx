@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ArrowLeft } from 'lucide-react';
 import { Container } from '@/components/layout/Container';
 import { MarketingHeader } from '@/components/layout/MarketingHeader';

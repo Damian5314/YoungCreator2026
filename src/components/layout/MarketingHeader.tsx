@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Menu, X } from 'lucide-react';
-import { useT } from '@/i18n/I18nProvider';
+import { useLocale, useT } from '@/i18n/I18nProvider';
+import { localizeHref } from '@/i18n/routing';
 import { Container } from './Container';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
@@ -35,6 +36,7 @@ const desktopLink = `relative rounded-md py-2 text-[15px] font-medium text-foreg
  */
 export function MarketingHeader({ nav }: { nav: MarketingNav }) {
   const t = useT();
+  const locale = useLocale();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -79,7 +81,7 @@ export function MarketingHeader({ nav }: { nav: MarketingNav }) {
           <ul className="flex items-center gap-8 whitespace-nowrap xl:gap-10">
             {nav.links.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className={desktopLink}>
+                <a href={localizeHref(link.href, locale)} className={desktopLink}>
                   {link.label}
                 </a>
               </li>
@@ -127,7 +129,7 @@ export function MarketingHeader({ nav }: { nav: MarketingNav }) {
               {nav.links.map((link) => (
                 <li key={link.label}>
                   <a
-                    href={link.href}
+                    href={localizeHref(link.href, locale)}
                     onClick={close}
                     className={`block rounded-xl px-3 py-3 text-base font-medium text-foreground/85 transition-colors hover:bg-primary-soft hover:text-primary ${focusRing}`}
                   >

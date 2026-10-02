@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, type FormEvent, type InputHTMLAttributes, type ReactNode } from 'react';
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { FormMessage } from '@/components/ui/FormMessage';
 import { useT } from '@/i18n/I18nProvider';

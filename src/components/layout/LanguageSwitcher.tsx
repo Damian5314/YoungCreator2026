@@ -1,18 +1,24 @@
 'use client';
 
 import { useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { locales } from '@/i18n/config';
 import { setLocale } from '@/i18n/actions';
 import { useLocale, useT } from '@/i18n/I18nProvider';
+import { isPublicPath, localizeHref, splitLocale } from '@/i18n/routing';
 
 /**
- * EN | NL-schakelaar. Zet de taal-cookie via een Server Action; Next.js rendert de
- * pagina daarna opnieuw, zodat alle teksten wisselen zonder volledige reload.
+ * EN | NL-schakelaar. Zet de taal-cookie via een Server Action; Next.js rendert de pagina daarna
+ * opnieuw. Op publieke pagina's staat de taal ook in de URL (/faq ↔ /nl/faq): daar navigeren we
+ * naar de andere variant, zodat URL en taal altijd bij elkaar passen.
  */
 export function LanguageSwitcher({ className = '' }: { className?: string }) {
   const locale = useLocale();
   const t = useT();
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
+  const publicPath = splitLocale(pathname).path;
 
   return (
     <div
@@ -37,7 +43,12 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
             disabled={pending}
             onClick={() => {
               if (active) return;
-              startTransition(() => setLocale(code));
+              startTransition(async () => {
+                await setLocale(code);
+                if (isPublicPath(publicPath)) {
+                  router.replace(`${localizeHref(publicPath, code)}${window.location.search}${window.location.hash}`);
+                }
+              });
             }}
             className={`h-8 min-w-9 rounded-full px-2.5 text-xs font-semibold tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
               active

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { getT } from '@/i18n/server';
 import { COMPANY, COMPANY_ADDRESS } from '@/shared/constants/company';
 

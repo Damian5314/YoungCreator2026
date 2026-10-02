@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ArrowRight } from 'lucide-react';
 
 interface FooterLinksProps {

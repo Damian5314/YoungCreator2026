@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 
 const sizes = {
   md: { text: 'gap-2.5 text-[18px]', mark: 'h-[30px] w-[37px]' },

@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import Link from 'next/link';
+import { LocaleLink as Link } from '@/components/layout/LocaleLink';
 import { ChevronDown, Coins, LifeBuoy, LogOut, Settings, UserRound } from 'lucide-react';
 import { useT } from '@/i18n/I18nProvider';
 import { logout } from '@/lib/actions/auth';
